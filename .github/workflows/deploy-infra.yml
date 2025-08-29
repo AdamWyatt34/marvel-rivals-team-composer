@@ -87,39 +87,6 @@ jobs:
           echo "appConfigEndpoint  = ${{ steps.deploy.outputs.appConfigEndpoint }}"
           echo "openAiEndpoint     = ${{ steps.deploy.outputs.openAiEndpoint }}"
 
-      # Upsert repo-level Actions Variables used by your other workflows (Functions/SWA)
-      - name: Upsert GitHub Actions Variables
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          FUNCTION_HOST: ${{ steps.deploy.outputs.functionHost }}
-          FUNCTION_NAME: ${{ steps.deploy.outputs.functionName }}
-          SWA_NAME: ${{ steps.deploy.outputs.staticWebAppName }}
-          SWA_HOST: ${{ steps.deploy.outputs.staticWebAppHost }}
-          STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.storageAccountName }}
-          STORAGE_BLOB_ENDPOINT: ${{ steps.deploy.outputs.storageBlobEndpoint }}
-          APPCONFIG_ENDPOINT: ${{ steps.deploy.outputs.appConfigEndpoint }}
-          OPENAI_ENDPOINT: ${{ steps.deploy.outputs.openAiEndpoint }}
-        run: |
-          upsert_var () {
-            local NAME=$1
-            local VALUE=$2
-            # skip empty values (e.g., OPENAI_ENDPOINT when enableOpenAI=false)
-            if [ -z "$VALUE" ] || [ "$VALUE" = "null" ]; then
-              echo "Skipping $NAME (empty)"; return 0
-            fi
-            gh api -X PATCH "repos/$REPO/actions/variables/$NAME" -f name="$NAME" -f value="$VALUE" \
-              || gh api -X POST "repos/$REPO/actions/variables" -f name="$NAME" -f value="$VALUE"
-          }
-          upsert_var FUNCTION_HOST "$FUNCTION_HOST"
-          upsert_var FUNCTION_NAME "$FUNCTION_NAME"
-          upsert_var SWA_NAME "$SWA_NAME"
-          upsert_var SWA_HOST "$SWA_HOST"
-          upsert_var STORAGE_ACCOUNT_NAME "$STORAGE_ACCOUNT_NAME"
-          upsert_var STORAGE_BLOB_ENDPOINT "$STORAGE_BLOB_ENDPOINT"
-          upsert_var APPCONFIG_ENDPOINT "$APPCONFIG_ENDPOINT"
-          upsert_var OPENAI_ENDPOINT "$OPENAI_ENDPOINT"
-
       - name: Summary
         run: |
           {
