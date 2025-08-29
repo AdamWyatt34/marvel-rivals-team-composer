@@ -54,12 +54,25 @@ jobs:
       - name: Deploy Bicep
         id: deploy
         run: |
+          set -Eeuo pipefail
           az deployment group create \
             -g "$RG" \
             -f infrastructure/azure/main.bicep \
             -p location="$LOC" appName="$APP" environment="$ENV" enableOpenAI=$OPENAI \
-            --query properties.outputs > outputs.json
+            -o json > deploy.json
+
+          # If the CLI returned a non-zero code, show the raw response
+          if [ $? -ne 0 ]; then
+            echo "Deployment failed; raw response:"
+            cat deploy.json || true
+            exit 1
+          fi
+
+          # Extract just the outputs with jq
+          jq '.properties.outputs' deploy.json > outputs.json
+          echo "Outputs:"
           cat outputs.json
+      
 
       - name: Extract outputs
         id: out
