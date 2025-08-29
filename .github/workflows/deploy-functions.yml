@@ -6,6 +6,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: write
     env:
       DOTNET_VERSION: '9.0.x'                  # Functions v4 supports .NET 8
       FUNCTIONAPP_NAME: 'func-rivals-comp-dev' # keep in sync with Bicep
