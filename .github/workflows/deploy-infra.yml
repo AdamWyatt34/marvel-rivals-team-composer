@@ -45,7 +45,8 @@ jobs:
           az bicep version
           az bicep build \
             --file infrastructure/azure/main.bicep \
-            --out-file infrastructure/azure/main.compiled.json
+            > infrastructure/azure/main.compiled.json
+      
 
       # 2) Deploy the compiled JSON ARM template (no validation pass)
       - name: Deploy ARM (compiled)
