@@ -14,38 +14,38 @@ jobs:
       contents: read
 
     env:
-      # Set this in repo "Variables" (e.g. func-rivals-comp-dev.azurewebsites.net)
+      # e.g. func-rivals-comp-dev.azurewebsites.net  (NO protocol)
       FUNCTION_HOST: ${{ vars.FUNCTION_HOST }}
 
     steps:
       - uses: actions/checkout@v4
 
-      # Optional but helpful for local tooling steps (e.g., patch + JSON validate)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Patch the SWA config to point /api/* at your Function App
-      - name: Patch SWA config with Function host
-        run: |
-          FILE=src/web/staticwebapp.config.json
-          sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" "$FILE"
-          node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
-
-      # Deploy — the SWA Action will build the Next.js app for you
+      # Build → export → patch config inside the artifact we deploy
       - name: Install & Build (static export)
         working-directory: src/web
         run: |
           npm ci
           NEXT_TELEMETRY_DISABLED=1 NEXT_DISABLE_SOURCEMAPS=1 npm run build
+          # Ensure the static export exists
           test -f out/index.html || (echo "No out/index.html found!" && exit 1)
-          cp staticwebapp.config.json out/  # <-- put config next to index.html
+          # Patch the config with your Function host and copy it into /out
+          sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" staticwebapp.config.json
+          cp staticwebapp.config.json out/staticwebapp.config.json
+          echo "---- Deployed config ----"
+          cat out/staticwebapp.config.json
+          echo "-------------------------"
+          echo "== out/ =="
           ls -lah out
-      
+
+      # Upload the already-built artifact (no Oryx build)
       - name: Deploy SWA (upload exported)
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
-          app_location: "src/web/out"  # <-- deploy straight from the built folder
+          app_location: "src/web/out"   # deploy from the built folder that contains index.html + staticwebapp.config.json
           skip_app_build: true
           action: "upload"
