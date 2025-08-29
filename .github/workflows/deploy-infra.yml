@@ -56,7 +56,7 @@ jobs:
         run: |
           az deployment group create \
             -g "$RG" \
-            -f main.bicep \
+            -f infrastructure/azure/main.bicep \
             -p location="$LOC" appName="$APP" environment="$ENV" enableOpenAI=$OPENAI \
             --query properties.outputs > outputs.json
           cat outputs.json
