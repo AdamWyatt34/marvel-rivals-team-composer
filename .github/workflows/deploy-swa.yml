@@ -12,40 +12,44 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
+
     env:
-      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }}   # e.g. func-rivals-comp-dev.azurewebsites.net (no protocol)
+      # e.g. func-rivals-comp-dev.azurewebsites.net (NO http/https)
+      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }}
 
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Patch the config IN PLACE at app root (SWA will read it from here)
-      - name: Patch SWA config with Function host
-        run: |
-          FILE=src/web/staticwebapp.config.json
-          sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" "$FILE"
-          echo "---- Patched config ----"
-          cat "$FILE"
-          node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
-
-      # Build (Next will emit static export into /out because output:'export')
+      # Build static export -> /out
       - name: Install & Build (static export)
         working-directory: src/web
         run: |
           npm ci
           NEXT_TELEMETRY_DISABLED=1 NEXT_DISABLE_SOURCEMAPS=1 npm run build
-          ls -lah out
-          test -f out/index.html
+          test -f out/index.html || (echo "No out/index.html found!" && exit 1)
 
-      # Deploy prebuilt artifacts: app root = src/web, artifacts = out
+      # Patch SWA config and copy it into the artifact root (/out)
+      - name: Prepare SWA config (patch + copy)
+        working-directory: src/web
+        run: |
+          sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" staticwebapp.config.json
+          # ensure API calls are not eaten by SPA fallback
+          # (your file should already have this block)
+          echo "---- Deployed config ----"
+          cat staticwebapp.config.json
+          cp staticwebapp.config.json out/staticwebapp.config.json
+          echo "---- Out folder ----"
+          ls -lah out
+
+      # Deploy prebuilt artifact from /out (no Oryx build)
       - name: Deploy SWA (upload exported)
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
-          app_location: "src/web"      # where staticwebapp.config.json lives
-          output_location: "out"       # built static site folder
-          app_artifact_location: "out" # (legacy key, belt + suspenders)
+          app_location: "src/web/out"   # deploy straight from the folder that has index.html
           skip_app_build: true
           action: "upload"
