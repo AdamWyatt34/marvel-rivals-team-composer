@@ -12,35 +12,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+        node-version: '20'
 
-      # 1) Patch config with Functions host and validate JSON
+      # Patch the placeholder JUST ON CI
       - name: Patch SWA config with Function host
         run: |
           FILE=src/web/staticwebapp.config.json
-          sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" "$FILE"
+          sed -i "s#__FUNCTION_HOST__#${{ vars.FUNCTION_HOST }}#g" "$FILE"
           node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
-
-      # 2) Install deps and prebuild with SWA CLI (produces SSR-ready artifact)
-      - name: Build with SWA CLI
+      
+      # 1) Install & build Next (creates .next)
+      - name: Build Next.js
         working-directory: src/web
         run: |
           npm ci
-          # optional: trim sourcemaps for smaller upload
+          export NEXT_TELEMETRY_DISABLED=1
           export NEXT_DISABLE_SOURCEMAPS=1
-          npx @azure/static-web-apps-cli build
-          # sanity: list artifact
-          echo "Artifact content:"
+          npm run build
+          ls -lah .next || (echo "No .next output!" && exit 1)
+      
+      # 2) Package for SWA using the built artifact
+      #    NOTE: --app-artifact-location points to .next
+      - name: Package with SWA CLI
+        working-directory: src/web
+        run: |
+          npx @azure/static-web-apps-cli build \
+            --app-location . \
+            --app-artifact-location .next \
+            --output-location .swa/build
+          echo "Packaged artifact:"
           ls -lah .swa/build || true
-
-      # 3) Upload the already-built artifact
+      
+      # 3) Upload the prebuilt SWA artifact
       - name: Deploy SWA (upload prebuilt)
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
           deployment_action: upload
-          app_location: "src/web/.swa/build"
+          app_location: "src/web"        # app root (where package.json & staticwebapp.config.json live)
+          output_location: ".swa/build"  # relative to app_location
           skip_app_build: true
