@@ -15,10 +15,9 @@ jobs:
       - name: Patch SWA config with Function host
         run: |
           FILE=src/web/staticwebapp.config.json
-          echo "Patching $FILE with FUNCTION_HOST=${FUNCTION_HOST}"
-          sed -i "s#\"rewrite\": \".*\"#\"rewrite\": \"https://${FUNCTION_HOST}/api/{*path}\"#g" $FILE
-          echo "Result:"
-          cat $FILE
+          sed -i "s#__FUNCTION_HOST__#${{ vars.FUNCTION_HOST }}#g" "$FILE"
+          # sanity check JSON
+          node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
 
       - name: Setup Node
         uses: actions/setup-node@v4
