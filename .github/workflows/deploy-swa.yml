@@ -2,7 +2,6 @@ name: Deploy Static Web App
 
 on:
   workflow_dispatch: {}
-  # or:
   # push:
   #   branches: [ main ]
   #   paths: [ 'src/web/**', '.github/workflows/deploy-swa.yml' ]
@@ -13,49 +12,32 @@ jobs:
     timeout-minutes: 25
     permissions:
       contents: read
+
     env:
-      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }}  # e.g. func-rivals-comp-dev.azurewebsites.net
+      # Set this in repo "Variables" (e.g. func-rivals-comp-dev.azurewebsites.net)
+      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }}
 
     steps:
       - uses: actions/checkout@v4
 
+      # Optional but helpful for local tooling steps (e.g., patch + JSON validate)
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Patch placeholder in SWA config and validate JSON
+      # Patch the SWA config to point /api/* at your Function App
       - name: Patch SWA config with Function host
         run: |
           FILE=src/web/staticwebapp.config.json
           sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" "$FILE"
           node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
 
-      # Build Next.js (.next)
-      - name: Build Next.js
-        working-directory: src/web
-        run: |
-          npm ci
-          export NEXT_TELEMETRY_DISABLED=1
-          export NEXT_DISABLE_SOURCEMAPS=1
-          npm run build
-          ls -lah .next || (echo "No .next output!" && exit 1)
-
-      # Package for SWA (no --app-artifact-location)
-      - name: Package with SWA CLI
-        working-directory: src/web
-        run: |
-          npx @azure/static-web-apps-cli@1.1.7 build \
-            --app-location . \
-            --output-location .swa/build
-          echo "Packaged artifact:"
-          ls -lah .swa/build || true
-
-      # Upload the already built artifact
-      - name: Deploy SWA (upload prebuilt)
+      # Deploy — the SWA Action will build the Next.js app for you
+      - name: Deploy SWA
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
-          deployment_action: upload
-          app_location: "src/web"        # app root (package.json + staticwebapp.config.json)
-          output_location: ".swa/build"  # relative to app_location
-          skip_app_build: true
+          app_location: "src/web"
+          # Optional, but makes intent explicit:
+          app_build_command: "npm ci && NEXT_TELEMETRY_DISABLED=1 NEXT_DISABLE_SOURCEMAPS=1 npm run build"
+          # Do not set skip_app_build or output_location when you want the Action to build
