@@ -1,14 +1,20 @@
 name: Deploy Static Web App
 
 on:
-  workflow_dispatch:  # or push: { branches: [main] } if you want auto-deploys
+  workflow_dispatch: {}
+  # or:
+  # push:
+  #   branches: [ main ]
+  #   paths: [ 'src/web/**', '.github/workflows/deploy-swa.yml' ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
     env:
-      SWA_NAME: 'swa-rivals-comp-dev'   # from bicep
-      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }} # set in repo Variables (func-xxx.azurewebsites.net)
+      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }}  # e.g. func-rivals-comp-dev.azurewebsites.net
 
     steps:
       - uses: actions/checkout@v4
@@ -17,15 +23,14 @@ jobs:
         with:
           node-version: '20'
 
-      # Patch the placeholder JUST ON CI
+      # Patch placeholder in SWA config and validate JSON
       - name: Patch SWA config with Function host
         run: |
           FILE=src/web/staticwebapp.config.json
-          sed -i "s#__FUNCTION_HOST__#${{ vars.FUNCTION_HOST }}#g" "$FILE"
-          # validate JSON to fail fast
+          sed -i "s#__FUNCTION_HOST__#${FUNCTION_HOST}#g" "$FILE"
           node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
 
-      # 1) Install & build Next.js (creates .next)
+      # Build Next.js (.next)
       - name: Build Next.js
         working-directory: src/web
         run: |
@@ -35,23 +40,22 @@ jobs:
           npm run build
           ls -lah .next || (echo "No .next output!" && exit 1)
 
-      # 2) Package for SWA using the built artifact
+      # Package for SWA (no --app-artifact-location)
       - name: Package with SWA CLI
         working-directory: src/web
         run: |
-          npx @azure/static-web-apps-cli build \
+          npx @azure/static-web-apps-cli@1.1.7 build \
             --app-location . \
-            --app-artifact-location .next \
             --output-location .swa/build
           echo "Packaged artifact:"
           ls -lah .swa/build || true
 
-      # 3) Upload the prebuilt SWA artifact
+      # Upload the already built artifact
       - name: Deploy SWA (upload prebuilt)
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
           deployment_action: upload
-          app_location: "src/web"        # app root (where package.json & staticwebapp.config.json live)
+          app_location: "src/web"        # app root (package.json + staticwebapp.config.json)
           output_location: ".swa/build"  # relative to app_location
           skip_app_build: true
