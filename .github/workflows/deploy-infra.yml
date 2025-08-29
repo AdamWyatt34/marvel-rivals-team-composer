@@ -22,7 +22,7 @@ on:
       enableOpenAI:
         description: 'Provision Azure OpenAI (true/false)'
         required: true
-        default: 'false'
+        default: 'true'
 
 jobs:
   deploy:
