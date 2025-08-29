@@ -1,10 +1,11 @@
 {
-  "navigationFallback": { "rewrite": "/index.html", "exclude": ["/api/*"] },
+  "version": 1,
+  "navigationFallback": { "rewrite": "/index.html", "exclude": ["/api/*", "/_next/*", "/*.js", "/*.css", "/*.png", "/*.jpg", "/*.svg", "/*.ico"] },
   "routes": [
     {
       "route": "/api/*",
       "allowedRoles": ["anonymous"],
-      "rewrite": "http://localhost:7071/api/{*path}"
+      "rewrite": "https://__FUNCTION_HOST__/api"
     }
   ]
 }
