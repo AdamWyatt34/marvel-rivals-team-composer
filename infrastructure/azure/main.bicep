@@ -66,7 +66,7 @@ module openai 'modules/azureopenai.bicep' = if (enableOpenAI) {
 var aoaiId = resourceId('Microsoft.CognitiveServices/accounts', openAiName)
 
 /* AOAI values without touching module outputs */
-var aoaiEndpointValue     = enableOpenAI ? reference(aoaiId, '2023-05-01', 'full').endpoint : ''
+var aoaiEndpointValue   = enableOpenAI ? reference(aoaiId, '2023-05-01', 'full').properties.endpoint : ''
 var aoaiPrimaryKeyValue   = enableOpenAI ? listKeys(aoaiId, '2023-05-01').key1 : ''
 var aoaiDeploymentValue   = enableOpenAI ? openAiDeployment : ''
 
