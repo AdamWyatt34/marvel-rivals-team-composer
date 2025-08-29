@@ -30,6 +30,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: write  # for Actions Variables
 
     env:
       RG:  ${{ github.event.inputs.resourceGroup }}
