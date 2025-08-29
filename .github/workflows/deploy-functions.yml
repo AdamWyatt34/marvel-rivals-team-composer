@@ -7,24 +7,36 @@ on:
       - 'src/Composer.Core/**'
       - 'src/Composer.Functions/**'
       - '.github/workflows/deploy-functions.yml'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      DOTNET_VERSION: '9.0.x'
-      FUNCTIONAPP_NAME: 'func-rivals-comp-dev' # keep in sync with bicep nameSuffix
+      DOTNET_VERSION: '9.0.x'                  # Functions v4 supports .NET 8
+      FUNCTIONAPP_NAME: 'func-rivals-comp-dev' # keep in sync with Bicep
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
-        with: { dotnet-version: ${{ env.DOTNET_VERSION }} }
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Restore & Build
+      - name: Restore
         run: |
-          dotnet build src/Composer.Core/Composer.Core/Composer.Core.csproj -c Release
-          dotnet publish src/Composer.Core/Composer.Functions/Composer.Functions.csproj -c Release -o publish
+          dotnet restore src/Composer.Core/Composer.Functions/Composer.Functions.csproj
+
+      - name: Build
+        run: |
+          dotnet build src//Composer.Core/Composer.Functions/Composer.Functions.csproj -c Release --no-restore
+
+      - name: Publish
+        run: |
+          dotnet publish src//Composer.Core/Composer.Functions/Composer.Functions.csproj -c Release -o publish
+          echo "Publish contents:"
+          ls -la publish
 
       - name: Deploy to Azure Functions
         uses: Azure/functions-action@v1
