@@ -51,28 +51,19 @@ jobs:
       - name: Ensure resource group
         run: az group create -n "$RG" -l "$LOC"
 
-      - name: Deploy Bicep
-        id: deploy
+      - name: Deploy Bicep (simple)
+        shell: bash
         run: |
           set -Eeuo pipefail
           az deployment group create \
             -g "$RG" \
             -f infrastructure/azure/main.bicep \
             -p location="$LOC" appName="$APP" environment="$ENV" enableOpenAI=$OPENAI \
-            -o json > deploy.json
-
-          # If the CLI returned a non-zero code, show the raw response
-          if [ $? -ne 0 ]; then
-            echo "Deployment failed; raw response:"
-            cat deploy.json || true
-            exit 1
-          fi
-
-          # Extract just the outputs with jq
-          jq '.properties.outputs' deploy.json > outputs.json
-          echo "Outputs:"
-          cat outputs.json
-      
+            -o none
+          az deployment group show \
+            -g "$RG" \
+            --name main \
+            --query properties.outputs -o json > outputs.json
 
       - name: Extract outputs
         id: out
