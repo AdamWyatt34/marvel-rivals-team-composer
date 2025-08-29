@@ -1,4 +1,6 @@
 param location string = 'eastus'
+@description('Region for Static Web App (SWA must be in specific regions)')
+param swaLocation string = 'eastus2' // pick one of: westus2, centralus, eastus2, westeurope, eastasia
 param appName string
 @allowed([ 'dev', 'uat', 'prod' ])
 param environment string = 'dev'
@@ -40,7 +42,7 @@ module swa 'modules/staticwebapp.bicep' = {
   name: 'swa'
   params: {
     name: 'swa-${nameSuffix}'
-    location: location
+    location: swaLocation
   }
 }
 
