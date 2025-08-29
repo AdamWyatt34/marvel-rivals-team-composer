@@ -3,11 +3,26 @@ name: Deploy Infra (Bicep)
 on:
   workflow_dispatch:
     inputs:
-      resourceGroup:   { description: 'RG name', required: true, default: 'rg-rivals-comp' }
-      location:        { description: 'Region',  required: true, default: 'eastus' }
-      appName:         { description: 'Base name', required: true, default: 'rivals-comp' }
-      environment:     { description: 'env', required: true, default: 'dev' }
-      enableOpenAI:    { description: 'true/false', required: true, default: 'true' }
+      resourceGroup:
+        description: 'Azure Resource Group (must exist or grant sub-level rights to create)'
+        required: true
+        default: 'rg-rivals-comp'
+      location:
+        description: 'Azure region'
+        required: true
+        default: 'eastus'
+      appName:
+        description: 'Base app name (used in resource names)'
+        required: true
+        default: 'rivals-comp'
+      environment:
+        description: 'Environment'
+        required: true
+        default: 'dev'
+      enableOpenAI:
+        description: 'Provision Azure OpenAI (true/false)'
+        required: true
+        default: 'false'
 
 jobs:
   deploy:
@@ -17,55 +32,49 @@ jobs:
       contents: read
 
     env:
-      RG:      ${{ github.event.inputs.resourceGroup }}
-      LOC:     ${{ github.event.inputs.location }}
-      APP:     ${{ github.event.inputs.appName }}
-      ENV:     ${{ github.event.inputs.environment }}
-      OPENAI:  ${{ github.event.inputs.enableOpenAI }}
+      RG:  ${{ github.event.inputs.resourceGroup }}
+      LOC: ${{ github.event.inputs.location }}
+      APP: ${{ github.event.inputs.appName }}
+      ENV: ${{ github.event.inputs.environment }}
+      OPENAI: ${{ github.event.inputs.enableOpenAI }}
 
     steps:
       - uses: actions/checkout@v4
 
+      # OIDC login (NO client secret). Make sure you created the Entra app + federated credential
+      # and set these repo secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
-          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Optional: only if your principal has sub-scope rights;
-      # otherwise pre-create the RG once and delete this step.
+      # Optional: create the RG. This requires Contributor at subscription scope.
+      # If you granted only RG-scope permissions, pre-create the RG and set continue-on-error true here or remove this step.
       - name: Ensure resource group
         continue-on-error: true
-        run: az group create -n "$RG" -l "$LOC" -o none
-
-      # 1) Build Bicep -> ARM JSON explicitly (avoids the stream bug)
-      - name: Build Bicep to ARM
         run: |
-          az bicep version
-          az bicep build \
-            --file infrastructure/azure/main.bicep \
-            > infrastructure/azure/main.compiled.json
-      
+          az group create -n "$RG" -l "$LOC"
 
-      # 2) Deploy the compiled JSON ARM template (no validation pass)
-      - name: Deploy ARM (compiled)
+      # Deploy Bicep using the ARM/Bicep GitHub Action (no output-stream quirks)
+      - name: Deploy infra with Bicep
         id: deploy
         uses: azure/arm-deploy@v1
         with:
           scope: resourcegroup
-          subscriptionId:   ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RG }}
-          deploymentName:    infra-${{ github.run_id }}
-          template: infrastructure/azure/main.compiled.json
-          parameters: |
+          template: infrastructure/azure/main.bicep
+          parameters: >
             location=${{ env.LOC }}
             appName=${{ env.APP }}
             environment=${{ env.ENV }}
             enableOpenAI=${{ env.OPENAI }}
-          failOnStdErr: false
-          additionalArguments: --only-show-errors
 
+      # The arm-deploy action exposes each Bicep output directly as a step output.
+      # Our main.bicep outputs: functionHost, functionName, staticWebAppName, staticWebAppHost,
+      # storageAccountName, storageBlobEndpoint, appConfigEndpoint, openAiEndpoint
       - name: Echo outputs
         run: |
           echo "functionHost       = ${{ steps.deploy.outputs.functionHost }}"
@@ -77,23 +86,27 @@ jobs:
           echo "appConfigEndpoint  = ${{ steps.deploy.outputs.appConfigEndpoint }}"
           echo "openAiEndpoint     = ${{ steps.deploy.outputs.openAiEndpoint }}"
 
-      # optional: write outputs as repo Actions Variables for other workflows
+      # Upsert repo-level Actions Variables used by your other workflows (Functions/SWA)
       - name: Upsert GitHub Actions Variables
         env:
-          GH_TOKEN:                ${{ github.token }}
-          REPO:                    ${{ github.repository }}
-          FUNCTION_HOST:           ${{ steps.deploy.outputs.functionHost }}
-          FUNCTION_NAME:           ${{ steps.deploy.outputs.functionName }}
-          SWA_NAME:                ${{ steps.deploy.outputs.staticWebAppName }}
-          SWA_HOST:                ${{ steps.deploy.outputs.staticWebAppHost }}
-          STORAGE_ACCOUNT_NAME:    ${{ steps.deploy.outputs.storageAccountName }}
-          STORAGE_BLOB_ENDPOINT:   ${{ steps.deploy.outputs.storageBlobEndpoint }}
-          APPCONFIG_ENDPOINT:      ${{ steps.deploy.outputs.appConfigEndpoint }}
-          OPENAI_ENDPOINT:         ${{ steps.deploy.outputs.openAiEndpoint }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          FUNCTION_HOST: ${{ steps.deploy.outputs.functionHost }}
+          FUNCTION_NAME: ${{ steps.deploy.outputs.functionName }}
+          SWA_NAME: ${{ steps.deploy.outputs.staticWebAppName }}
+          SWA_HOST: ${{ steps.deploy.outputs.staticWebAppHost }}
+          STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.storageAccountName }}
+          STORAGE_BLOB_ENDPOINT: ${{ steps.deploy.outputs.storageBlobEndpoint }}
+          APPCONFIG_ENDPOINT: ${{ steps.deploy.outputs.appConfigEndpoint }}
+          OPENAI_ENDPOINT: ${{ steps.deploy.outputs.openAiEndpoint }}
         run: |
           upsert_var () {
-            local NAME=$1 VALUE=$2
-            if [ -z "$VALUE" ] || [ "$VALUE" = "null" ]; then echo "Skip $NAME"; return 0; fi
+            local NAME=$1
+            local VALUE=$2
+            # skip empty values (e.g., OPENAI_ENDPOINT when enableOpenAI=false)
+            if [ -z "$VALUE" ] || [ "$VALUE" = "null" ]; then
+              echo "Skipping $NAME (empty)"; return 0
+            fi
             gh api -X PATCH "repos/$REPO/actions/variables/$NAME" -f name="$NAME" -f value="$VALUE" \
               || gh api -X POST "repos/$REPO/actions/variables" -f name="$NAME" -f value="$VALUE"
           }
@@ -105,3 +118,18 @@ jobs:
           upsert_var STORAGE_BLOB_ENDPOINT "$STORAGE_BLOB_ENDPOINT"
           upsert_var APPCONFIG_ENDPOINT "$APPCONFIG_ENDPOINT"
           upsert_var OPENAI_ENDPOINT "$OPENAI_ENDPOINT"
+
+      - name: Summary
+        run: |
+          {
+            echo "### Infra deployment outputs"
+            echo ""
+            echo "- Function Host:  \`${{ steps.deploy.outputs.functionHost }}\`"
+            echo "- Function Name:  \`${{ steps.deploy.outputs.functionName }}\`"
+            echo "- SWA Name:       \`${{ steps.deploy.outputs.staticWebAppName }}\`"
+            echo "- SWA Host:       \`${{ steps.deploy.outputs.staticWebAppHost }}\`"
+            echo "- Storage Name:   \`${{ steps.deploy.outputs.storageAccountName }}\`"
+            echo "- Blob Endpoint:  \`${{ steps.deploy.outputs.storageBlobEndpoint }}\`"
+            echo "- AppConfig:      \`${{ steps.deploy.outputs.appConfigEndpoint }}\`"
+            echo "- OpenAI:         \`${{ steps.deploy.outputs.openAiEndpoint || 'n/a' }}\`"
+          } >> $GITHUB_STEP_SUMMARY
