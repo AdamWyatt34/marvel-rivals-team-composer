@@ -61,6 +61,13 @@ module openai 'modules/azureopenai.bicep' = if (enableOpenAI) {
   }
 }
 
+var aoaiId = resourceId('Microsoft.CognitiveServices/accounts', openAiName)
+
+/* AOAI values without touching module outputs */
+var aoaiEndpointValue     = enableOpenAI ? reference(aoaiId, '2023-05-01', 'full').endpoint : ''
+var aoaiPrimaryKeyValue   = enableOpenAI ? listKeys(aoaiId, '2023-05-01').key1 : ''
+var aoaiDeploymentValue   = enableOpenAI ? openAiDeployment : ''
+
 module func 'modules/functionapp.bicep' = {
   name: 'func'
   params: {
@@ -74,9 +81,9 @@ module func 'modules/functionapp.bicep' = {
     cacheMinutes: 5
     allowedOrigins: allowedOrigins
     openAiEnabled: enableOpenAI
-    openAiEndpoint: enableOpenAI ? openai.outputs.endpoint : ''
-    openAiKey: enableOpenAI ? openai.outputs.primaryKey : ''
-    openAiDeployment: enableOpenAI ? openai.outputs.deploymentName : ''
+    openAiEndpoint: aoaiEndpointValue
+    openAiKey: aoaiPrimaryKeyValue
+    openAiDeployment: aoaiDeploymentValue
   }
 }
 
@@ -124,4 +131,5 @@ output staticWebAppHost string      = swa.outputs.defaultHostname
 output storageAccountName string    = storage.outputs.name
 output storageBlobEndpoint string   = storage.outputs.blobEndpoint
 output appConfigEndpoint string     = appconfig.outputs.endpoint
-output openAiEndpoint string        = enableOpenAI ? openai.outputs.endpoint : ''
+output openAiEndpoint string        = aoaiEndpointValue
+

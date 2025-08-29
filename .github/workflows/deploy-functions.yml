@@ -1,12 +1,6 @@
 name: Deploy Functions API
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'src/Composer.Core/**'
-      - 'src/Composer.Functions/**'
-      - '.github/workflows/deploy-functions.yml'
   workflow_dispatch:
 
 jobs:

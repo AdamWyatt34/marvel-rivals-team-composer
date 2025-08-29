@@ -16,7 +16,8 @@ resource aoai 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
 }
 
 resource dep 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
-  name: '${name}/${deploymentName}'
+  name: deploymentName
+  parent: aoai
   properties: {
     model: {
       format: 'OpenAI'
@@ -29,6 +30,6 @@ resource dep 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
 
 var keys = aoai.listKeys()
 
-output endpoint string = aoai.properties.endpoint
-output primaryKey string = keys.key1
-output deploymentName string = deploymentName
+output endpoint string        = aoai.properties.endpoint
+output primaryKey string      = keys.key1
+output deploymentName string  = deploymentName

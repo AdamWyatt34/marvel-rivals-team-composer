@@ -14,4 +14,4 @@ resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 }
 
 output name string = sa.name
-output blobEndpoint string = 'https://${sa.name}.blob.core.windows.net'
+output blobEndpoint string = 'https://${sa.name}.blob.${environment().suffixes.storage}'
