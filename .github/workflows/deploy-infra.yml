@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       resourceGroup:
-        description: 'Azure Resource Group'
+        description: 'Azure Resource Group (must exist or grant sub-level rights to create)'
         required: true
         default: 'rg-rivals-comp'
       location:
@@ -12,11 +12,11 @@ on:
         required: true
         default: 'eastus'
       appName:
-        description: 'App base name'
+        description: 'Base app name (used in resource names)'
         required: true
         default: 'rivals-comp'
       environment:
-        description: 'Environment (dev|uat|prod)'
+        description: 'Environment'
         required: true
         default: 'dev'
       enableOpenAI:
@@ -32,7 +32,7 @@ jobs:
       contents: read
 
     env:
-      RG: ${{ github.event.inputs.resourceGroup }}
+      RG:  ${{ github.event.inputs.resourceGroup }}
       LOC: ${{ github.event.inputs.location }}
       APP: ${{ github.event.inputs.appName }}
       ENV: ${{ github.event.inputs.environment }}
@@ -41,6 +41,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # OIDC login (NO client secret). Make sure you created the Entra app + federated credential
+      # and set these repo secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID
       - name: Azure Login (OIDC)
         uses: azure/login@v2
         with:
@@ -48,51 +50,86 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # Optional: create the RG. This requires Contributor at subscription scope.
+      # If you granted only RG-scope permissions, pre-create the RG and set continue-on-error true here or remove this step.
       - name: Ensure resource group
-        run: az group create -n "$RG" -l "$LOC"
-
-      - name: Deploy Bicep (simple)
-        shell: bash
+        continue-on-error: true
         run: |
-          set -Eeuo pipefail
-          az deployment group create \
-            -g "$RG" \
-            -f infrastructure/azure/main.bicep \
-            -p location="$LOC" appName="$APP" environment="$ENV" enableOpenAI=$OPENAI \
-            -o none
-          az deployment group show \
-            -g "$RG" \
-            --name main \
-            --query properties.outputs -o json > outputs.json
+          az group create -n "$RG" -l "$LOC"
 
-      - name: Extract outputs
-        id: out
+      # Deploy Bicep using the ARM/Bicep GitHub Action (no output-stream quirks)
+      - name: Deploy infra with Bicep
+        id: deploy
+        uses: azure/arm-deploy@v1
+        with:
+          scope: resourcegroup
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RG }}
+          template: infrastructure/azure/main.bicep
+          parameters: >
+            location=${{ env.LOC }}
+            appName=${{ env.APP }}
+            environment=${{ env.ENV }}
+            enableOpenAI=${{ env.OPENAI }}
+
+      # The arm-deploy action exposes each Bicep output directly as a step output.
+      # Our main.bicep outputs: functionHost, functionName, staticWebAppName, staticWebAppHost,
+      # storageAccountName, storageBlobEndpoint, appConfigEndpoint, openAiEndpoint
+      - name: Echo outputs
         run: |
-          echo "FUNCTION_HOST=$(jq -r '.functionHost.value' outputs.json)" >> $GITHUB_OUTPUT
-          echo "FUNCTION_NAME=$(jq -r '.functionName.value' outputs.json)" >> $GITHUB_OUTPUT
-          echo "SWA_NAME=$(jq -r '.staticWebAppName.value' outputs.json)" >> $GITHUB_OUTPUT
-          echo "SWA_HOST=$(jq -r '.staticWebAppHost.value' outputs.json)" >> $GITHUB_OUTPUT
+          echo "functionHost       = ${{ steps.deploy.outputs.functionHost }}"
+          echo "functionName       = ${{ steps.deploy.outputs.functionName }}"
+          echo "staticWebAppName   = ${{ steps.deploy.outputs.staticWebAppName }}"
+          echo "staticWebAppHost   = ${{ steps.deploy.outputs.staticWebAppHost }}"
+          echo "storageAccountName = ${{ steps.deploy.outputs.storageAccountName }}"
+          echo "storageBlobEndpoint= ${{ steps.deploy.outputs.storageBlobEndpoint }}"
+          echo "appConfigEndpoint  = ${{ steps.deploy.outputs.appConfigEndpoint }}"
+          echo "openAiEndpoint     = ${{ steps.deploy.outputs.openAiEndpoint }}"
 
+      # Upsert repo-level Actions Variables used by your other workflows (Functions/SWA)
       - name: Upsert GitHub Actions Variables
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
+          FUNCTION_HOST: ${{ steps.deploy.outputs.functionHost }}
+          FUNCTION_NAME: ${{ steps.deploy.outputs.functionName }}
+          SWA_NAME: ${{ steps.deploy.outputs.staticWebAppName }}
+          SWA_HOST: ${{ steps.deploy.outputs.staticWebAppHost }}
+          STORAGE_ACCOUNT_NAME: ${{ steps.deploy.outputs.storageAccountName }}
+          STORAGE_BLOB_ENDPOINT: ${{ steps.deploy.outputs.storageBlobEndpoint }}
+          APPCONFIG_ENDPOINT: ${{ steps.deploy.outputs.appConfigEndpoint }}
+          OPENAI_ENDPOINT: ${{ steps.deploy.outputs.openAiEndpoint }}
         run: |
           upsert_var () {
             local NAME=$1
             local VALUE=$2
-            # try update, else create
+            # skip empty values (e.g., OPENAI_ENDPOINT when enableOpenAI=false)
+            if [ -z "$VALUE" ] || [ "$VALUE" = "null" ]; then
+              echo "Skipping $NAME (empty)"; return 0
+            fi
             gh api -X PATCH "repos/$REPO/actions/variables/$NAME" -f name="$NAME" -f value="$VALUE" \
               || gh api -X POST "repos/$REPO/actions/variables" -f name="$NAME" -f value="$VALUE"
           }
-          upsert_var FUNCTION_HOST "${{ steps.out.outputs.FUNCTION_HOST }}"
-          upsert_var FUNCTION_NAME "${{ steps.out.outputs.FUNCTION_NAME }}"
-          upsert_var SWA_NAME "${{ steps.out.outputs.SWA_NAME }}"
-          upsert_var SWA_HOST "${{ steps.out.outputs.SWA_HOST }}"
+          upsert_var FUNCTION_HOST "$FUNCTION_HOST"
+          upsert_var FUNCTION_NAME "$FUNCTION_NAME"
+          upsert_var SWA_NAME "$SWA_NAME"
+          upsert_var SWA_HOST "$SWA_HOST"
+          upsert_var STORAGE_ACCOUNT_NAME "$STORAGE_ACCOUNT_NAME"
+          upsert_var STORAGE_BLOB_ENDPOINT "$STORAGE_BLOB_ENDPOINT"
+          upsert_var APPCONFIG_ENDPOINT "$APPCONFIG_ENDPOINT"
+          upsert_var OPENAI_ENDPOINT "$OPENAI_ENDPOINT"
 
       - name: Summary
         run: |
-          echo "Function Host : ${{ steps.out.outputs.FUNCTION_HOST }}" >> $GITHUB_STEP_SUMMARY
-          echo "Function Name : ${{ steps.out.outputs.FUNCTION_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "SWA Name      : ${{ steps.out.outputs.SWA_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "SWA Host      : ${{ steps.out.outputs.SWA_HOST }}" >> $GITHUB_STEP_SUMMARY
+          {
+            echo "### Infra deployment outputs"
+            echo ""
+            echo "- Function Host:  \`${{ steps.deploy.outputs.functionHost }}\`"
+            echo "- Function Name:  \`${{ steps.deploy.outputs.functionName }}\`"
+            echo "- SWA Name:       \`${{ steps.deploy.outputs.staticWebAppName }}\`"
+            echo "- SWA Host:       \`${{ steps.deploy.outputs.staticWebAppHost }}\`"
+            echo "- Storage Name:   \`${{ steps.deploy.outputs.storageAccountName }}\`"
+            echo "- Blob Endpoint:  \`${{ steps.deploy.outputs.storageBlobEndpoint }}\`"
+            echo "- AppConfig:      \`${{ steps.deploy.outputs.appConfigEndpoint }}\`"
+            echo "- OpenAI:         \`${{ steps.deploy.outputs.openAiEndpoint || 'n/a' }}\`"
+          } >> $GITHUB_STEP_SUMMARY
