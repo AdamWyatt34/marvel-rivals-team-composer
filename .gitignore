@@ -38,4 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+src/web/next-env.d.ts
+/src/Composer.Core/.idea
+/src/Composer.Core/Composer.Core/bin
+/src/Composer.Core/Composer.Core/obj
+/src/web/.next
+/src/web/node_modules

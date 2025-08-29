@@ -1,0 +1,330 @@
+[
+  {
+    "id": "phoenix",
+    "name": "Phoenix",
+    "role": "Duelist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "ultron",
+    "name": "Ultron",
+    "role": "Strategist",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "emma-frost",
+    "name": "Emma Frost",
+    "role": "Vanguard",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "the-thing",
+    "name": "The Thing",
+    "role": "Vanguard",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "human-torch",
+    "name": "Human Torch",
+    "role": "Duelist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "storm",
+    "name": "Storm",
+    "role": "Duelist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "iron-man",
+    "name": "Iron Man",
+    "role": "Duelist",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "invisible-woman",
+    "name": "Invisible Woman",
+    "role": "Strategist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "mr-fantastic",
+    "name": "Mr. Fantastic",
+    "role": "Duelist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "venom",
+    "name": "Venom",
+    "role": "Vanguard",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "black-panther",
+    "name": "Black Panther",
+    "role": "Duelist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "cloak-and-dagger",
+    "name": "Cloak & Dagger",
+    "role": "Strategist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "groot",
+    "name": "Groot",
+    "role": "Vanguard",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "hela",
+    "name": "Hela",
+    "role": "Duelist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "luna-snow",
+    "name": "Luna Snow",
+    "role": "Strategist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "magik",
+    "name": "Magik",
+    "role": "Duelist",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "iron-fist",
+    "name": "Iron Fist",
+    "role": "Duelist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "peni-parker",
+    "name": "Peni Parker",
+    "role": "Vanguard",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "hulk",
+    "name": "Hulk",
+    "role": "Vanguard",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "hawkeye",
+    "name": "Hawkeye",
+    "role": "Duelist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "psylocke",
+    "name": "Psylocke",
+    "role": "Duelist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "captain-america",
+    "name": "Captain America",
+    "role": "Vanguard",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "moon-knight",
+    "name": "Moon Knight",
+    "role": "Duelist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "loki",
+    "name": "Loki",
+    "role": "Strategist",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "mantis",
+    "name": "Mantis",
+    "role": "Strategist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "spider-man",
+    "name": "Spider-Man",
+    "role": "Duelist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "rocket-racoon",
+    "name": "Rocket Racoon",
+    "role": "Strategist",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "wolverine",
+    "name": "Wolverine",
+    "role": "Duelist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "thor",
+    "name": "Thor",
+    "role": "Vanguard",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "squirrel-girl",
+    "name": "Squirrel Girl",
+    "role": "Duelist",
+    "tags": [
+      "tier:B"
+    ]
+  },
+  {
+    "id": "namor",
+    "name": "Namor",
+    "role": "Duelist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "punisher",
+    "name": "Punisher",
+    "role": "Duelist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "jeff",
+    "name": "Jeff",
+    "role": "Strategist",
+    "tags": [
+      "tier:D"
+    ]
+  },
+  {
+    "id": "scarlet-witch",
+    "name": "Scarlet Witch",
+    "role": "Duelist",
+    "tags": [
+      "tier:D"
+    ]
+  },
+  {
+    "id": "black-widow",
+    "name": "Black Widow",
+    "role": "Duelist",
+    "tags": [
+      "tier:D"
+    ]
+  },
+  {
+    "id": "adam-warlock",
+    "name": "Adam Warlock",
+    "role": "Strategist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "winter-soldier",
+    "name": "Winter Soldier",
+    "role": "Duelist",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "magneto",
+    "name": "Magneto",
+    "role": "Vanguard",
+    "tags": [
+      "tier:S"
+    ]
+  },
+  {
+    "id": "doctor-strange",
+    "name": "Doctor Strange",
+    "role": "Vanguard",
+    "tags": [
+      "tier:A"
+    ]
+  },
+  {
+    "id": "star-lord",
+    "name": "Star-Lord",
+    "role": "Duelist",
+    "tags": [
+      "tier:C"
+    ]
+  },
+  {
+    "id": "blade",
+    "name": "Blade",
+    "role": "Duelist",
+    "tags": [
+      "tier:B"
+    ]
+  }
+]

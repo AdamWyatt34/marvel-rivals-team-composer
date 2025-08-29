@@ -1,0 +1,45 @@
+name: Deploy Static Web App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/web/**'
+      - '.github/workflows/deploy-swa.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SWA_NAME: 'swa-rivals-comp-dev'  # from bicep
+      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }} # set in repo Variables: e.g., func-rivals-comp-dev.azurewebsites.net
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch SWA config with Function host
+        run: |
+          FILE=src/web/staticwebapp.config.json
+          echo "Patching $FILE with FUNCTION_HOST=${FUNCTION_HOST}"
+          sed -i "s#\"rewrite\": \".*\"#\"rewrite\": \"https://${FUNCTION_HOST}/api/{*path}\"#g" $FILE
+          echo "Result:"
+          cat $FILE
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build web
+        working-directory: src/web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy SWA
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
+          app_location: "src/web"
+          output_location: ".next"
+          skip_app_build: true
+          action: ''

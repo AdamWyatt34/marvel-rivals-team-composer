@@ -1,0 +1,94 @@
+name: Deploy Infra (Bicep)
+
+on:
+  workflow_dispatch:
+    inputs:
+      resourceGroup:
+        description: 'Azure Resource Group'
+        required: true
+        default: 'rg-rivals-comp'
+      location:
+        description: 'Azure region'
+        required: true
+        default: 'eastus'
+      appName:
+        description: 'App base name'
+        required: true
+        default: 'rivals-comp'
+      environment:
+        description: 'Environment (dev|uat|prod)'
+        required: true
+        default: 'dev'
+      enableOpenAI:
+        description: 'Provision Azure OpenAI (true/false)'
+        required: true
+        default: 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      RG: ${{ github.event.inputs.resourceGroup }}
+      LOC: ${{ github.event.inputs.location }}
+      APP: ${{ github.event.inputs.appName }}
+      ENV: ${{ github.event.inputs.environment }}
+      OPENAI: ${{ github.event.inputs.enableOpenAI }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Ensure resource group
+        run: az group create -n "$RG" -l "$LOC"
+
+      - name: Deploy Bicep
+        id: deploy
+        run: |
+          az deployment group create \
+            -g "$RG" \
+            -f main.bicep \
+            -p location="$LOC" appName="$APP" environment="$ENV" enableOpenAI=$OPENAI \
+            --query properties.outputs > outputs.json
+          cat outputs.json
+
+      - name: Extract outputs
+        id: out
+        run: |
+          echo "FUNCTION_HOST=$(jq -r '.functionHost.value' outputs.json)" >> $GITHUB_OUTPUT
+          echo "FUNCTION_NAME=$(jq -r '.functionName.value' outputs.json)" >> $GITHUB_OUTPUT
+          echo "SWA_NAME=$(jq -r '.staticWebAppName.value' outputs.json)" >> $GITHUB_OUTPUT
+          echo "SWA_HOST=$(jq -r '.staticWebAppHost.value' outputs.json)" >> $GITHUB_OUTPUT
+
+      - name: Upsert GitHub Actions Variables
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          upsert_var () {
+            local NAME=$1
+            local VALUE=$2
+            # try update, else create
+            gh api -X PATCH "repos/$REPO/actions/variables/$NAME" -f name="$NAME" -f value="$VALUE" \
+              || gh api -X POST "repos/$REPO/actions/variables" -f name="$NAME" -f value="$VALUE"
+          }
+          upsert_var FUNCTION_HOST "${{ steps.out.outputs.FUNCTION_HOST }}"
+          upsert_var FUNCTION_NAME "${{ steps.out.outputs.FUNCTION_NAME }}"
+          upsert_var SWA_NAME "${{ steps.out.outputs.SWA_NAME }}"
+          upsert_var SWA_HOST "${{ steps.out.outputs.SWA_HOST }}"
+
+      - name: Summary
+        run: |
+          echo "Function Host : ${{ steps.out.outputs.FUNCTION_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "Function Name : ${{ steps.out.outputs.FUNCTION_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "SWA Name      : ${{ steps.out.outputs.SWA_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "SWA Host      : ${{ steps.out.outputs.SWA_HOST }}" >> $GITHUB_STEP_SUMMARY

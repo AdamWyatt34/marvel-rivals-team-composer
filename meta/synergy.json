@@ -1,0 +1,226 @@
+[
+  {
+    "pair": [
+      "doctor-strange",
+      "scarlet-witch"
+    ],
+    "score": 0.6
+  },
+  {
+    "pair": [
+      "luna-snow",
+      "hawkeye"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "luna-snow",
+      "iron-fist"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "magik",
+      "black-panther"
+    ],
+    "score": 0.1
+  },
+  {
+    "pair": [
+      "adam-warlock",
+      "luna-snow"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "human-torch",
+      "spiderm-man"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "invisible-woman",
+      "human-torch"
+    ],
+    "score": 0.5
+  },
+  {
+    "pair": [
+      "invisible-woman",
+      "mr-fantastic"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "invisible-woman",
+      "the-thing"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "wolverine",
+      "hulk"
+    ],
+    "score": 0.1
+  },
+  {
+    "pair": [
+      "wolverine",
+      "the-thing"
+    ],
+    "score": 0.1
+  },
+  {
+    "pair": [
+      "human-torch",
+      "the-thing"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "hulk",
+      "namor"
+    ],
+    "score": 0.7
+  },
+  {
+    "pair": [
+      "jeff",
+      "storm"
+    ],
+    "score": 0.6
+  },
+  {
+    "pair": [
+      "cloak-and-dagger",
+      "moon-knight"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "cloak-and-dagger",
+      "blade"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "emma-frost",
+      "magneto"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "emma-frost",
+      "psylocke"
+    ],
+    "score": 0.5
+  },
+  {
+    "pair": [
+      "black-widow",
+      "punisher"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "groot",
+      "rocket-racoon"
+    ],
+    "score": 0.1
+  },
+  {
+    "pair": [
+      "groot",
+      "jeff"
+    ],
+    "score": 0.1
+  },
+  {
+    "pair": [
+      "phoenix",
+      "wolverine"
+    ],
+    "score": 0.6
+  },
+  {
+    "pair": [
+      "hela",
+      "thor"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "rocket-racoon",
+      "peni-parker"
+    ],
+    "score": 0.7
+  },
+  {
+    "pair": [
+      "rocket-racoon",
+      "star-lord"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "captain-america",
+      "winter-soldier"
+    ],
+    "score": 0.1
+  },
+  {
+    "pair": [
+      "iron-man",
+      "ultron"
+    ],
+    "score": 0.5
+  },
+  {
+    "pair": [
+      "iron-man",
+      "squirrel-girl"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "venom",
+      "jeff"
+    ],
+    "score": 0.3
+  },
+  {
+    "pair": [
+      "venom",
+      "hela"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "mantis",
+      "loki"
+    ],
+    "score": 0.2
+  },
+  {
+    "pair": [
+      "mantis",
+      "groot"
+    ],
+    "score": 0.3
+  }
+]

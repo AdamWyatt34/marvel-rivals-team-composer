@@ -1,0 +1,48 @@
+/* ---- Canvas ---- */
+:root { color-scheme: light dark; }
+
+html, body, #__next, body > div:first-child, .app-body {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    min-height: 100%;
+    margin: 0;
+}
+
+/* ---- Light defaults ---- */
+:root {
+    --bg:#ffffff;
+    --text:#111111;
+    --muted:#666;
+    --muted-strong:#444;
+    --border:#e5e5e5;
+    --muted-border:#b7b7b7;
+    --card:#ffffff;
+    --chip:#f4f4f5;
+    --my:#2563eb; --enemy:#dc2626;
+
+    --role-strat:#fde68a; --role-vang:#bfdbfe; --role-duel:#fca5a5;
+    --tier-s:#111111; --tier-a:#0aa770; --tier-b:#0990ff; --tier-c:#999; --tier-d:#bbb; --tier-on-dark:#fff;
+}
+
+/* ---- Dark via system ---- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg:#0f1115;
+        --text:#f1f5f9;
+        --muted:#cbd5e1;
+        --muted-strong:#e5e7eb;
+        --border:#2a2f3a;
+        --muted-border:#505665;
+        --card:#171a21;
+        --chip:#1f232d;
+        --my:#3b82f6; --enemy:#f43f5e;
+
+        --role-strat:#6d5200; --role-vang:#104575; --role-duel:#6d2323;
+        --tier-s:#e5e7eb; --tier-a:#22c55e; --tier-b:#60a5fa; --tier-c:#a3a3a3; --tier-d:#6b7280; --tier-on-dark:#111111;
+    }
+}
+
+/* ---- Small resets ---- */
+* { box-sizing: border-box; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; }

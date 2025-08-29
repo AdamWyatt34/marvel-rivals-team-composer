@@ -1,0 +1,608 @@
+[
+  {
+    "counters": {
+      "doctor-strange": 1.1,
+      "emma-frost": 1.1,
+      "punisher": 1.1,
+      "star-lord": 1.1
+    },
+    "hero": "phoenix"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.1,
+      "black-widow": 1.1,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "iron-fist": 1.1,
+      "namor": 1.1,
+      "psylocke": 1.1,
+      "punisher": 1.1,
+      "spider-man": 1.1,
+      "star-lord": 1.1
+    },
+    "hero": "ultron"
+  },
+  {
+    "counters": {
+      "groot": 1.1,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "iron-man": 1.1,
+      "punisher": 1.1
+    },
+    "hero": "emma-frost"
+  },
+  {
+    "counters": {
+      "groot": 1.1,
+      "hela": 1.1,
+      "iron-man": 1.1,
+      "squirrel-girl": 1.1,
+      "storm": 1.1
+    },
+    "hero": "the-thing"
+  },
+  {
+    "counters": {
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "iron-man": 1.1,
+      "psylocke": 1.1,
+      "punisher": 1.1,
+      "spider-man": 1.1
+    },
+    "hero": "human-torch"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.1,
+      "black-panther": 1.15,
+      "black-widow": 1.1,
+      "doctor-strange": 1.1,
+      "groot": 1.15,
+      "hela": 1.1,
+      "iron-fist": 1.1,
+      "luna-snow": 1.1,
+      "magik": 1.15,
+      "namor": 1.1,
+      "peni-parker": 1.15,
+      "psylocke": 1.1,
+      "punisher": 1.1,
+      "rocket-racoon": 1.1,
+      "spider-man": 1.05,
+      "star-lord": 1.05,
+      "winter-soldier": 1.05
+    },
+    "hero": "storm"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.1,
+      "black-panther": 1.15,
+      "black-widow": 1.1,
+      "doctor-strange": 1.1,
+      "groot": 1.15,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "iron-fist": 1.1,
+      "loki": 1.05,
+      "luna-snow": 1.15,
+      "namor": 1.1,
+      "peni-parker": 1.15,
+      "psylocke": 1.1,
+      "punisher": 1.1,
+      "rocket-racoon": 1.1,
+      "spider-man": 1.1,
+      "star-lord": 1.1,
+      "storm": 1.05,
+      "the-thing": 1.15,
+      "venom": 1.15
+    },
+    "hero": "iron-man"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "hulk": 1.15,
+      "iron-fist": 1.15,
+      "magik": 1.05,
+      "moon-knight": 1.1,
+      "psylocke": 1.15,
+      "punisher": 1.1,
+      "spider-man": 1.05,
+      "squirrel-girl": 1.1,
+      "wolverine": 1.15
+    },
+    "hero": "invisible-woman"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "groot": 1.1,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "hulk": 1.15,
+      "iron-man": 1.1,
+      "peni-parker": 1.15,
+      "punisher": 1.1,
+      "spider-man": 1.15,
+      "squirrel-girl": 1.15,
+      "storm": 1.1
+    },
+    "hero": "mr-fantastic"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "groot": 1.15,
+      "iron-man": 1.1,
+      "luna-snow": 1.15,
+      "magneto": 1.1,
+      "punisher": 1.1,
+      "storm": 1.1,
+      "wolverine": 1.1
+    },
+    "hero": "venom"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "black-widow": 1.15,
+      "hawkeye": 1.15,
+      "human-torch": 1.1,
+      "iron-man": 1.1,
+      "magneto": 1.05,
+      "namor": 1.1,
+      "peni-parker": 1.1,
+      "psylocke": 1.05,
+      "star-lord": 1.1,
+      "storm": 1.1,
+      "the-thing": 1.1,
+      "winter-soldier": 1.15
+    },
+    "hero": "black-panther"
+  },
+  {
+    "counters": {
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "magik": 1.1,
+      "magneto": 1.1,
+      "psylocke": 1.1,
+      "punisher": 1.15,
+      "venom": 1.15
+    },
+    "hero": "cloak-and-dagger"
+  },
+  {
+    "counters": {
+      "black-widow": 1.15,
+      "hawkeye": 1.15,
+      "hela": 1.1,
+      "iron-man": 1.1,
+      "mantis": 1.15,
+      "punisher": 1.1,
+      "storm": 1.1,
+      "the-thing": 1.15,
+      "winter-soldier": 1.1,
+      "wolverine": 1.1
+    },
+    "hero": "groot"
+  },
+  {
+    "counters": {
+      "doctor-strange": 1.1,
+      "human-torch": 1.15,
+      "iron-man": 1.15,
+      "loki": 1.05,
+      "magik": 1.1,
+      "storm": 1.15,
+      "ultron": 1.15
+    },
+    "hero": "hela"
+  },
+  {
+    "counters": {
+      "captain-america": 1.1,
+      "iron-man": 1.1,
+      "loki": 1.05,
+      "magneto": 1.05,
+      "psylocke": 1.1,
+      "punisher": 1.05,
+      "scarlet-witch": 1.1
+    },
+    "hero": "luna-snow"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "doctor-strange": 1.1,
+      "human-torch": 1.1,
+      "iron-man": 1.1,
+      "namor": 1.1,
+      "punisher": 1.15,
+      "storm": 1.1
+    },
+    "hero": "magik"
+  },
+  {
+    "counters": {
+      "captain-america": 1.05,
+      "human-torch": 1.15,
+      "invisible-woman": 1.1,
+      "iron-man": 1.15,
+      "loki": 1.1,
+      "luna-snow": 1.05,
+      "mantis": 1.05,
+      "namor": 1.1,
+      "storm": 1.15,
+      "ultron": 1.15,
+      "winter-soldier": 1.1
+    },
+    "hero": "iron-fist"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "doctor-strange": 1.1,
+      "groot": 1.1,
+      "hulk": 1.15,
+      "iron-fist": 1.15,
+      "iron-man": 1.1,
+      "loki": 1.05,
+      "magik": 1.15,
+      "namor": 1.1,
+      "punisher": 1.1,
+      "star-lord": 1.1,
+      "storm": 1.1,
+      "wolverine": 1.15
+    },
+    "hero": "peni-parker"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "black-panther": 1.15,
+      "cloak-and-dagger": 1.15,
+      "doctor-strange": 1.15,
+      "groot": 1.15,
+      "iron-man": 1.1,
+      "luna-snow": 1.05,
+      "mantis": 1.05,
+      "namor": 1.1,
+      "peni-parker": 1.05,
+      "phoenix": 1.05,
+      "punisher": 1.1,
+      "storm": 1.1,
+      "thor": 1.1,
+      "wolverine": 1.1
+    },
+    "hero": "hulk"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "black-widow": 1.15,
+      "groot": 1.1,
+      "hela": 1.1,
+      "iron-man": 1.15,
+      "jeff": 1.15,
+      "peni-parker": 1.15,
+      "psylocke": 1.1,
+      "spider-man": 1.1
+    },
+    "hero": "hawkeye"
+  },
+  {
+    "counters": {
+      "black-widow": 1.15,
+      "groot": 1.15,
+      "human-torch": 1.15,
+      "invisible-woman": 1.05,
+      "iron-man": 1.15,
+      "jeff": 1.15,
+      "luna-snow": 1.05,
+      "mantis": 1.05,
+      "namor": 1.05,
+      "rocket-racoon": 1.15,
+      "scarlet-witch": 1.1,
+      "star-lord": 1.1,
+      "storm": 1.15,
+      "ultron": 1.15,
+      "venom": 1.1
+    },
+    "hero": "psylocke"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "black-panther": 1.15,
+      "groot": 1.15,
+      "hela": 1.1,
+      "human-torch": 1.1,
+      "iron-man": 1.1,
+      "loki": 1.1,
+      "namor": 1.1,
+      "rocket-racoon": 1.15,
+      "scarlet-witch": 1.1,
+      "storm": 1.1,
+      "ultron": 1.05
+    },
+    "hero": "captain-america"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "black-panther": 1.1,
+      "human-torch": 1.1,
+      "iron-fist": 1.05,
+      "iron-man": 1.1,
+      "loki": 1.15,
+      "luna-snow": 1.15,
+      "magik": 1.05,
+      "magneto": 1.1,
+      "namor": 1.15,
+      "peni-parker": 1.15,
+      "psylocke": 1.1,
+      "punisher": 1.15,
+      "spider-man": 1.1,
+      "storm": 1.1
+    },
+    "hero": "moon-knight"
+  },
+  {
+    "counters": {
+      "groot": 1.15,
+      "iron-man": 1.1,
+      "magik": 1.15,
+      "moon-knight": 1.1,
+      "peni-parker": 1.15,
+      "psylocke": 1.15,
+      "punisher": 1.1
+    },
+    "hero": "loki"
+  },
+  {
+    "counters": {
+      "black-panther": 1.05,
+      "captain-america": 1.1,
+      "iron-fist": 1.1,
+      "iron-man": 1.1,
+      "magik": 1.15,
+      "namor": 1.15,
+      "peni-parker": 1.15,
+      "psylocke": 1.1,
+      "punisher": 1.1,
+      "spider-man": 1.05
+    },
+    "hero": "mantis"
+  },
+  {
+    "counters": {
+      "doctor-strange": 1.1,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "human-torch": 1.15,
+      "invisible-woman": 1.05,
+      "iron-fist": 1.1,
+      "iron-man": 1.15,
+      "luna-snow": 1.1,
+      "mantis": 1.05,
+      "moon-knight": 1.15,
+      "namor": 1.1,
+      "squirrel-girl": 1.15,
+      "storm": 1.15
+    },
+    "hero": "spider-man"
+  },
+  {
+    "counters": {
+      "black-panther": 1.1,
+      "iron-man": 1.1,
+      "psylocke": 1.1,
+      "spider-man": 1.1,
+      "star-lord": 1.1,
+      "venom": 1.1
+    },
+    "hero": "rocket-racoon"
+  },
+  {
+    "counters": {
+      "captain-america": 1.05,
+      "doctor-strange": 1.15,
+      "emma-frost": 1.15,
+      "groot": 1.15,
+      "invisible-woman": 1.1,
+      "iron-man": 1.1,
+      "luna-snow": 1.05,
+      "magneto": 1.15,
+      "mantis": 1.05,
+      "namor": 1.1,
+      "peni-parker": 1.1,
+      "spider-man": 1.05,
+      "storm": 1.1,
+      "thor": 1.15,
+      "venom": 1.15
+    },
+    "hero": "wolverine"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "groot": 1.15,
+      "hulk": 1.15,
+      "iron-man": 1.1,
+      "magneto": 1.15,
+      "mantis": 1.05,
+      "peni-parker": 1.1,
+      "punisher": 1.1,
+      "scarlet-witch": 1.1,
+      "star-lord": 1.1,
+      "storm": 1.1,
+      "wolverine": 1.1
+    },
+    "hero": "thor"
+  },
+  {
+    "counters": {
+      "adam-warlock": 1.15,
+      "black-panther": 1.05,
+      "captain-america": 1.1,
+      "doctor-strange": 1.05,
+      "groot": 1.1,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "peni-parker": 1.15,
+      "spider-man": 1.1,
+      "thor": 1.15,
+      "venom": 1.1
+    },
+    "hero": "squirrel-girl"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "iron-fist": 1.15,
+      "magik": 1.15,
+      "moon-knight": 1.1,
+      "psylocke": 1.15,
+      "spider-man": 1.15,
+      "venom": 1.1
+    },
+    "hero": "namor"
+  },
+  {
+    "counters": {
+      "black-panther": 1.05,
+      "captain-america": 1.1,
+      "doctor-strange": 1.15,
+      "groot": 1.15,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "human-torch": 1.15,
+      "iron-fist": 1.1,
+      "iron-man": 1.15,
+      "magik": 1.1,
+      "spider-man": 1.1,
+      "storm": 1.15,
+      "ultron": 1.15
+    },
+    "hero": "punisher"
+  },
+  {
+    "counters": {
+      "black-panther": 1.1,
+      "human-torch": 1.1,
+      "iron-man": 1.1,
+      "psylocke": 1.1,
+      "scarlet-witch": 1.05,
+      "spider-man": 1.1,
+      "storm": 1.1
+    },
+    "hero": "jeff"
+  },
+  {
+    "counters": {
+      "doctor-strange": 1.1,
+      "groot": 1.15,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "human-torch": 1.15,
+      "iron-man": 1.15,
+      "luna-snow": 1.15,
+      "phoenix": 1.05,
+      "psylocke": 1.1,
+      "punisher": 1.1,
+      "storm": 1.15,
+      "thor": 1.15
+    },
+    "hero": "scarlet-witch"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "doctor-strange": 1.1,
+      "emma-frost": 1.1,
+      "human-torch": 1.15,
+      "iron-man": 1.15,
+      "magneto": 1.1,
+      "psylocke": 1.1,
+      "spider-man": 1.15,
+      "storm": 1.15,
+      "ultron": 1.15
+    },
+    "hero": "black-widow"
+  },
+  {
+    "counters": {
+      "black-panther": 1.1,
+      "psylocke": 1.1,
+      "spider-man": 1.1,
+      "venom": 1.1
+    },
+    "hero": "adam-warlock"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "doctor-strange": 1.05,
+      "groot": 1.15,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "magneto": 1.05,
+      "peni-parker": 1.15,
+      "psylocke": 1.1,
+      "spider-man": 1.15,
+      "storm": 1.05
+    },
+    "hero": "winter-soldier"
+  },
+  {
+    "counters": {
+      "cloak-and-dagger": 1.15,
+      "hawkeye": 1.15,
+      "hela": 1.15,
+      "human-torch": 1.05,
+      "iron-man": 1.15,
+      "punisher": 1.15,
+      "storm": 1.05,
+      "wolverine": 1.1
+    },
+    "hero": "magneto"
+  },
+  {
+    "counters": {
+      "black-panther": 1.1,
+      "hawkeye": 1.15,
+      "hela": 1.15,
+      "hulk": 1.1,
+      "scarlet-witch": 1.15,
+      "venom": 1.1,
+      "winter-soldier": 1.1,
+      "wolverine": 1.1
+    },
+    "hero": "doctor-strange"
+  },
+  {
+    "counters": {
+      "black-panther": 1.15,
+      "doctor-strange": 1.1,
+      "groot": 1.15,
+      "hawkeye": 1.1,
+      "hela": 1.1,
+      "invisible-woman": 1.1,
+      "iron-fist": 1.15,
+      "iron-man": 1.15,
+      "loki": 1.1,
+      "luna-snow": 1.1,
+      "magneto": 1.1,
+      "moon-knight": 1.15,
+      "namor": 1.05,
+      "punisher": 1.1
+    },
+    "hero": "star-lord"
+  }
+]
