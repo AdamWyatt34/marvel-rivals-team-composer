@@ -1,29 +1,31 @@
 name: Deploy Static Web App
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # or push: { branches: [main] } if you want auto-deploys
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      SWA_NAME: 'swa-rivals-comp-dev'  # from bicep
-      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }} # set in repo Variables: e.g., func-rivals-comp-dev.azurewebsites.net
+      SWA_NAME: 'swa-rivals-comp-dev'   # from bicep
+      FUNCTION_HOST: ${{ vars.FUNCTION_HOST }} # set in repo Variables (func-xxx.azurewebsites.net)
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-        node-version: '20'
+          node-version: '20'
 
       # Patch the placeholder JUST ON CI
       - name: Patch SWA config with Function host
         run: |
           FILE=src/web/staticwebapp.config.json
           sed -i "s#__FUNCTION_HOST__#${{ vars.FUNCTION_HOST }}#g" "$FILE"
+          # validate JSON to fail fast
           node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
-      
-      # 1) Install & build Next (creates .next)
+
+      # 1) Install & build Next.js (creates .next)
       - name: Build Next.js
         working-directory: src/web
         run: |
@@ -32,9 +34,8 @@ jobs:
           export NEXT_DISABLE_SOURCEMAPS=1
           npm run build
           ls -lah .next || (echo "No .next output!" && exit 1)
-      
+
       # 2) Package for SWA using the built artifact
-      #    NOTE: --app-artifact-location points to .next
       - name: Package with SWA CLI
         working-directory: src/web
         run: |
@@ -44,7 +45,7 @@ jobs:
             --output-location .swa/build
           echo "Packaged artifact:"
           ls -lah .swa/build || true
-      
+
       # 3) Upload the prebuilt SWA artifact
       - name: Deploy SWA (upload prebuilt)
         uses: Azure/static-web-apps-deploy@v1
