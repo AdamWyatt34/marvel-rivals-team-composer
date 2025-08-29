@@ -33,10 +33,19 @@ jobs:
           node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE"
 
       # Deploy — the SWA Action will build the Next.js app for you
-      - name: Deploy SWA
+      - name: Install & Build + Export Next.js
+        working-directory: src/web
+        run: |
+          npm ci
+          NEXT_TELEMETRY_DISABLED=1 NEXT_DISABLE_SOURCEMAPS=1 npm run build
+          npm run export
+          ls -lah out
+      
+      - name: Deploy SWA (upload exported)
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
-          app_location: "src/web"
-          app_build_command: "npm ci && NEXT_TELEMETRY_DISABLED=1 NEXT_DISABLE_SOURCEMAPS=1 npm run build"
+          app_location: "src/web"   # where staticwebapp.config.json lives
+          output_location: "out"    # exported static folder
+          skip_app_build: true
           action: "upload"
