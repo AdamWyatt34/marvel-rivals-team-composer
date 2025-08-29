@@ -65,6 +65,8 @@ jobs:
           scope: resourcegroup
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RG }}
+          failOnStdErr: false
+          additionalArguments: --only-show-errors
           template: infrastructure/azure/main.bicep
           parameters: >
             location=${{ env.LOC }}
