@@ -33,7 +33,10 @@ var storageKey = listKeys(storageId, '2023-01-01').keys[0].value
 var storageConn = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageKey};EndpointSuffix=core.windows.net'
 
 // Insights connection string
-var aiConn = reference(appInsightsId, '2020-02-02', 'Full').ConnectionString
+var aiRef  = reference(appInsightsId, '2020-02-02', 'full')
+var aiConn = empty(aiRef.properties.ConnectionString)
+  ? 'InstrumentationKey=${aiRef.properties.InstrumentationKey}'
+  : aiRef.properties.ConnectionString
 
 // Base app settings
 var baseAppSettings = [
