@@ -50,7 +50,7 @@ var devOrigins = environment == 'dev' ? [
   'http://localhost:3000'
 ] : []
 var swaOrigin = 'https://${swa.outputs.defaultHostname}'
-var allowedOrigins = union([ swaOrigin ], devOrigins)
+var allowedOrigins = union([ swaOrigin ], devOrigins, ['https://marvelrivalsteamposer.com', 'https://www.marvelrivalsteamposer.com')
 
 module openai 'modules/azureopenai.bicep' = if (enableOpenAI) {
   name: 'openai'
