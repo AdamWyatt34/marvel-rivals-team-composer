@@ -2,13 +2,14 @@
   "routes": [
     {
       "route": "/fn/canary",
-      "statusCode": 418,
-      "headers": { "Cache-Control": "no-store" }
+      "statusCode": 404
     },
     {
       "route": "/fn/*",
       "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/*",
-      "headers": { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" }
+      "headers": {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"
+      }
     }
   ],
   "navigationFallback": {
