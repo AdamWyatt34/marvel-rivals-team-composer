@@ -15,13 +15,13 @@ builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
 
-var config = new ConfigurationBuilder()
-    .AddConfiguration(builder.Configuration)
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables()
-    .Build();
-
-builder.Configuration.AddConfiguration(config);
+// var config = new ConfigurationBuilder()
+//     .AddConfiguration(builder.Configuration)
+//     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+//     .AddEnvironmentVariables()
+//     .Build();
+//
+// builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
 
