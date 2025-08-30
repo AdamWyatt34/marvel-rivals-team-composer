@@ -32,7 +32,7 @@ module storage 'modules/storage.bicep' = {
 module appconfig 'modules/appconfig.bicep' = {
   name: 'appconfig'
   params: {
-    name: 'appc-${nameSuffix}'
+    name: 'appc-${nameSuffix}-cfg'
     location: location
     initialMetaVersion: 'v1'
   }
@@ -90,7 +90,7 @@ module func 'modules/functionapp.bicep' = {
 }
 
 var funcName       = 'func-${nameSuffix}'
-var appConfigName  = 'appc-${nameSuffix}'
+var appConfigName  = 'appc-${nameSuffix}-cfg'
 var storageName    = toLower(replace('st${uniqueString(resourceGroup().id, nameSuffix)}','-',''))
 
 resource funcSite 'Microsoft.Web/sites@2022-09-01' existing = {
