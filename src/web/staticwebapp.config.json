@@ -1,15 +1,24 @@
 {
   "routes": [
     {
-      "route": "/fn/canary",
-      "statusCode": 404
+      "route": "/fn/heroes",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/heroes",
+      "headers": { "Cache-Control": "no-store" }
     },
     {
-      "route": "/fn/*",
-      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/*",
-      "headers": {
-        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"
-      }
+      "route": "/fn/compose",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/compose",
+      "headers": { "Cache-Control": "no-store" }
+    },
+    {
+      "route": "/fn/hero/*",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/hero/*",
+      "headers": { "Cache-Control": "no-store" }
+    },
+    {
+      "route": "/fn/threats",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/threats",
+      "headers": { "Cache-Control": "no-store" }
     }
   ],
   "navigationFallback": {
