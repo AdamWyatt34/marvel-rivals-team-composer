@@ -6,7 +6,7 @@ public sealed class Composer
 {
     private readonly Roster _r;
 
-    public Composer(Roster roster) => _r = roster;
+    public Composer(IRosterProvider rosterProvider) => _r = rosterProvider.GetAsync().GetAwaiter().GetResult();
 
     public IReadOnlyList<Hero> Pool => _r.Heroes.Values.ToList();
 
