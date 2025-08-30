@@ -6,7 +6,6 @@ using Microsoft.Azure.Functions.Worker.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 var builder = FunctionsApplication.CreateBuilder(args);
 
@@ -29,33 +28,20 @@ var services = builder.Services;
 
 var cfg = builder.Configuration;
 
-services.AddSingleton<IRosterProvider, AzureRosterProvider>(); // used only if USE_AZURE=true
-
-services.AddSingleton<Roster>(sp =>
+var useAzure = (cfg["USE_AZURE"] ?? "false").Equals("true", StringComparison.OrdinalIgnoreCase);
+if (useAzure)
 {
-    var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("RosterInit");
-    var useAzure = string.Equals(cfg["USE_AZURE"], "true", StringComparison.OrdinalIgnoreCase);
-
-    if (useAzure)
-    {
-        try
-        {
-            var provider = sp.GetRequiredService<IRosterProvider>();
-            // NOTE: single sync wait during startup; wrapped in try/catch with fallback
-            return provider.GetAsync().GetAwaiter().GetResult();
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Azure roster load failed — falling back to local /meta");
-        }
-    }
-
-    // Fallback: load from bundled meta folder so startup never crashes
-    var metaPath = Path.Combine(Directory.GetCurrentDirectory(), "meta");
+    services.AddSingleton<IRosterProvider, AzureRosterProvider>();
+    services.AddSingleton<Roster>(sp => sp.GetRequiredService<IRosterProvider>().GetAsync().GetAwaiter().GetResult());
+}
+else
+{
+    // Local loader reads from repo /meta
+    var root = Directory.GetCurrentDirectory();
+    var metaPath = Path.Combine(root, "meta");
     var roster = RosterLoader.LoadFromFolder(metaPath);
-    logger.LogInformation("Loaded local roster from {Path}", metaPath);
-    return roster;
-});
+    services.AddSingleton<Roster>(roster);
+}
 services.AddSingleton<Composer.Core.Composer>();
 services.AddSingleton<BanRecommender>();
 
