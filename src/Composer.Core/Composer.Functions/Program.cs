@@ -22,7 +22,6 @@ var config = new ConfigurationBuilder()
     .Build();
 
 builder.Configuration.AddConfiguration(config);
-builder.Services.AddSingleton<IConfiguration>(config);
 
 var services = builder.Services;
 
