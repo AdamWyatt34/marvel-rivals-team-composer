@@ -6,7 +6,7 @@ param initialMetaVersion string = 'v1'
 resource ac 'Microsoft.AppConfiguration/configurationStores@2023-03-01' = {
   name: name
   location: location
-  sku: { name: 'Standard' }
+  sku: { name: 'Free' }
 }
 
 resource kv 'Microsoft.AppConfiguration/configurationStores/keyValues@2023-03-01' = {
