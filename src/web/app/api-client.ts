@@ -1,4 +1,4 @@
-const API = process.env.NEXT_PUBLIC_API_BASE ?? '/fn';
+const API = 'https://func-rivals-comp-dev.azurewebsites.net/api';
 
 export type ComposePayload = {
     myLocked: string[];
