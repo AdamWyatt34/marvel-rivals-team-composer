@@ -1,6 +1,5 @@
 ﻿using System.Net;
 using System.Text.Json;
-using Composer.Core;
 using Composer.Core.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -10,7 +9,7 @@ namespace Composer.Functions;
 public sealed class HeroDetailsFunction
 {
     private readonly Roster _roster;
-    public HeroDetailsFunction(IRosterProvider rosterProvider) => _roster = rosterProvider.GetAsync().GetAwaiter().GetResult();
+    public HeroDetailsFunction(Roster roster) => _roster = roster;
 
     public sealed record HeroDetails(
         string id, string name, string role,
