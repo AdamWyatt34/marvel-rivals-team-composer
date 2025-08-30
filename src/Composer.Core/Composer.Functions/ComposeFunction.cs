@@ -16,12 +16,12 @@ public sealed class ComposeFunction
     private readonly IExplainer _explainer;
     private readonly Roster _roster;
 
-    public ComposeFunction(Composer.Core.Composer composer, BanRecommender banRecommender, IExplainer explainer, Roster roster)
+    public ComposeFunction(Composer.Core.Composer composer, BanRecommender banRecommender, IExplainer explainer, IRosterProvider rosterProvider)
     {
         _composer = composer;
         _banRecommender = banRecommender;
         _explainer = explainer;
-        _roster = roster;
+        _roster = rosterProvider.GetAsync().GetAwaiter().GetResult();
     }
 
     public sealed record TeamRulesDto(int minStrategists = 2, int minVanguards = 1, int teamSize = 6);

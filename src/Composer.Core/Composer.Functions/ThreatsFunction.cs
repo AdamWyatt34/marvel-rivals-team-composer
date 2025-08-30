@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Composer.Core;
 using Composer.Core.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -9,7 +10,7 @@ namespace Composer.Functions;
 public sealed class ThreatsFunction
 {
     private readonly Roster _roster;
-    public ThreatsFunction(Roster roster) => _roster = roster;
+    public ThreatsFunction(IRosterProvider rosterProvider) => _roster = rosterProvider.GetAsync().GetAwaiter().GetResult();
 
     public sealed record ThreatEntry(string id, string name, double mult);
     // Response shape: { "<heroId>": { mult: 1.35, by: { id: "psylocke", name: "Psylocke", mult: 1.35 } } }
