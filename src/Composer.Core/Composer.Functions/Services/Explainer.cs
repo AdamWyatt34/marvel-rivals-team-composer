@@ -24,11 +24,11 @@ public sealed class Explainer : IExplainer
     public Explainer(IConfiguration cfg, IHttpClientFactory httpFactory, IMemoryCache cache)
     {
         _http       = httpFactory.CreateClient(); // reuse HttpClient from DI
-        _endpoint   = cfg["AZURE_OPENAI_ENDPOINT"]
+        _endpoint   = cfg["AZURE_OPENAI_ENDPOINT"] ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")
                    ?? throw new InvalidOperationException("AZURE_OPENAI_ENDPOINT missing");
-        _apiKey     = cfg["AZURE_OPENAI_API_KEY"]
+        _apiKey     = cfg["AZURE_OPENAI_API_KEY"] ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY")
                    ?? throw new InvalidOperationException("AZURE_OPENAI_API_KEY missing");
-        _deployment = cfg["AZURE_OPENAI_DEPLOYMENT"]
+        _deployment = cfg["AZURE_OPENAI_DEPLOYMENT"] ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT")
                    ?? throw new InvalidOperationException("AZURE_OPENAI_DEPLOYMENT missing");
         _apiVersion = cfg["AZURE_OPENAI_API_VERSION"] ?? "2024-06-01";
         _cache      = cache;

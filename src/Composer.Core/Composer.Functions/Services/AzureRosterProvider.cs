@@ -20,10 +20,10 @@ public sealed class AzureRosterProvider : IRosterProvider
         if (_cache is { } hit && hit.expires > DateTimeOffset.UtcNow) return hit.roster;
 
         // Read settings HERE (not in ctor)
-        var appConfigEndpointStr = _cfg["AppConfig__Endpoint"];
-        var blobEndpointStr      = _cfg["Storage__BlobEndpoint"];
+        var appConfigEndpointStr = _cfg["AppConfig__Endpoint"] ?? Environment.GetEnvironmentVariable("AppConfig__Endpoint");
+        var blobEndpointStr      = _cfg["Storage__BlobEndpoint"] ?? Environment.GetEnvironmentVariable("Storage__BlobEndpoint");
         var container            = _cfg["Meta__ContainerName"] ?? "meta";
-        var cacheMinutesStr      = _cfg["Meta__CacheMinutes"];
+        var cacheMinutesStr      = _cfg["Meta__CacheMinutes"] ?? "60";
 
         if (string.IsNullOrWhiteSpace(appConfigEndpointStr) ||
             string.IsNullOrWhiteSpace(blobEndpointStr))
