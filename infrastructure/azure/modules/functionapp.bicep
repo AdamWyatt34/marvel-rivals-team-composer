@@ -5,7 +5,7 @@ param appInsightsId string
 param appConfigEndpoint string
 param blobEndpoint string
 param metaContainer string = 'meta'
-param cacheMinutes int = 5
+param cacheMinutes int = 60
 
 @description('Allowed origins for CORS (Function App)')
 param allowedOrigins array = []
