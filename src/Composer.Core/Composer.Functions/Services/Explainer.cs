@@ -32,9 +32,9 @@ public sealed class Explainer : IExplainer
     public Explainer(IConfiguration cfg, IHttpClientFactory f, IMemoryCache cache)
     {
         _http = f.CreateClient();
-        _endpoint = cfg["AI__Endpoint"] ?? cfg["AI:Endpoint"];
-        _apiKey   = cfg["AI__ApiKey"]   ?? cfg["AI:ApiKey"];
-        _model    = cfg["AI__Model"]    ?? cfg["AI:Model"] ?? "Phi-3.5-mini-instruct";
+        _endpoint = cfg["AZURE_OPENAI_ENDPOINT"] ?? cfg["AZURE:OPNENAI_ENDPOINT"] ?? cfg["AI:Endpoint"];
+        _apiKey   = cfg["AZURE_OPENAI_API_KEY"]   ?? cfg["AZURE:OPNENAI_API_KEY"]   ?? cfg["AI:ApiKey"];
+        _model    = cfg["AZURE_OPENAI_DEPLOYMENT"]    ?? cfg["AZURE:OPENAI:DEPLOYMENT"] ?? "Phi-3.5-mini-instruct";
         _cache = cache;
     }
 
