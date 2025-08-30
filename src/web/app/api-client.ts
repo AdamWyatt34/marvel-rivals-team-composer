@@ -1,3 +1,5 @@
+const API = process.env.NEXT_PUBLIC_API_BASE ?? '/fn';
+
 export type ComposePayload = {
     myLocked: string[];
     enemyLocked: string[];
@@ -15,7 +17,7 @@ export type ComposeResponse = {
 };
 
 export async function compose(payload: ComposePayload): Promise<ComposeResponse> {
-    const res = await fetch("/fn/compose", {
+    const res = await fetch(`${API}/compose`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -27,7 +29,7 @@ export async function compose(payload: ComposePayload): Promise<ComposeResponse>
 export type Hero = { id: string; name: string; role: string; tags: string[] };
 
 export async function getHeroes(): Promise<Hero[]> {
-    const res = await fetch("/fn/heroes");
+    const res = await fetch(`${API}/heroes`);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }
@@ -38,7 +40,7 @@ export type HeroDetails = {
 };
 
 export async function getHeroDetails(id: string): Promise<HeroDetails> {
-    const res = await fetch(`/fn/hero/${id}`);
+    const res = await fetch(`${API}/hero/${id}`);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }
@@ -50,7 +52,7 @@ export type ThreatsResponse = Record<
 
 export async function getThreatsDetailed(enemyIds: string[]): Promise<ThreatsResponse> {
     const qs = enemyIds.length ? `?enemy=${encodeURIComponent(enemyIds.join(","))}` : "";
-    const res = await fetch(`/fn/threats${qs}`);
+    const res = await fetch(`${API}/threats${qs}`);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }
