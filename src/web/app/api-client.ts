@@ -15,7 +15,7 @@ export type ComposeResponse = {
 };
 
 export async function compose(payload: ComposePayload): Promise<ComposeResponse> {
-    const res = await fetch("/api/compose", {
+    const res = await fetch("/fn/compose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -27,7 +27,7 @@ export async function compose(payload: ComposePayload): Promise<ComposeResponse>
 export type Hero = { id: string; name: string; role: string; tags: string[] };
 
 export async function getHeroes(): Promise<Hero[]> {
-    const res = await fetch("/api/heroes");
+    const res = await fetch("/fn/heroes");
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }
@@ -38,7 +38,7 @@ export type HeroDetails = {
 };
 
 export async function getHeroDetails(id: string): Promise<HeroDetails> {
-    const res = await fetch(`/api/hero/${id}`);
+    const res = await fetch(`/fn/hero/${id}`);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }
@@ -50,7 +50,7 @@ export type ThreatsResponse = Record<
 
 export async function getThreatsDetailed(enemyIds: string[]): Promise<ThreatsResponse> {
     const qs = enemyIds.length ? `?enemy=${encodeURIComponent(enemyIds.join(","))}` : "";
-    const res = await fetch(`/api/threats${qs}`);
+    const res = await fetch(`/fn/threats${qs}`);
     if (!res.ok) throw new Error(await res.text());
     return res.json();
 }
