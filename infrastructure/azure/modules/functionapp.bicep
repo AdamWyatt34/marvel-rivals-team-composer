@@ -57,6 +57,7 @@ var aoaiSettings = openAiEnabled ? [
   { name: 'AZURE_OPENAI_ENDPOINT', value: openAiEndpoint }
   { name: 'AZURE_OPENAI_API_KEY', value: openAiKey }
   { name: 'AZURE_OPENAI_DEPLOYMENT', value: openAiDeployment }
+  { name: 'USE_AZURE' , value: 'true' }
 ] : []
 
 resource site 'Microsoft.Web/sites@2022-09-01' = {
