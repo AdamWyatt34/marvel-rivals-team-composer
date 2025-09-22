@@ -17,6 +17,7 @@ param openAiKey string = ''
 param openAiDeployment string = ''
 @description('Queue name used by the QueueTrigger for match details')
 param matchDetailsQueueName string = 'match-details'
+#disable-next-line no-hardcoded-env-urls
 @description('Queue endpoint for MI access, e.g. https://<acct>.queue.core.windows.net')
 param queueEndpoint string
 @description('Key Vault Secret URI for the Marvel Rivals API key')
