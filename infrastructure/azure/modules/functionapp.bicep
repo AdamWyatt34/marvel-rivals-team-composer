@@ -21,6 +21,7 @@ param matchDetailsQueueName string = 'match-details'
 @description('Queue endpoint for MI access, e.g. https://<acct>.queue.core.windows.net')
 param queueEndpoint string
 @description('Key Vault Secret URI for the Marvel Rivals API key')
+#disable-next-line no-unused-params
 param marvelApiSecretUri string = ''  // pass in from main; empty means "not wired yet"
 
 // Plan (Y1 = Consumption)
