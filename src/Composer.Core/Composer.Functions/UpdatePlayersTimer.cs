@@ -34,7 +34,7 @@ public sealed class UpdatePlayersTimer
     var added = await MergeSeedsAsync(state, ct);
     if (added > 0) _log.LogInformation("Merged {Count} new players from seed", added);
 
-    var maxUpdates = int.TryParse(_cfg["INGEST__MaxUpdatesPerRun"], out var mu) ? mu : 100;
+    var maxUpdates = int.TryParse(_cfg["INGEST__MaxUpdatesPerRun"], out var mu) ? mu : 10;
 
     var now = DateTimeOffset.UtcNow;
     var issued = 0;
