@@ -19,31 +19,37 @@ resource sa 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 
 /* -------- Blob service + containers (new) -------- */
 resource bs 'Microsoft.Storage/storageAccounts/blobServices@2023-01-01' = {
-  name: '${sa.name}/default'
+  parent: sa
+  name: 'default'
 }
 
 resource data 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${sa.name}/default/data'
+  parent: bs
+  name: 'data'
   properties: {}
 }
 
 resource meta 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${sa.name}/default/meta'
+  parent: bs
+  name: 'meta'
   properties: {}
 }
 
 resource models 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
-  name: '${sa.name}/default/models'
+  parent: bs
+  name: 'models'
   properties: {}
 }
 
 /* -------- Queue service + queue (existing) -------- */
 resource qs 'Microsoft.Storage/storageAccounts/queueServices@2023-01-01' = {
-  name: '${sa.name}/default'
+  parent: sa
+  name: 'default'
 }
 
 resource matchQueue 'Microsoft.Storage/storageAccounts/queueServices/queues@2023-01-01' = {
-  name: '${sa.name}/default/${matchDetailsQueueName}'
+  parent: qs
+  name: matchDetailsQueueName
 }
 
 var keys = sa.listKeys()
