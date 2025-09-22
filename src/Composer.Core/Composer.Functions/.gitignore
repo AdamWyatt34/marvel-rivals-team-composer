@@ -262,3 +262,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+../Composer.Core/Composer.Core/bin
+../Composer.Core/Composer.Core/obj

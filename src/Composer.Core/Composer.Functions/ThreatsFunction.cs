@@ -10,56 +10,60 @@ namespace Composer.Functions;
 public sealed class ThreatsFunction
 {
     private readonly Roster _roster;
-    public ThreatsFunction(IRosterProvider rosterProvider) => _roster = rosterProvider.GetAsync().GetAwaiter().GetResult();
+    public ThreatsFunction(IRosterProvider rosterProvider)
+        => _roster = rosterProvider.GetAsync().GetAwaiter().GetResult();
 
     public sealed record ThreatEntry(string id, string name, double mult);
-    // Response shape: { "<heroId>": { mult: 1.35, by: { id: "psylocke", name: "Psylocke", mult: 1.35 } } }
     public sealed record ThreatResult(double mult, ThreatEntry? by);
 
     [Function("threats")]
-    public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
+    public async Task<HttpResponseData> Run(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req)
     {
         var query = System.Web.HttpUtility.ParseQueryString(new Uri(req.Url.ToString()).Query);
         var enemyCsv = (query["enemy"] ?? "").Trim();
         var enemyIds = enemyCsv.Length == 0
-            ? Array.Empty<string>()
+            ? []
             : enemyCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                      .Select(s => s.ToLowerInvariant()).ToArray();
-
-        // Pre-validate list
-        var enemies = enemyIds.Where(id => _roster.Heroes.ContainsKey(id)).ToArray();
+                      .Select(s => s.ToLowerInvariant())
+                      .Where(id => _roster.Heroes.ContainsKey(id))   // validate ids
+                      .ToArray();
 
         var result = new Dictionary<string, ThreatResult>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var h in _roster.Heroes.Values)
+        foreach (var me in _roster.Heroes.Values)
         {
-            double maxMult = 1.0;
-            string? maxEnemyId = null;
+            var maxThreat = 1.0;
+            string? worstEnemyId = null;
 
-            foreach (var e in enemies)
+            // counters.json: counters[ourHero][enemyHero] = vs / baseline (clamped ~[0.5,1.5])
+            // Threat should be >1 when enemy hurts us => 1 / counters[me][enemy]
+            if (_roster.Counters.TryGetValue(me.Id, out var vsMap))
             {
-                // "Enemy counters me": look up C[enemy][me]
-                if (_roster.Counters.TryGetValue(e, out var cmap) && cmap.TryGetValue(h.Id, out var multAgainstH))
+                foreach (var e in enemyIds)
                 {
-                    if (multAgainstH > maxMult)
+                    if (!vsMap.TryGetValue(e, out var multVsEnemy) || multVsEnemy <= 0)
+                        continue;
+
+                    var threat = 1.0 / multVsEnemy;  // invert: <1 favorable -> threat<1; <1.0 -> good, >1.0 -> bad
+                    if (threat > maxThreat)
                     {
-                        maxMult = multAgainstH;
-                        maxEnemyId = e;
+                        maxThreat = threat;
+                        worstEnemyId = e;
                     }
                 }
             }
 
             ThreatEntry? by = null;
-            if (maxEnemyId is not null && _roster.Heroes.TryGetValue(maxEnemyId, out var enemyHero))
-            {
-                by = new ThreatEntry(maxEnemyId, enemyHero.Name, maxMult);
-            }
+            if (worstEnemyId is not null && _roster.Heroes.TryGetValue(worstEnemyId, out var enemyHero))
+                by = new ThreatEntry(worstEnemyId, enemyHero.Name, maxThreat);
 
-            result[h.Id] = new ThreatResult(mult: maxMult, by: by);
+            result[me.Id] = new ThreatResult(mult: maxThreat, by: by);
         }
 
         var res = req.CreateResponse(HttpStatusCode.OK);
         res.Headers.Add("Content-Type", "application/json");
+        // (Optional) res.Headers.Add("Cache-Control", "no-store");
         await res.WriteStringAsync(JsonSerializer.Serialize(result));
         return res;
     }

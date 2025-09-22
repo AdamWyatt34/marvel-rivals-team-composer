@@ -19,7 +19,22 @@
       "route": "/fn/threats",
       "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/threats",
       "headers": { "Cache-Control": "no-store" }
+    },
+    {
+      "route": "/fn/maps",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/maps",
+      "headers": { "Cache-Control": "no-store" }
+    },
+    {
+      "route": "/fn/model-compare",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/model-compare",
+      "headers": { "Cache-Control": "no-store" } },
+    {
+      "route": "/fn/model-explain-gbdt",
+      "rewrite": "https://func-rivals-comp-dev.azurewebsites.net/api/model-explain-gbdt",
+      "headers": { "Cache-Control": "no-store" }
     }
+
   ],
   "navigationFallback": {
     "rewrite": "/index.html",

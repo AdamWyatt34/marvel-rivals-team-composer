@@ -15,6 +15,12 @@ param openAiEnabled bool = false
 param openAiEndpoint string = ''
 param openAiKey string = ''
 param openAiDeployment string = ''
+@description('Queue name used by the QueueTrigger for match details')
+param matchDetailsQueueName string = 'match-details'
+@description('Queue endpoint for MI access, e.g. https://<acct>.queue.core.windows.net')
+param queueEndpoint string
+@description('Key Vault Secret URI for the Marvel Rivals API key')
+param marvelApiSecretUri string = ''  // pass in from main; empty means "not wired yet"
 
 // Plan (Y1 = Consumption)
 resource plan 'Microsoft.Web/serverfarms@2022-09-01' = {
@@ -48,6 +54,28 @@ var baseAppSettings = [
   { name: 'Storage__BlobEndpoint', value: blobEndpoint }
   { name: 'Meta__ContainerName', value: metaContainer }
   { name: 'Meta__CacheMinutes', value: string(cacheMinutes) }
+  { name: 'Models__BlobEndpoint', value: blobEndpoint }
+  { name: 'Models__ContainerName', value: 'models' }
+  { name: 'Data__BlobEndpoint', value: blobEndpoint }
+  { name: 'Data__ContainerName', value: 'data' }
+  { name: 'UPDATE_CRON', value: '0 0 */5 * * *' }
+  { name: 'ENQUEUE_CRON', value: '0 0 */1 * * *' }
+  { name: 'INGEST__CrawlDelayMinutes', value: '60' }
+
+  // enqueue knobs
+  { name: 'ENQ__PlayersPerRun', value: '25' }
+  { name: 'ENQ__MaxPagesPerPlayer', value: '6' }
+  { name: 'ENQ__MaxSecondsPerPlayer', value: '150' }
+  { name: 'ENQ__InterPageDelayMs', value: '200' }
+  { name: 'ENQ__MaxMatchesEnqueued', value: '2000' }
+
+  { name: 'Queue__ConnString', value: storageConn }
+  { name: 'Queue__Endpoint', value: queueEndpoint }
+  { name: 'Queue__MatchDetailsName', value: matchDetailsQueueName }
+  { name: 'COUNTERS__LookbackDays', value: '60' }
+  { name: 'Meta__Version',         value: 'v1' }
+  { name: 'MRAPI__BaseUrl', value: 'https://marvelrivalsapi.com'}
+  { name: 'MRAPI__Key', value: '@Microsoft.KeyVault(SecretUri=${marvelApiSecretUri})' }
   // Optional but useful for zip deploys
   { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
 ]

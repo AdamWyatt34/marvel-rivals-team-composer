@@ -64,7 +64,7 @@
     ]
   },
   {
-    "id": "mr-fantastic",
+    "id": "mister-fantastic",
     "name": "Mr. Fantastic",
     "role": "Duelist",
     "tags": [
@@ -88,7 +88,7 @@
     ]
   },
   {
-    "id": "cloak-and-dagger",
+    "id": "cloak-dagger",
     "name": "Cloak & Dagger",
     "role": "Strategist",
     "tags": [
@@ -144,7 +144,7 @@
     ]
   },
   {
-    "id": "hulk",
+    "id": "bruce-banner",
     "name": "Hulk",
     "role": "Vanguard",
     "tags": [
@@ -208,8 +208,8 @@
     ]
   },
   {
-    "id": "rocket-racoon",
-    "name": "Rocket Racoon",
+    "id": "rocket-raccoon",
+    "name": "Rocket Raccoon",
     "role": "Strategist",
     "tags": [
       "tier:B"
@@ -248,7 +248,7 @@
     ]
   },
   {
-    "id": "punisher",
+    "id": "the-punisher",
     "name": "Punisher",
     "role": "Duelist",
     "tags": [
@@ -256,7 +256,7 @@
     ]
   },
   {
-    "id": "jeff",
+    "id": "jeff-the-land-shark",
     "name": "Jeff",
     "role": "Strategist",
     "tags": [

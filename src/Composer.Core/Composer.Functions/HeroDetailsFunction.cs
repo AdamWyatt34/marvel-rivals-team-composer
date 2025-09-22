@@ -35,7 +35,7 @@ public sealed class HeroDetailsFunction
         // Top counters this hero has vs others (by multiplier)
         var topCounters = _roster.Counters.TryGetValue(id, out var cmap)
             ? cmap.OrderByDescending(kv => kv.Value).Take(5).Select(kv => kv.Key).ToArray()
-            : Array.Empty<string>();
+            : [];
 
         // Top threats (who counters THIS hero): reverse over all C maps
         var topThreats = _roster.Counters

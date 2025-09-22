@@ -20,9 +20,7 @@ type Props = {
 };
 
 const ROLES = ["All", "Strategist", "Vanguard", "Duelist"] as const;
-const TIERS = ["All", "S", "A", "B", "C", "D"] as const;
 type RoleTab = (typeof ROLES)[number];
-type TierTab = (typeof TIERS)[number];
 
 type DetailsMap = Record<
     string,
@@ -41,7 +39,6 @@ export default function HeroPicker({
                                    }: Props) {
     const [q, setQ] = useState("");
     const [role, setRole] = useState<RoleTab>("All");
-    const [tier, setTier] = useState<TierTab>("All");
     const [open, setOpen] = useState<Record<string, boolean>>({});
     const [details, setDetails] = useState<DetailsMap>({});
 
@@ -49,9 +46,8 @@ export default function HeroPicker({
         const needle = q.trim().toLowerCase();
         return allHeroes
             .filter((h) => role === "All" || h.role === role)
-            .filter((h) => tier === "All" || tierOf(h) === tier)
             .filter((h) => (needle ? h.name.toLowerCase().includes(needle) || h.id.includes(needle) : true));
-    }, [allHeroes, q, role, tier]);
+    }, [allHeroes, q, role]);
 
     function toggle(id: string) {
         if (selected.includes(id)) setSelected(selected.filter((x) => x !== id));
@@ -69,13 +65,6 @@ export default function HeroPicker({
                 <div style={{ display: "flex", gap: 4 }}>
                     {ROLES.map((r) => (
                         <button key={r} onClick={() => setRole(r)} style={pill(role === r)}>{r}</button>
-                    ))}
-                </div>
-
-                {/* Tier filter */}
-                <div style={{ display: "flex", gap: 4 }}>
-                    {TIERS.map((t) => (
-                        <button key={t} onClick={() => setTier(t)} style={pill(tier === t)}>{t}</button>
                     ))}
                 </div>
 

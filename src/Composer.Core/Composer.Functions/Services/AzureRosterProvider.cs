@@ -17,7 +17,8 @@ public sealed class AzureRosterProvider : IRosterProvider
 
     public async Task<Roster> GetAsync(CancellationToken ct = default)
     {
-        if (_cache is { } hit && hit.expires > DateTimeOffset.UtcNow) return hit.roster;
+        if (_cache is { } hit && hit.expires > DateTimeOffset.UtcNow)
+            return hit.roster;
 
         // Read settings HERE (not in ctor)
         var appConfigEndpointStr = _cfg["AppConfig__Endpoint"] ?? Environment.GetEnvironmentVariable("AppConfig__Endpoint");
@@ -64,7 +65,7 @@ public sealed class AzureRosterProvider : IRosterProvider
 
         var heroMap = heroes.ToDictionary(
             h => h.id,
-            h => new Hero(h.id, h.name, Enum.Parse<Role>(h.role, ignoreCase: true), h.tags ?? Array.Empty<string>()));
+            h => new Hero(h.id, h.name, Enum.Parse<Role>(h.role, ignoreCase: true), h.tags ?? []));
 
         var synergyMap = new Dictionary<(string,string), double>();
         foreach (var p in synergy) synergyMap[(p.pair[0], p.pair[1])] = p.score;
@@ -74,32 +75,10 @@ public sealed class AzureRosterProvider : IRosterProvider
             c => (IReadOnlyDictionary<string,double>)(c.counters ?? new Dictionary<string,double>()),
             StringComparer.Ordinal);
 
-        var weights = new Weights(w.roleCoverage, w.synergy, w.counters, w.antiSynergy, w.mapMods, w.banRisk, w.prior);
-
-        var priors = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-        foreach (var h in heroes)
-        {
-            double p = 0.0;
-            if (h.tags is not null)
-                foreach (var tag in h.tags)
-                    p = Math.Max(p, TierToPrior(tag));
-            priors[h.id] = p;
-        }
-
-        var roster = new Roster(heroMap, synergyMap, countersMap, weights, priors);
+        var roster = new Roster(heroMap, synergyMap, countersMap);
         _cache = (version, roster, DateTimeOffset.UtcNow + cacheFor);
         return roster;
     }
-    
-    private static double TierToPrior(string tag) => tag switch
-    {
-        "tier:S" => 1.00,
-        "tier:A" => 0.60,
-        "tier:B" => 0.30,
-        "tier:C" => 0.00,
-        "tier:D" => 0.00,
-        _ => 0.00
-    };
 
     private sealed record HeroJson(string id, string name, string role, string[]? tags);
     private sealed record PairJson(string[] pair, double score, string? note);

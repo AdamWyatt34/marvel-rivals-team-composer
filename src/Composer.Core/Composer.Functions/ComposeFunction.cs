@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 using Composer.Core;
 using Composer.Core.Models;
 using Composer.Functions.Extensions;
@@ -14,13 +13,15 @@ public sealed class ComposeFunction
     private readonly Composer.Core.Composer _composer;
     private readonly BanRecommender _banRecommender;
     private readonly IExplainer _explainer;
+    private readonly ITeamScorer _teamScorer;
     private readonly Roster _roster;
 
-    public ComposeFunction(Composer.Core.Composer composer, BanRecommender banRecommender, IExplainer explainer, IRosterProvider rosterProvider)
+    public ComposeFunction(Composer.Core.Composer composer, BanRecommender banRecommender, IExplainer explainer, IRosterProvider rosterProvider, ITeamScorer teamScorer)
     {
         _composer = composer;
         _banRecommender = banRecommender;
         _explainer = explainer;
+        _teamScorer = teamScorer;
         _roster = rosterProvider.GetAsync().GetAwaiter().GetResult();
     }
 
@@ -53,10 +54,10 @@ public sealed class ComposeFunction
         // Canonicalize ids and validate against roster so typos don't create weird states
         static string Canon(string s) => (s ?? "").Trim().ToLowerInvariant();
 
-        string[] canonMyLocked    = (input.myLocked    ?? Array.Empty<string>()).Select(Canon).ToArray();
-        string[] canonEnemyLocked = (input.enemyLocked ?? Array.Empty<string>()).Select(Canon).ToArray();
-        string[] canonMyBans      = (input.myBans      ?? Array.Empty<string>()).Select(Canon).ToArray();
-        string[] canonEnemyBans   = (input.enemyBans   ?? Array.Empty<string>()).Select(Canon).ToArray();
+        var canonMyLocked    = input.myLocked.Select(Canon).ToArray();
+        var canonEnemyLocked = input.enemyLocked.Select(Canon).ToArray();
+        var canonMyBans      = (input.myBans      ?? []).Select(Canon).ToArray();
+        var canonEnemyBans   = (input.enemyBans   ?? []).Select(Canon).ToArray();
 
         var unknown =
             canonMyLocked.Where(id => !_roster.Heroes.ContainsKey(id))
@@ -88,7 +89,7 @@ public sealed class ComposeFunction
 
         try
         {
-            var (team, score) = _composer.Compose(
+            var (team, score) = await _composer.Compose(
                 canonMyLocked,
                 canonEnemyLocked,
                 canonMyBans,
@@ -96,8 +97,16 @@ public sealed class ComposeFunction
                 rules,
                 input.map);
 
-            var rawBackups = BackupsBuilder.BuildBackups(team, score, _composer,
-                canonMyLocked, canonEnemyLocked, bannedUnion, rules, tolerance: 0.05);
+            var rawBackups = await BackupsBuilder.BuildBackups(
+                team,
+                _composer.Pool,
+                _teamScorer,
+                canonMyLocked, 
+                canonEnemyLocked,
+                bannedUnion,
+                rules,
+                input.map,
+                tolerance: 0.05);
 
             // normalize: drop heroes already in the primary team, pretty-print names, dedupe, cap to 3
             var teamIds = team.Select(h => h.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -114,7 +123,9 @@ public sealed class ComposeFunction
 
             string[]? suggested = null;
             if (canonMyBans.Length == 0) // only suggest if caller didn't pass myBans
-                suggested = _banRecommender.SuggestBans(canonMyLocked, canonEnemyLocked, bannedUnion, rules, k: 3).ToArray();
+                suggested = (await _banRecommender.SuggestBans(
+                        canonMyLocked, canonEnemyLocked, bannedUnion, rules, k: 3, map: input.map))
+                    .ToArray();
 
             var rationale = new ExplainPayload(
                 Team: team.Select(h => h.Name).ToList(),
@@ -161,8 +172,8 @@ public sealed class ComposeFunction
     private List<string> ExtractTopSynergies(IReadOnlyList<Hero> team)
     {
         var pairs = new List<(string desc, double s)>();
-        for (int i = 0; i < team.Count; i++)
-        for (int j = i + 1; j < team.Count; j++)
+        for (var i = 0; i < team.Count; i++)
+        for (var j = i + 1; j < team.Count; j++)
         {
             var a = team[i]; var b = team[j];
             if (_roster.Synergy.TryGetValue((a.Id, b.Id), out var v) || _roster.Synergy.TryGetValue((b.Id, a.Id), out v))

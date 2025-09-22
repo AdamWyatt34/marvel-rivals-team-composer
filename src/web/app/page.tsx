@@ -1,6 +1,14 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import {compose, ComposeResponse, getHeroes, Hero, getThreatsDetailed} from "./api-client";
+import {
+    compose,
+    ComposeResponse,
+    getHeroes,
+    Hero,
+    getThreatsDetailed,
+    MapItem,
+    getMaps
+} from "./api-client";
 import HeroPicker from "./HeroPicker";
 
 type HL = "my" | "enemy" | "myban" | "enemyban";
@@ -16,6 +24,12 @@ export default function Home() {
     const [busy, setBusy] = useState(false);
     const [warn, setWarn] = useState<Record<string, number>>({});
     const [warnWhy, setWarnWhy] = useState<Record<string, string>>({});
+    const [maps, setMaps] = useState<MapItem[]>([]);
+    const [selectedMap, setSelectedMap] = useState<string | undefined>(undefined);
+    const [dbgErr, setDbgErr] = useState<string | null>(null);
+    const busyDebug = busy;
+
+    useEffect(() => { getMaps().then(setMaps).catch(() => setMaps([])); }, []);
 
     useEffect(() => { getHeroes().then(setAllHeroes).catch(e => setErr(String(e))); }, []);
 
@@ -54,6 +68,7 @@ export default function Home() {
                 enemyLocked: enemy,
                 myBans,
                 enemyBans,
+                map: selectedMap,
                 rules: { minStrategists: 2, minVanguards: 1, teamSize: 6 }
             });
             setResp(r);
@@ -66,47 +81,192 @@ export default function Home() {
         }
     }
 
+    function ContextBar({
+                            maps, selectedMap, setSelectedMap, busy, onCompose
+                        }: {
+        maps: MapItem[]; selectedMap?: string; setSelectedMap: (v?: string) => void;
+        busy: boolean; onCompose: () => void;
+    }) {
+        return (
+            <div className="context">
+                <div className="row">
+                    <label style={{ fontWeight: 600, marginRight: 8 }}>Map:</label>
+                    <select
+                        value={selectedMap ?? ""}
+                        onChange={e => setSelectedMap(e.target.value || undefined)}
+                        style={{ padding:"6px 10px", borderRadius: 8, border: "1px solid var(--border)" }}
+                        aria-label="Select map"
+                    >
+                        <option value="">Any</option>
+                        {maps.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    </select>
+
+                    {/* light compose for desktop; sticky big button stays for mobile */}
+                    <button
+                        onClick={onCompose}
+                        disabled={busy}
+                        className="composeInline"
+                        aria-label="Compose team"
+                    >
+                        {busy ? "Composing…" : "Compose"}
+                    </button>
+                </div>
+
+                <style jsx>{`
+        .context {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 10px 12px;
+          margin: 8px 0 14px;
+        }
+        .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .composeInline {
+          margin-left: auto;
+          padding: 8px 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          background: var(--chip);
+          color: var(--text);
+          cursor: pointer;
+        }
+        @media (max-width: 900px) {
+          .composeInline { display: none; } /* keep big sticky button on mobile */
+        }
+      `}</style>
+            </div>
+        );
+    }
+
+    function ResultsPanel({
+                              resp, err
+                          }: {
+        resp: ComposeResponse | null; err: string | null;
+    }) {
+        return (
+            <aside className="results" id="results">
+                <h2 style={{marginTop:0}}>Results</h2>
+                {!resp && !err && (
+                    <p style={{color:"var(--muted)"}}>Run “Compose” to see recommendations.</p>
+                )}
+                {err && <pre style={{ color:"#b00020", whiteSpace:"pre-wrap" }}>{err}</pre>}
+
+                {resp && (
+                    <>
+                        <h3>Primary Lineup</h3>
+                        <ul style={{marginTop:6}}>
+                            {resp.primary.map((x, idx) => <li key={idx}><strong>{x.role}</strong>: {x.hero}</li>)}
+                        </ul>
+
+                        <h4>Backups per Role</h4>
+                        {Object.entries(resp.backups).map(([role, names]) => (
+                            <div key={role}><strong>{role}:</strong> {names.length ? names.join(", ") : "—"}</div>
+                        ))}
+                        {resp.suggestedBans?.length ? (
+                            <p style={{marginTop:10}}><strong>Suggested bans:</strong> {resp.suggestedBans.join(", ")}</p>
+                        ) : null}
+                        {resp?.explanation && (
+                            <details style={{marginTop:12}}>
+                                <summary style={{cursor:"pointer", fontWeight:600}}>Why this lineup</summary>
+                                <p style={{marginTop:8}}>{resp.explanation}</p>
+                            </details>
+                        )}
+                    </>
+                )}
+
+                <style jsx>{`
+        .results {
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 14px;
+          position: sticky;
+          top: 12px;
+          max-height: calc(100vh - 24px);
+          overflow: auto;
+        }
+        @media (max-width: 900px) {
+          .results {
+            position: static;
+            max-height: none;
+            margin-top: 16px;
+          }
+        }
+      `}</style>
+            </aside>
+        );
+    }
+
+
+
     return (
-        <main style={{ padding:24, maxWidth:980, margin:"0 auto", background:"var(--bg)", color:"var(--text)", minHeight:"100vh" }}>
-        <h1 style={{marginBottom:6}}>Marvel Rivals Team Composer</h1>
+        <main style={{ padding:24, maxWidth:1100, margin:"0 auto", background:"var(--bg)", color:"var(--text)", minHeight:"100vh" }}>
+            <h1 style={{marginBottom:6}}>Marvel Rivals Team Composer</h1>
             <p style={{marginTop:0, color:"#555"}}>Pick up to 6 locked teammates, up to 6 enemy picks, and optional bans for both sides. Bans are symmetric.</p>
 
-            {/* Summary Bar */}
-            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, margin:"10px 0 18px"}}>
-                <Summary title={`My locked (${my.length}/6)`} ids={my} allHeroes={allHeroes} pillColor="#2563eb" onRemove={id => setMy(my.filter(x => x!==id))}/>
-                <Summary title={`Enemy locked (${enemy.length}/6)`} ids={enemy} allHeroes={allHeroes} pillColor="#dc2626" onRemove={id => setEnemy(enemy.filter(x => x!==id))}/>
-                <Summary title={`My bans (${myBans.length})`} ids={myBans} allHeroes={allHeroes} pillColor="#6b7280" onRemove={id => setMyBans(myBans.filter(x => x!==id))}/>
-                <Summary title={`Enemy bans (${enemyBans.length})`} ids={enemyBans} allHeroes={allHeroes} pillColor="#6b7280" onRemove={id => setEnemyBans(enemyBans.filter(x => x!==id))}/>
+            {/* NEW: context bar with map + inline compose (desktop) */}
+            <ContextBar
+                maps={maps}
+                selectedMap={selectedMap}
+                setSelectedMap={setSelectedMap}
+                busy={busy}
+                onCompose={() => { onCompose(); /* scroll to results on desktop */ if (window.innerWidth > 900) document.getElementById("results")?.scrollIntoView({behavior:"smooth"}); }}
+            />
+
+            {/* 2-column responsive layout */}
+            <div className="grid">
+                <section className="left">
+                    {/* Summary bar stays */}
+                    <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, margin:"10px 0 18px"}}>
+                        <Summary title={`My locked (${my.length}/6)`} ids={my} allHeroes={allHeroes} pillColor="#2563eb" onRemove={id => setMy(my.filter(x => x!==id))}/>
+                        <Summary title={`Enemy locked (${enemy.length}/6)`} ids={enemy} allHeroes={allHeroes} pillColor="#dc2626" onRemove={id => setEnemy(enemy.filter(x => x!==id))}/>
+                        <Summary title={`My bans (${myBans.length})`} ids={myBans} allHeroes={allHeroes} pillColor="#6b7280" onRemove={id => setMyBans(myBans.filter(x => x!==id))}/>
+                        <Summary title={`Enemy bans (${enemyBans.length})`} ids={enemyBans} allHeroes={allHeroes} pillColor="#6b7280" onRemove={id => setEnemyBans(enemyBans.filter(x => x!==id))}/>
+                    </div>
+
+                    <HeroPicker label="My locked"     allHeroes={allHeroes} selected={my}        setSelected={setMy}        limit={6} highlight={highlight} warn={warn} warnWhy={warnWhy}/>
+                    <HeroPicker label="Enemy locked"  allHeroes={allHeroes} selected={enemy}     setSelected={setEnemy}     limit={6} highlight={highlight} warn={warn} warnWhy={warnWhy}/>
+                    <HeroPicker label="My bans"       allHeroes={allHeroes} selected={myBans}    setSelected={setMyBans}            highlight={highlight} warn={warn} warnWhy={warnWhy}/>
+                    <HeroPicker label="Enemy bans"    allHeroes={allHeroes} selected={enemyBans} setSelected={setEnemyBans}         highlight={highlight} warn={warn} warnWhy={warnWhy}/>
+
+                    {/* Mobile quick jump to results */}
+                    <a href="#results" className="toResults">↑ Results</a>
+                </section>
+
+                <ResultsPanel resp={resp} err={err} />
             </div>
 
-            <HeroPicker label="My locked"     allHeroes={allHeroes} selected={my}        setSelected={setMy}        limit={6} highlight={highlight} warn={warn} warnWhy={warnWhy}/>
-            <HeroPicker label="Enemy locked"  allHeroes={allHeroes} selected={enemy}     setSelected={setEnemy}     limit={6} highlight={highlight} warn={warn} warnWhy={warnWhy}/>
-            <HeroPicker label="My bans"       allHeroes={allHeroes} selected={myBans}    setSelected={setMyBans}            highlight={highlight} warn={warn} warnWhy={warnWhy}/>
-            <HeroPicker label="Enemy bans"    allHeroes={allHeroes} selected={enemyBans} setSelected={setEnemyBans}         highlight={highlight} warn={warn} warnWhy={warnWhy}/>
+            {/* Keep your sticky BottomBar for mobile */}
+            <BottomBar busy={busy} onCompose={() => { onCompose(); document.getElementById("results")?.scrollIntoView({behavior:"smooth"}); }} onClear={() => { setResp(null); setErr(null); }} />
 
-            <BottomBar busy={busy} onCompose={onCompose} onClear={() => { setResp(null); setErr(null); }} />
-
-
-            {err && <pre style={{marginTop:16, color:"#b00020", whiteSpace:"pre-wrap"}}>{err}</pre>}
-
-            {resp && (
-                <section style={{marginTop:24}}>
-                    <h2>Primary Lineup</h2>
-                    <ul>
-                        {resp.primary.map((x, idx) => <li key={idx}><strong>{x.role}</strong>: {x.hero}</li>)}
-                    </ul>
-                    <h3>Backups per Role</h3>
-                    {Object.entries(resp.backups).map(([role, names]) => (
-                        <div key={role}><strong>{role}:</strong> {names.length ? names.join(", ") : "—"}</div>
-                    ))}
-                    {resp.suggestedBans && resp.suggestedBans.length > 0 && (
-                        <p><strong>Suggested bans:</strong> {resp.suggestedBans.join(", ")}</p>
-                    )}
-                    <p style={{marginTop:12}}>{resp.explanation}</p>
-                </section>
-            )}
+            <style jsx>{`
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 360px;
+        gap: 16px;
+      }
+      .left { min-width: 0; }
+      .toResults {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        .grid { grid-template-columns: 1fr; }
+        .toResults {
+          display: inline-block;
+          margin-top: 8px;
+          font-size: 12px;
+          color: var(--my);
+          text-decoration: none;
+          border: 1px solid var(--border);
+          padding: 4px 8px;
+          border-radius: 999px;
+          background: var(--chip);
+        }
+      }
+    `}</style>
         </main>
     );
+
 }
 
 /** Small pill list used in the Summary Bar */
