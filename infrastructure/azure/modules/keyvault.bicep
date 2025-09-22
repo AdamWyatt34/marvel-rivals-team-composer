@@ -22,7 +22,8 @@ resource kv 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 @description('Create the secret if a value is provided')
 resource apiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(marvelRivalsApiKey)) {
-  name: '${kv.name}/MarvelRivals-ApiKey'
+  parent: kv
+  name: 'MarvelRivals-ApiKey'
   properties: {
     value: marvelRivalsApiKey
   }
