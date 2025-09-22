@@ -31,6 +31,7 @@ resource apiKeySecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empt
 
 output id string = kv.id
 output name string = kv.name
+#disable-next-line outputs-should-not-contain-secrets
 output apiKeySecretId string = !empty(marvelRivalsApiKey)
   ? apiKeySecret.id
   : '${kv.id}/secrets/MarvelRivals-ApiKey'
