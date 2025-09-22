@@ -76,6 +76,7 @@ var baseAppSettings = [
   { name: 'COUNTERS__LookbackDays', value: '60' }
   { name: 'Meta__Version',         value: 'v1' }
   { name: 'MRAPI__BaseUrl', value: 'https://marvelrivalsapi.com'}
+#disable-next-line no-hardcoded-env-urls
   { name: 'MRAPI__Key', value: '@Microsoft.KeyVault(SecretUri=https://kv-rivals-comp-dev.vault.azure.net/secrets/MarvelRivals-ApiKey)' }
   // Optional but useful for zip deploys
   { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
