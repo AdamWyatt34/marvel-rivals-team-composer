@@ -1,5 +1,5 @@
-// const API = 'https://func-rivals-comp-dev.azurewebsites.net/api';
-const API = process.env.NEXT_PUBLIC_API_BASE ?? "/api";
+const API = 'https://func-rivals-comp-dev.azurewebsites.net/api';
+// const API = process.env.NEXT_PUBLIC_API_BASE ?? "/api";
 
 export type ComposePayload = {
     myLocked: string[];
