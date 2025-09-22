@@ -50,7 +50,7 @@ public sealed class EnqueueMatchIdsTimer
             return;
         }
 
-        var playersPerRun = GetInt("ENQ:PlayersPerRun", 10);
+        var playersPerRun = GetInt("ENQ:PlayersPerRun", 5);
         var maxPages      = GetInt("ENQ:MaxPagesPerPlayer", 6);
         var maxMatches    = GetInt("ENQ:MaxMatchesEnqueued", 2000);
         var interDelayMs  = GetInt("ENQ:InterPageDelayMs", 200);

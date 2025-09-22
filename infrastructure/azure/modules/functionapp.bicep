@@ -65,9 +65,9 @@ var baseAppSettings = [
   { name: 'INGEST__CrawlDelayMinutes', value: '60' }
 
   // enqueue knobs
-  { name: 'ENQ__PlayersPerRun', value: '25' }
+  { name: 'ENQ__PlayersPerRun', value: '5' }
   { name: 'ENQ__MaxPagesPerPlayer', value: '6' }
-  { name: 'ENQ__MaxSecondsPerPlayer', value: '150' }
+  { name: 'ENQ__MaxSecondsPerPlayer', value: '180' }
   { name: 'ENQ__InterPageDelayMs', value: '200' }
   { name: 'ENQ__MaxMatchesEnqueued', value: '2000' }
 
