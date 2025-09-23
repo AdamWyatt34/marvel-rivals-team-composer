@@ -31,8 +31,8 @@ public sealed class UpdatePlayersTimer
 
     var state = await LoadStateAsync(ct);
     // NEW: merge new seeds each run
-    var added = await MergeSeedsAsync(state, ct);
-    if (added > 0) _log.LogInformation("Merged {Count} new players from seed", added);
+    // var added = await MergeSeedsAsync(state, ct);
+    // if (added > 0) _log.LogInformation("Merged {Count} new players from seed", added);
 
     var maxUpdates = int.TryParse(_cfg["INGEST__MaxUpdatesPerRun"], out var mu) ? mu : 5;
 
@@ -56,16 +56,22 @@ public sealed class UpdatePlayersTimer
     _log.LogInformation("Issued {Count} player updates", issued);
 }
 
+private static bool IsUid(string? s) => !string.IsNullOrWhiteSpace(s) && s.All(char.IsDigit);
+
 private async Task<int> MergeSeedsAsync(IngestState state, CancellationToken ct)
 {
     var seed = _cont.GetBlobClient("state/seed_players.txt");
-    if (!await seed.ExistsAsync(ct)) 
+    if (!await seed.ExistsAsync(ct))
         return 0;
 
-    var txt = (await seed.DownloadContentAsync(ct)).Value.Content.ToString();
+    var txt   = (await seed.DownloadContentAsync(ct)).Value.Content.ToString();
     var lines = txt.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-    var byId = state.players.ToDictionary(p => p.id, StringComparer.OrdinalIgnoreCase);
+    // Only index true UIDs here (avoid name-only ids polluting the check)
+    var byUid = state.players
+        .Where(p => IsUid(p.id))
+        .ToDictionary(p => p.id, StringComparer.OrdinalIgnoreCase);
+
     var added = 0;
 
     foreach (var qraw in lines)
@@ -73,22 +79,48 @@ private async Task<int> MergeSeedsAsync(IngestState state, CancellationToken ct)
         var q = qraw.Trim();
         if (q.Length == 0) continue;
 
-        // Skip if state already has this UID
-        if (byId.ContainsKey(q)) 
+        var qIsUid = IsUid(q);
+
+        // If seed is a UID and we already track that UID, skip
+        if (qIsUid && byUid.ContainsKey(q)) 
+            continue;
+
+        // If seed is a NAME and we already have that name with a known UID, skip
+        if (!qIsUid && state.players.Any(p =>
+                string.Equals(p.name, q, StringComparison.OrdinalIgnoreCase) && IsUid(p.id)))
             continue;
 
         try
         {
+            // Resolve either UID or name
             var resolved = await _api.ResolvePlayerAsync(q, ct);
             if (resolved is not null)
             {
-                var uid = resolved.PlayerUid ?? q;
-                if (!byId.ContainsKey(uid))
+                var uid  = resolved.PlayerUid ?? q;       // prefer UID if API returns it
+                var name = resolved.NickName  ?? q;
+
+                if (IsUid(uid))
                 {
-                    var p = new PlayerState { id = uid, name = resolved.NickName ?? q };
-                    state.players.Add(p);
-                    byId[uid] = p;
-                    added++;
+                    // Add by UID if not present
+                    if (!byUid.ContainsKey(uid))
+                    {
+                        var p = new PlayerState { id = uid, name = name };
+                        state.players.Add(p);
+                        byUid[uid] = p;
+                        added++;
+                    }
+                }
+                else
+                {
+                    // API didn’t give a UID (rare) – add/merge by name as placeholder
+                    var existingByName = state.players.FirstOrDefault(p =>
+                        string.Equals(p.name, name, StringComparison.OrdinalIgnoreCase));
+                    if (existingByName is null)
+                    {
+                        state.players.Add(new PlayerState { id = name, name = name });
+                        added++;
+                    }
+                    // else keep existing; upgrade will happen in the pass below
                 }
             }
             else
@@ -105,15 +137,16 @@ private async Task<int> MergeSeedsAsync(IngestState state, CancellationToken ct)
     // Optional: upgrade name-only entries to UID when resolvable
     foreach (var p in state.players.ToList())
     {
-        if (p.id.All(char.IsDigit)) continue; // looks like UID already
+        if (IsUid(p.id)) continue; // already a UID
         try
         {
-            var resolved = await _api.ResolvePlayerAsync(p.id, ct); // p.id might be a name from first run
-            if (resolved?.PlayerUid is { } uid && uid != p.id && !byId.ContainsKey(uid))
+            var resolved = await _api.ResolvePlayerAsync(p.id, ct); // p.id might be a name
+            if (IsUid(resolved?.PlayerUid) && !byUid.ContainsKey(resolved!.PlayerUid))
             {
-                byId.Remove(p.id);
-                p.id = uid;
-                byId[uid] = p;
+                byUid.Remove(p.id); // harmless if not present
+                p.id = resolved.PlayerUid!;
+                if (string.IsNullOrWhiteSpace(p.name)) p.name = resolved.NickName ?? p.id;
+                byUid[p.id] = p;
             }
         }
         catch { /* non-fatal */ }
