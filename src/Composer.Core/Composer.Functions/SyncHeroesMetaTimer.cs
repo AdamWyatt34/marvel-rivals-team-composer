@@ -24,7 +24,11 @@ public sealed class SyncHeroesMetaTimer
         _cfg = cfg;
         _marvelRivalsApi = marvelRivalsApi;
         _heroSlugMapper = heroSlugMapper;
-        var svc = new BlobServiceClient(new Uri(_cfg["Data:BlobEndpoint"]!), new DefaultAzureCredential());
+        var uri = _cfg["Data:BlobEndpoint"] 
+                  ?? _cfg["Data__BlobEndpoint"]
+                  ?? Environment.GetEnvironmentVariable("Data_BlobEndpoint")
+                    ?? throw new InvalidOperationException("Missing Data:BlobEndpoint configuration");
+        var svc = new BlobServiceClient(new Uri(uri), new DefaultAzureCredential());
         _meta = svc.GetBlobContainerClient(_cfg["Meta:ContainerName"] ?? "meta");
     }
 
