@@ -60,7 +60,7 @@ var baseAppSettings = [
   { name: 'Models__ContainerName', value: 'models' }
   { name: 'Data__BlobEndpoint', value: blobEndpoint }
   { name: 'Data__ContainerName', value: 'data' }
-  { name: 'UPDATE_CRON', value: '0 0 */5 * * *' }
+  { name: 'UPDATE_CRON', value: '0 0 */3 * * *' }
   { name: 'ENQUEUE_CRON', value: '0 0 */1 * * *' }
   { name: 'INGEST__CrawlDelayMinutes', value: '60' }
 
