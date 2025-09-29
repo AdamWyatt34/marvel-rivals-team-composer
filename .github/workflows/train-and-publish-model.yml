@@ -52,28 +52,56 @@ jobs:
         run: |
           python ml/train_gbdt.py $(find data -name "*.csv" | head -n 200)
 
+      - name: Verify model artifacts & capture RUN_ID
+        run: |
+          set -euo pipefail
+          echo "Artifacts tree (out/):"
+          find out -maxdepth 2 -type f -printf "%P\n" || true
+      
+          # Ensure the model exists
+          test -s out/latest/gbdt_model.json.gz || {
+            echo "❌ No model generated at out/latest/gbdt_model.json.gz. Did training skip due to no CSVs?"
+            exit 1
+          }
+      
+          # Read RUN_ID from 'latest/manifest.json' (preferred) or from versioned manifest
+          if [ -f out/latest/manifest.json ]; then
+            RUN_ID=$(jq -r '.current // .run_id // empty' out/latest/manifest.json)
+          fi
+          if [ -z "${RUN_ID:-}" ]; then
+            # Fallback: read any versioned manifest that has run_id
+            RUN_ID=$(jq -r 'select(.run_id)|.run_id' out/*/manifest.json 2>/dev/null | tail -n1 || true)
+          fi
+      
+          if [ -z "${RUN_ID:-}" ] || [ ! -d "out/${RUN_ID}" ]; then
+            echo "❌ Could not determine RUN_ID or directory out/${RUN_ID} missing."
+            exit 1
+          fi
+      
+          echo "RUN_ID=${RUN_ID}"
+          echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
+
+
       - name: Publish model to Blob (versioned + latest)
         run: |
-          RUN_ID=$(jq -r '.run_id' out/*/manifest.json | tail -n1)
-          echo "RUN_ID=$RUN_ID"
+          set -euo pipefail
+          echo "Publishing RUN_ID=$RUN_ID"
           az storage blob upload-batch \
             --account-name "${{ secrets.AZ_STORAGE_NAME }}" \
             --destination models \
-            --source out/$RUN_ID \
-            --auth-mode login \
-            --overwrite
-          # refresh 'latest'
+            --source "out/${RUN_ID}" \
+            --overwrite --only-show-errors
+
           az storage blob upload \
             --account-name "${{ secrets.AZ_STORAGE_NAME }}" \
             --container-name models \
             --name latest/gbdt_model.json.gz \
             --file out/latest/gbdt_model.json.gz \
-            --auth-mode login \
-            --overwrite
+            --overwrite --only-show-errors
+
           az storage blob upload \
             --account-name "${{ secrets.AZ_STORAGE_NAME }}" \
             --container-name models \
             --name latest/manifest.json \
             --file out/latest/manifest.json \
-            --auth-mode login \
-            --overwrite
+            --overwrite --only-show-errors
