@@ -23,16 +23,19 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Download recent clean data
+      - name: Download last 2 months of data
         run: |
           mkdir -p data
-          az storage blob download-batch \
-            --account-name "${{ secrets.AZ_STORAGE_NAME }}" \
-            --destination data \
-            --source data/clean \
-            --auth-mode login \
-            --pattern "*.csv" \
-            --no-progress || true
+          M0=$(date -u '+%Y/%m')
+          M1=$(date -u -d '-1 month' '+%Y/%m')
+          for M in "$M0" "$M1"; do
+            az storage copy \
+              --source "https://${{ secrets.AZ_STORAGE_NAME }}.blob.core.windows.net/data/clean/${M}" \
+              --destination "./data" \
+              --recursive \
+              --only-show-errors \
+              --auth-mode login || true
+          done
 
       - name: Train GBDT
         env:
