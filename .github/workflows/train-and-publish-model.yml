@@ -7,6 +7,10 @@ on:
 jobs:
   train:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v4
 
