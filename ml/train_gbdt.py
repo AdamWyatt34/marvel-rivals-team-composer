@@ -12,6 +12,7 @@ from typing import Any, Dict, List
 import lightgbm as lgb
 import numpy as np
 import pandas as pd
+from collections import Counter
 
 # ---------- config (env) ----------
 KEEP_DAYS   = int(os.getenv("TRAIN_KEEP_DAYS", "0"))     # 0 = use all CSVs
@@ -67,6 +68,31 @@ def split_col(s): return [] if pd.isna(s) or s == "" else str(s).split("|")
 df["our_list"]   = df["our"].apply(split_col)
 df["enemy_list"] = df["enemy"].apply(split_col)
 
+def to01(v):
+    if pd.isna(v):
+        return np.nan
+    s = str(v).strip().lower()
+    if s in ("1","true","t","yes","y","win","won","w"): return 1
+    if s in ("0","false","f","no","n","loss","lost","l"): return 0
+    # last-ditch: try parsing numbers
+    try:
+        f = float(s)
+        if f == 1.0: return 1
+        if f == 0.0: return 0
+    except Exception:
+        pass
+    return np.nan
+
+if "result" not in df.columns:
+    print("No `result` column found in input CSVs."); sys.exit(1)
+
+df["result"] = df["result"].apply(to01)
+bad = df["result"].isna().sum()
+if bad:
+    print(f"Filtering out {bad} rows with non-numeric/unknown `result`")
+df = df.dropna(subset=["result"])
+df["result"] = df["result"].astype(int)
+
 # ---------- priors (smoothed per-hero deltas) ----------
 p_base = float(df["result"].mean())
 
@@ -77,7 +103,6 @@ def logit(p):
 
 base_logit = logit(p_base)
 
-from collections import Counter
 wins, games = Counter(), Counter()
 for _, row in df.iterrows():
     for h in row["our_list"]:
