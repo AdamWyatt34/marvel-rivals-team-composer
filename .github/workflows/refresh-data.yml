@@ -1,0 +1,45 @@
+name: Refresh data snapshot
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # daily, 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/web
+        run: npm ci
+
+      - name: Ingest RivalsMeta snapshot
+        working-directory: src/web
+        run: npm run ingest
+
+      - name: Commit snapshot if changed
+        run: |
+          if git diff --quiet -- src/web/public/data/snapshot.json; then
+            echo "Snapshot unchanged; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/web/public/data/snapshot.json
+          git commit -m "chore(data): refresh snapshot $(date -u +%F)"
+          git push
