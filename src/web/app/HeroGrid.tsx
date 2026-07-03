@@ -32,6 +32,8 @@ type Props = {
   onToggle: (id: string) => void;
   warn: Record<string, number>;
   warnWhy: Record<string, string>;
+  /** heroId -> team-up name this hero would complete with the current locks */
+  completes: Record<string, string>;
   favorites: string[];
   onToggleFavorite: (id: string) => void;
   band: TierBand;
@@ -47,6 +49,7 @@ export default function HeroGrid({
   onToggle,
   warn,
   warnWhy,
+  completes,
   favorites,
   onToggleFavorite,
   band,
@@ -207,6 +210,13 @@ export default function HeroGrid({
                         >
                           {bucketLabel(bucket)}
                         </span>
+                      ) : completes[h.id] != null ? (
+                        <span
+                          style={teamUpHint}
+                          title={`Completes the ${completes[h.id]} team-up with your current picks`}
+                        >
+                          ⚡ {titleCase(completes[h.id])}
+                        </span>
                       ) : (
                         <span style={{ color: "var(--muted)", fontSize: 11 }}>
                           &nbsp;
@@ -323,6 +333,10 @@ function DossierBox({
       )}
     </div>
   );
+}
+
+function titleCase(s: string): string {
+  return s.toLowerCase().replace(/(^|[\s-])\S/g, (c) => c.toUpperCase());
 }
 
 function tierOf(h: Hero): string {
@@ -446,6 +460,19 @@ const bucketTag: CSSProperties = {
 };
 
 const warnDot: CSSProperties = { fontSize: 12 };
+
+const teamUpHint: CSSProperties = {
+  fontSize: 10,
+  fontWeight: 600,
+  color: "var(--accent)",
+  border: "1px solid color-mix(in oklab, var(--accent) 45%, transparent)",
+  borderRadius: 999,
+  padding: "1px 7px",
+  maxWidth: 110,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
 
 const starBtn: CSSProperties = {
   background: "transparent",

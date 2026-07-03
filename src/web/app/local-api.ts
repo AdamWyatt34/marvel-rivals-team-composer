@@ -290,6 +290,33 @@ export async function slotAlternatives(
   return alternatives.sort((a, b) => b.deltaProb - a.deltaProb).slice(0, topN);
 }
 
+/**
+ * heroId -> team-up name that adding this hero would complete, given the
+ * current locks. Powers the ⚡ badges on the hero grid so team-up reasoning
+ * is visible while drafting, not just after composing.
+ */
+export async function getTeamUpCompletions(
+  myIds: string[],
+  band: TierBand = "all",
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  if (myIds.length === 0) return out;
+  const { tables } = await getTables(band);
+  const mine = new Set(myIds);
+  for (const teamUp of tables.teamUps) {
+    for (const variant of teamUp.variants) {
+      if (variant.members.length < 2) continue;
+      for (const member of variant.members) {
+        if (mine.has(member)) continue;
+        if (variant.members.every((x) => x === member || mine.has(x))) {
+          out[member] ??= teamUp.name;
+        }
+      }
+    }
+  }
+  return out;
+}
+
 export type BanBaitWarning = {
   id: string;
   name: string;

@@ -15,6 +15,7 @@ import {
   getHeroes,
   getMaps,
   getSnapshotMeta,
+  getTeamUpCompletions,
   getThreatsDetailed,
   slotAlternatives,
   suggestBansFor,
@@ -86,6 +87,7 @@ export default function Home() {
     loading: boolean;
   }>({ list: null, loading: false });
   const [banBait, setBanBait] = useState<BanBaitWarning[]>([]);
+  const [completes, setCompletes] = useState<Record<string, string>>({});
 
   // localStorage hydration (after mount, to keep static prerender consistent)
   useEffect(() => {
@@ -206,6 +208,12 @@ export default function Home() {
     () => [...new Set([...my, ...pinned])],
     [my, pinned],
   );
+
+  useEffect(() => {
+    getTeamUpCompletions(effectiveLocks, band)
+      .then(setCompletes)
+      .catch(() => setCompletes({}));
+  }, [effectiveLocks, band]);
 
   const payload = useMemo<ComposePayload>(
     () => ({
@@ -473,6 +481,7 @@ export default function Home() {
             onToggle={toggleHero}
             warn={warn}
             warnWhy={warnWhy}
+            completes={completes}
             favorites={favorites}
             onToggleFavorite={(id) =>
               setFavorites((f) =>
