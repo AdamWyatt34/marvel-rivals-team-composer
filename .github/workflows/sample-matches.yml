@@ -1,0 +1,47 @@
+name: Sample matches for pair synergy
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily, 06:00 UTC (after the snapshot refresh)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sample-matches
+  cancel-in-progress: false
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: src/web
+        run: npm ci
+
+      - name: Sample matches
+        working-directory: src/web
+        env:
+          MRAPI_KEY: ${{ secrets.MRAPI_KEY }}
+        run: npm run sample-pairs
+
+      - name: Commit pair data if changed
+        run: |
+          git add data/pairs src/web/public/data/pairs.json
+          if git diff --cached --quiet; then
+            echo "No new pair data; nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): sample matches $(date -u +%F)"
+          git push

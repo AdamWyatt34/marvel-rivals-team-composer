@@ -1,3 +1,4 @@
+import type { PairsTable } from "../data/pairs-schema";
 import type { Snapshot } from "../data/schema";
 import type { EngineHero, Role } from "./types";
 
@@ -33,6 +34,15 @@ export const SCORING_PARAMS = {
    */
   K_COVERAGE: 0.6,
   META_THREAT_COUNT: 8,
+  /**
+   * Pair synergy from sampled matches: observed pair WR shrunk toward the
+   * pair's EXPECTED WR given both heroes' individual strengths, so only
+   * genuine over/under-performance together counts. Pairs covered by an
+   * active team-up are excluded (already scored by the team-up term).
+   */
+  M_PAIR: 300,
+  K_PAIR: 0.6,
+  PAIR_SYNERGY_CAP: 0.2,
   /** Team-up bonus clamps: rarely hurt, and their stats inherit the same
    * specialist bias as hero win rates, so cap the upside too. */
   TEAMUP_MIN: -0.1,
@@ -120,6 +130,8 @@ export interface ScoringTables {
    * when enemy picks aren't known yet.
    */
   metaThreats: string[];
+  /** "a+b" (sorted slugs) -> log-odds synergy beyond individual strengths. */
+  pairSynergy: Map<string, number>;
 }
 
 function aggregateBand(snapshot: Snapshot, band: TierBand) {
@@ -196,6 +208,7 @@ function globalMean(
 export function buildScoringTables(
   snapshot: Snapshot,
   band: TierBand,
+  pairs: PairsTable | null = null,
 ): ScoringTables {
   const perHero = aggregateBand(snapshot, band);
   const pBar = globalMean(perHero);
@@ -326,6 +339,46 @@ export function buildScoringTables(
     .slice(0, SCORING_PARAMS.META_THREAT_COUNT)
     .map((x) => x.slug);
 
+  // Pair synergy from sampled matches (optional data source). The pair's
+  // baseline is the WR expected from both heroes' individual deltas, so a
+  // pair of strong heroes isn't credited twice; team-up pairs are excluded.
+  const pairSynergy = new Map<string, number>();
+  if (pairs != null) {
+    const teamUpPairs = new Set<string>();
+    for (const def of snapshot.teamUps) {
+      if (!def.currentlyActive) continue;
+      for (let i = 0; i < def.heroes.length; i++) {
+        for (let j = i + 1; j < def.heroes.length; j++) {
+          const [x, y] = [def.heroes[i], def.heroes[j]].sort();
+          teamUpPairs.add(`${x}+${y}`);
+        }
+      }
+    }
+    const cap = SCORING_PARAMS.PAIR_SYNERGY_CAP;
+    for (const [key, count] of Object.entries(pairs.pairs)) {
+      if (teamUpPairs.has(key)) continue;
+      const [a, b] = key.split("+");
+      const rateA = heroRate.get(a);
+      const rateB = heroRate.get(b);
+      if (rateA == null || rateB == null) continue;
+      const expected = Math.min(
+        0.95,
+        Math.max(0.05, pBar + (rateA - pBar) + (rateB - pBar)),
+      );
+      const observed = shrunk(
+        count.wins,
+        count.matches,
+        expected,
+        SCORING_PARAMS.M_PAIR,
+      );
+      const syn = Math.min(
+        cap,
+        Math.max(-cap, logit(observed) - logit(expected)),
+      );
+      if (syn !== 0) pairSynergy.set(key, syn);
+    }
+  }
+
   return {
     band,
     pBar,
@@ -338,5 +391,6 @@ export function buildScoringTables(
     banRate,
     shapeDelta,
     metaThreats,
+    pairSynergy,
   };
 }

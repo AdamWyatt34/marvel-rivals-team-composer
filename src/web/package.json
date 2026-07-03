@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "ingest": "tsx scripts/ingest/index.ts",
-    "build-reference": "tsx scripts/ingest/build-reference.ts"
+    "build-reference": "tsx scripts/ingest/build-reference.ts",
+    "sample-pairs": "tsx scripts/pairs/sample.ts"
   },
   "dependencies": {
     "next": "15.5.2",

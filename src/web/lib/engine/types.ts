@@ -28,7 +28,14 @@ export class NoFeasibleTeamError extends Error {
 }
 
 export type ContributionKind =
-  "hero" | "enemy" | "matchup" | "map" | "teamup" | "shape" | "coverage";
+  | "hero"
+  | "enemy"
+  | "matchup"
+  | "map"
+  | "teamup"
+  | "shape"
+  | "coverage"
+  | "pair";
 
 export interface Contribution {
   kind: ContributionKind;

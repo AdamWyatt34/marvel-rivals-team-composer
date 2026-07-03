@@ -1,4 +1,4 @@
-import { loadSnapshot } from "../lib/data/load";
+import { loadPairs, loadSnapshot } from "../lib/data/load";
 import type { Snapshot } from "../lib/data/schema";
 import {
   buildBackups,
@@ -59,10 +59,10 @@ const tablesCache = new Map<TierBand, ScoringTables>();
 async function getTables(
   band: TierBand,
 ): Promise<{ tables: ScoringTables; snapshot: Snapshot }> {
-  const snapshot = await loadSnapshot();
+  const [snapshot, pairs] = await Promise.all([loadSnapshot(), loadPairs()]);
   let tables = tablesCache.get(band);
   if (tables == null) {
-    tables = buildScoringTables(snapshot, band);
+    tables = buildScoringTables(snapshot, band, pairs);
     tablesCache.set(band, tables);
   }
   return { tables, snapshot };

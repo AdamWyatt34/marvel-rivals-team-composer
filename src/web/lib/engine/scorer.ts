@@ -20,6 +20,23 @@ import type { Contribution, DetailedTeamScore, TeamScore } from "./types";
  */
 
 const TEAM_SIZE = 6;
+const FULL_TEAM_PAIRS = (TEAM_SIZE * (TEAM_SIZE - 1)) / 2; // 15
+
+function pairSynergySum(
+  tables: ScoringTables,
+  ourIds: readonly string[],
+): number {
+  if (tables.pairSynergy.size === 0 || ourIds.length < 2) return 0;
+  let sum = 0;
+  for (let i = 0; i < ourIds.length; i++) {
+    for (let j = i + 1; j < ourIds.length; j++) {
+      const [x, y] =
+        ourIds[i] < ourIds[j] ? [ourIds[i], ourIds[j]] : [ourIds[j], ourIds[i]];
+      sum += tables.pairSynergy.get(`${x}+${y}`) ?? 0;
+    }
+  }
+  return sum;
+}
 
 export function scoreTeam(
   tables: ScoringTables,
@@ -66,6 +83,8 @@ function zOf(
 
   z += K_TEAMUP * teamUpBonus(tables, ourIds).total;
   z += K_SHAPE * (shapeDeltaOf(tables, ourIds) ?? 0);
+  z +=
+    SCORING_PARAMS.K_PAIR * (pairSynergySum(tables, ourIds) / FULL_TEAM_PAIRS);
 
   const gaps = coverageGaps(tables, ourIds, enemyIds, bannedIds);
   if (gaps.length > 0) {
@@ -243,6 +262,25 @@ export function scoreTeamDetailed(
       label: nameOf(threat),
       deltaLogOdds: (K_COVERAGE * gap) / gaps.length,
     });
+  }
+
+  if (tables.pairSynergy.size > 0) {
+    for (let i = 0; i < ourIds.length; i++) {
+      for (let j = i + 1; j < ourIds.length; j++) {
+        const [x, y] =
+          ourIds[i] < ourIds[j]
+            ? [ourIds[i], ourIds[j]]
+            : [ourIds[j], ourIds[i]];
+        const syn = tables.pairSynergy.get(`${x}+${y}`);
+        if (syn == null || syn === 0) continue;
+        contributions.push({
+          kind: "pair",
+          ids: [x, y],
+          label: `${nameOf(x)} + ${nameOf(y)}`,
+          deltaLogOdds: (SCORING_PARAMS.K_PAIR * syn) / FULL_TEAM_PAIRS,
+        });
+      }
+    }
   }
 
   const z =

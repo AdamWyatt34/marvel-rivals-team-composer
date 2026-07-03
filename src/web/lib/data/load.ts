@@ -1,17 +1,25 @@
+import { pairsTableSchema, type PairsTable } from "./pairs-schema";
 import { snapshotSchema, type Snapshot } from "./schema";
 
 /**
- * Loads and caches the committed snapshot. The basePath prefix matters on
+ * Loads and caches the committed data files. The basePath prefix matters on
  * GitHub Pages where the site lives under /marvel-rivals-team-composer.
  */
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 let cached: Promise<Snapshot> | null = null;
+let cachedPairs: Promise<PairsTable | null> | null = null;
 
 export function loadSnapshot(): Promise<Snapshot> {
   cached ??= fetchSnapshot();
   return cached;
+}
+
+/** Optional pair-synergy data; null (never a throw) when missing or invalid. */
+export function loadPairs(): Promise<PairsTable | null> {
+  cachedPairs ??= fetchPairs();
+  return cachedPairs;
 }
 
 async function fetchSnapshot(): Promise<Snapshot> {
@@ -25,5 +33,16 @@ async function fetchSnapshot(): Promise<Snapshot> {
   } catch (err) {
     cached = null;
     throw err;
+  }
+}
+
+async function fetchPairs(): Promise<PairsTable | null> {
+  try {
+    const res = await fetch(`${BASE_PATH}/data/pairs.json`);
+    if (!res.ok) return null;
+    const parsed = pairsTableSchema.safeParse(await res.json());
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
   }
 }

@@ -17,14 +17,17 @@ hosted for free on GitHub Pages.
 ```
 marvel-rivals-team-composer/
 ├─ data/reference/            # slow-moving: hero ids/roles, maps, team-up defs
+├─ data/pairs/                # sampled match comps + sampler state (pair synergy)
 ├─ src/web/
 │  ├─ app/                    # Next.js UI (static export)
-│  ├─ lib/data/               # snapshot zod schema + loader
+│  ├─ lib/data/               # snapshot + pairs zod schemas + loaders
 │  ├─ lib/engine/             # scoring engine (see below) + beam-search composer
 │  ├─ scripts/ingest/         # daily RivalsMeta → snapshot pipeline
-│  └─ public/data/snapshot.json  # committed daily by GitHub Actions
+│  ├─ scripts/pairs/          # daily match sampler → pair-synergy table
+│  └─ public/data/            # snapshot.json + pairs.json, committed by Actions
 └─ .github/workflows/
    ├─ refresh-data.yml        # daily 04:00 UTC: fetch, validate, commit snapshot
+   ├─ sample-matches.yml      # daily 06:00 UTC: sample matches (needs MRAPI_KEY)
    └─ deploy-pages.yml        # on push to master: test, build, deploy to Pages
 ```
 
@@ -43,6 +46,14 @@ season id when data goes stale.
 - Matchup terms shrink each pair's win rate toward the hero's own baseline.
 - Map deltas shrink per-map rates toward the hero's overall rate.
 - Team-up bonuses are corrected for member strength and clamped.
+- Role-shape prior: soft preference for role compositions (2-2-2 vs 1-3-2 …)
+  that actually win at the selected rank band.
+- Threat coverage: a penalty when no one on the team has even a neutral
+  matchup into a likely threat (enemy locks, or the band's meta staples).
+- Pair synergy (optional, from sampled matches): observed same-team pair win
+  rate shrunk toward the rate *expected* from both heroes' individual
+  strengths — only genuine over/under-performance together counts. Team-up
+  pairs are excluded to avoid double counting.
 - Team score = weighted sum → sigmoid → win probability. Every term is
   inspectable; the "why this lineup" list is the model's own contributions.
 
@@ -63,6 +74,12 @@ npm run build-reference  # regenerate data/reference/* (run when a new hero ship
 
 New hero shipped? `npm run build-reference -- --live`, review the diff in
 `data/reference/`, commit, then `npm run ingest`.
+
+**Pair synergy data** accumulates via `sample-matches.yml`, which samples
+leaderboard players' competitive matches from marvelrivalsapi.com (free tier,
+3k requests/day). It needs an `MRAPI_KEY` repository secret; without it the
+workflow no-ops and the engine's pair term is simply zero. Expect the term to
+become meaningful after ~2–4 weeks of daily accumulation.
 
 ## Deployment
 

@@ -92,5 +92,9 @@ function renderLine(
         : `${c.label} compositions underperform at this rank (${pct})`;
     case "coverage":
       return `No good answer to ${c.label} (${pct})`;
+    case "pair":
+      return deltaP >= 0
+        ? `${c.label} overperform together (${pct})`
+        : `${c.label} underperform together (${pct})`;
   }
 }
