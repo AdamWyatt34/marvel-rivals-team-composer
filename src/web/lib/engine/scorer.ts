@@ -81,10 +81,16 @@ function zOf(
     z += (K_MAP * mapSum) / TEAM_SIZE;
   }
 
+  // Team-ups and pair synergies cut both ways: the enemy's active combos
+  // lower our win probability just as ours raise it.
   z += K_TEAMUP * teamUpBonus(tables, ourIds).total;
+  z -= K_TEAMUP * teamUpBonus(tables, enemyIds).total;
   z += K_SHAPE * (shapeDeltaOf(tables, ourIds) ?? 0);
   z +=
     SCORING_PARAMS.K_PAIR * (pairSynergySum(tables, ourIds) / FULL_TEAM_PAIRS);
+  z -=
+    SCORING_PARAMS.K_PAIR *
+    (pairSynergySum(tables, enemyIds) / FULL_TEAM_PAIRS);
 
   const gaps = coverageGaps(tables, ourIds, enemyIds, bannedIds);
   if (gaps.length > 0) {
@@ -238,6 +244,14 @@ export function scoreTeamDetailed(
       deltaLogOdds: K_TEAMUP * active.bonus,
     });
   }
+  for (const active of teamUpBonus(tables, enemyIds).active) {
+    contributions.push({
+      kind: "teamup",
+      ids: active.members,
+      label: `Enemy ${active.name}`,
+      deltaLogOdds: -K_TEAMUP * active.bonus,
+    });
+  }
 
   const shape = shapeDeltaOf(tables, ourIds);
   if (shape != null && shape !== 0) {
@@ -265,22 +279,24 @@ export function scoreTeamDetailed(
   }
 
   if (tables.pairSynergy.size > 0) {
-    for (let i = 0; i < ourIds.length; i++) {
-      for (let j = i + 1; j < ourIds.length; j++) {
-        const [x, y] =
-          ourIds[i] < ourIds[j]
-            ? [ourIds[i], ourIds[j]]
-            : [ourIds[j], ourIds[i]];
-        const syn = tables.pairSynergy.get(`${x}+${y}`);
-        if (syn == null || syn === 0) continue;
-        contributions.push({
-          kind: "pair",
-          ids: [x, y],
-          label: `${nameOf(x)} + ${nameOf(y)}`,
-          deltaLogOdds: (SCORING_PARAMS.K_PAIR * syn) / FULL_TEAM_PAIRS,
-        });
+    const pushPairs = (ids: readonly string[], sign: 1 | -1) => {
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const [x, y] = ids[i] < ids[j] ? [ids[i], ids[j]] : [ids[j], ids[i]];
+          const syn = tables.pairSynergy.get(`${x}+${y}`);
+          if (syn == null || syn === 0) continue;
+          contributions.push({
+            kind: "pair",
+            ids: [x, y],
+            label: `${sign === -1 ? "Enemy " : ""}${nameOf(x)} + ${nameOf(y)}`,
+            deltaLogOdds:
+              (sign * SCORING_PARAMS.K_PAIR * syn) / FULL_TEAM_PAIRS,
+          });
+        }
       }
-    }
+    };
+    pushPairs(ourIds, 1);
+    pushPairs(enemyIds, -1);
   }
 
   const z =

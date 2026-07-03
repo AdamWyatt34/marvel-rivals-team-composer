@@ -153,6 +153,23 @@ describe("scorer", () => {
     expect(detailed.contributions.some((c) => c.kind === "teamup")).toBe(true);
   });
 
+  it("enemy team-ups lower our probability", () => {
+    const ours = [
+      "hulk",
+      "magneto",
+      "iron-man",
+      "mantis",
+      "luna-snow",
+      "adam-warlock",
+    ];
+    // hela+thor activates RAGNAROK REBIRTH for the enemy; hela+magneto doesn't
+    const vsTeamUp = scoreTeam(tables, ours, ["hela", "thor"]).prob;
+    const vsNoTeamUp = scoreTeam(tables, ours, ["hela", "magneto"]).prob;
+    // thor and magneto are both strength-neutral vanguards in the fixture,
+    // so the difference is the enemy team-up (and thor's matchup absence)
+    expect(vsTeamUp).toBeLessThan(vsNoTeamUp);
+  });
+
   it("detailed contributions sum to the same score", () => {
     const ours = [
       "hela",

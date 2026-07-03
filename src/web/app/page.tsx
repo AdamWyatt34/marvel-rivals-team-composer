@@ -34,7 +34,8 @@ const BAND_LABELS: Record<TierBand, string> = {
   "grandmaster+": "Grandmaster+",
 };
 
-const BUCKET_LIMITS: Record<Bucket, number> = { my: 6, enemy: 6, ban: 8 };
+// 3 bans per team since Season 7 -> at most 6 unique bans per match
+const BUCKET_LIMITS: Record<Bucket, number> = { my: 6, enemy: 6, ban: 6 };
 
 type Preset = { name: string; locks: string[] };
 
@@ -187,7 +188,7 @@ export default function Home() {
   const banSeq = useRef(0);
   useEffect(() => {
     const seq = ++banSeq.current;
-    if (my.length === 0 || bans.length >= 4) {
+    if (my.length === 0 || bans.length >= BUCKET_LIMITS.ban) {
       setBanSuggestions({ list: null, loading: false });
       return;
     }
@@ -294,7 +295,7 @@ export default function Home() {
                 ? `My team (${my.length}/6)`
                 : b === "enemy"
                   ? `Enemy (${enemy.length}/6)`
-                  : `Bans (${bans.length})`}
+                  : `Bans (${bans.length}/6)`}
             </button>
           ))}
         </div>
