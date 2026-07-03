@@ -4,7 +4,13 @@ import { suggestBans, threatScore } from "../bans";
 import { compose } from "../compose";
 import { explainTeam } from "../explain";
 import { scoreTeam, scoreTeamDetailed } from "../scorer";
-import { buildScoringTables, logit, shrunk, SCORING_PARAMS } from "../stats";
+import {
+  buildScoringTables,
+  capStrength,
+  logit,
+  shrunk,
+  SCORING_PARAMS,
+} from "../stats";
 import { threatsAgainst } from "../threats";
 import { DEFAULT_RULES, NoFeasibleTeamError } from "../types";
 import { FIXTURE } from "./fixture";
@@ -18,8 +24,8 @@ describe("stats / shrinkage", () => {
   });
 
   it("hero strength matches the hand-computed empirical-Bayes value", () => {
-    // hela: shrunk(2750, 5000, 0.5, 400) = 2950/5400
-    const expected = logit(2950 / 5400);
+    // hela: shrunk(2750, 5000, 0.5, 400) = 2950/5400, then soft-capped
+    const expected = capStrength(logit(2950 / 5400));
     expect(tables.strength.get("hela")).toBeCloseTo(expected, 10);
     // an average hero shrinks to exactly the mean -> strength 0
     expect(tables.strength.get("thor")).toBeCloseTo(0, 10);
@@ -27,6 +33,28 @@ describe("stats / shrinkage", () => {
 
   it("a hero with no stats contributes zero strength", () => {
     expect(tables.strength.get("nobody")).toBeUndefined();
+  });
+
+  it("soft cap compresses outlier win rates more than modest ones", () => {
+    // a 58%+ specialist hero must land near the cap, not at its raw log-odds
+    const raw = logit(0.587);
+    expect(capStrength(raw)).toBeLessThan(SCORING_PARAMS.HERO_STRENGTH_CAP);
+    expect(capStrength(raw)).toBeGreaterThan(
+      0.9 * SCORING_PARAMS.HERO_STRENGTH_CAP,
+    );
+    // ordering is preserved
+    expect(capStrength(logit(0.53))).toBeLessThan(capStrength(raw));
+    // small strengths pass through nearly untouched
+    expect(capStrength(0.02)).toBeCloseTo(0.02, 3);
+  });
+
+  it("team-up bonuses are clamped to [TEAMUP_MIN, TEAMUP_MAX]", () => {
+    for (const teamUp of tables.teamUps) {
+      for (const v of teamUp.variants) {
+        expect(v.bonus).toBeGreaterThanOrEqual(SCORING_PARAMS.TEAMUP_MIN);
+        expect(v.bonus).toBeLessThanOrEqual(SCORING_PARAMS.TEAMUP_MAX);
+      }
+    }
   });
 
   it("matchup deltas shrink toward the hero's own baseline", () => {

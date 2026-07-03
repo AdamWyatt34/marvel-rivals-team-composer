@@ -20,12 +20,26 @@ export const SCORING_PARAMS = {
   M_MAP: 150,
   M_TEAMUP: 250,
   /** Term weights in the additive model. */
-  K_HERO: 1.0,
+  K_HERO: 0.85,
   K_MATCHUP: 0.8,
   K_MAP: 0.5,
   K_TEAMUP: 0.4,
-  /** Team-ups rarely hurt; clamp noisy negative estimates. */
+  /** Team-up bonus clamps: rarely hurt, and their stats inherit the same
+   * specialist bias as hero win rates, so cap the upside too. */
   TEAMUP_MIN: -0.1,
+  TEAMUP_MAX: 0.3,
+  /**
+   * Soft cap on hero strength (log-odds; 0.15 ~ a 53.7% hero at a 50% mean).
+   * Extreme win rates on niche heroes are specialist/one-trick selection
+   * bias, not team value — shrinkage can't fix that (their samples are
+   * large), so strengths are tanh-compressed toward the cap instead.
+   */
+  HERO_STRENGTH_CAP: 0.15,
+  /**
+   * Heroes picked less than the median share get a proportionally stronger
+   * shrinkage prior (specialists supply most of their games), capped at 8x.
+   */
+  PICK_SHARE_PRIOR_MAX: 8,
 };
 
 /**
@@ -117,17 +131,37 @@ function aggregateBand(snapshot: Snapshot, band: TierBand) {
 }
 
 function shrunkHeroRates(
-  perHero: Map<string, { wrMatches: number; wrWins: number }>,
+  perHero: Map<string, { matches: number; wrMatches: number; wrWins: number }>,
   pBar: number,
 ): Map<string, number> {
   const rates = new Map<string, number>();
+  const shares = [...perHero.values()]
+    .map((a) => a.matches)
+    .sort((a, b) => a - b);
+  const medianMatches =
+    shares.length > 0 ? shares[Math.floor(shares.length / 2)] : 0;
   for (const [slug, agg] of perHero) {
+    // Below-median pick volume -> proportionally stronger prior: niche heroes'
+    // games come disproportionately from specialists.
+    const factor =
+      agg.matches > 0 && medianMatches > 0
+        ? Math.min(
+            SCORING_PARAMS.PICK_SHARE_PRIOR_MAX,
+            Math.max(1, medianMatches / agg.matches),
+          )
+        : 1;
     rates.set(
       slug,
-      shrunk(agg.wrWins, agg.wrMatches, pBar, SCORING_PARAMS.M_HERO),
+      shrunk(agg.wrWins, agg.wrMatches, pBar, SCORING_PARAMS.M_HERO * factor),
     );
   }
   return rates;
+}
+
+/** tanh soft cap: preserves ordering, compresses specialist-biased outliers. */
+export function capStrength(rawLogOddsDelta: number): number {
+  const cap = SCORING_PARAMS.HERO_STRENGTH_CAP;
+  return cap * Math.tanh(rawLogOddsDelta / cap);
 }
 
 function globalMean(
@@ -159,7 +193,8 @@ export function buildScoringTables(
 
   const heroRate = shrunkHeroRates(perHero, pBar);
   const strength = new Map<string, number>();
-  for (const [slug, rate] of heroRate) strength.set(slug, logit(rate) - zBar);
+  for (const [slug, rate] of heroRate)
+    strength.set(slug, capStrength(logit(rate) - zBar));
 
   // Matchup deltas are shrunk toward the hero's own baseline AT THE MATRIX'S
   // tier (Diamond+), not toward 0.5 — a sparse matchup then contributes ~0.
@@ -229,9 +264,9 @@ export function buildScoringTables(
       const meanStrength =
         members.reduce((sum, m) => sum + (strength.get(m) ?? 0), 0) /
         members.length;
-      const bonus = Math.max(
-        SCORING_PARAMS.TEAMUP_MIN,
-        logit(rate) - zBar - meanStrength,
+      const bonus = Math.min(
+        SCORING_PARAMS.TEAMUP_MAX,
+        Math.max(SCORING_PARAMS.TEAMUP_MIN, logit(rate) - zBar - meanStrength),
       );
       variants.push({ members, bonus });
     }

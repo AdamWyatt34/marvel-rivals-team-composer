@@ -35,7 +35,8 @@ export default function Home() {
   const [warnWhy, setWarnWhy] = useState<Record<string, string>>({});
   const [maps, setMaps] = useState<MapItem[]>([]);
   const [selectedMap, setSelectedMap] = useState<string | undefined>(undefined);
-  const [band, setBand] = useState<TierBand>("all");
+  // Default to Platinum+ — the "all" band is dominated by low-rank data.
+  const [band, setBand] = useState<TierBand>("platinum+");
 
   useEffect(() => {
     getMaps()
