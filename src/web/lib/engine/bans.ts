@@ -120,6 +120,20 @@ export function suggestBans(
 
     banned.add(best);
     chosen.push(best);
+
+    // Bans alternate in-game (first votes are simultaneous, then one at a
+    // time), so between our votes the enemy consumes a ban too. Simulate
+    // theirs as the top remaining meta staple, so our later suggestions
+    // don't waste votes on heroes that will likely vanish anyway. Simulated
+    // enemy bans affect the search state but are never returned.
+    if (step < k - 1) {
+      const myLocked = new Set(myLockedIds);
+      const enemyBan = tables.metaThreats.find(
+        (id) =>
+          !banned.has(id) && !myLocked.has(id) && !enemyLockedIds.includes(id),
+      );
+      if (enemyBan != null) banned.add(enemyBan);
+    }
   }
 
   return chosen.slice(0, k);
