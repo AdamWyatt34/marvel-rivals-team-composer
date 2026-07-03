@@ -290,6 +290,49 @@ export async function slotAlternatives(
   return alternatives.sort((a, b) => b.deltaProb - a.deltaProb).slice(0, topN);
 }
 
+export type BanBaitWarning = {
+  id: string;
+  name: string;
+  /** Fraction of the band's matches in which this hero is banned. */
+  banRate: number;
+  backup: SlotAlternative | null;
+};
+
+/** Locked heroes likely to be removed in the ban phase get a heads-up. */
+const BAN_BAIT_THRESHOLD = 0.2;
+
+/**
+ * Bans happen before hero select, so a locked hero with a high ban rate is a
+ * plan with a hole in it. For each such lock, surface the rate and the best
+ * same-role replacement so the backup plan exists before the ban lands.
+ */
+export async function getBanBaitWarnings(
+  payload: ComposePayload,
+  teamIds: string[],
+): Promise<BanBaitWarning[]> {
+  const band = payload.band ?? "all";
+  const { tables } = await getTables(band);
+  const banned = new Set(payload.bans ?? []);
+  const warnings: BanBaitWarning[] = [];
+  for (const id of payload.myLocked) {
+    if (banned.has(id)) continue;
+    const rate = tables.banRate.get(id) ?? 0;
+    if (rate < BAN_BAIT_THRESHOLD) continue;
+    const hero = tables.heroes.get(id);
+    if (hero == null) continue;
+    const alts = teamIds.includes(id)
+      ? await slotAlternatives(payload, teamIds, id, 1)
+      : [];
+    warnings.push({
+      id,
+      name: hero.name,
+      banRate: rate,
+      backup: alts[0] ?? null,
+    });
+  }
+  return warnings.sort((a, b) => b.banRate - a.banRate);
+}
+
 export type HeroDossier = {
   id: string;
   name: string;

@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import type { ComposeResponse, SlotAlternative } from "./local-api";
+import type {
+  BanBaitWarning,
+  ComposeResponse,
+  SlotAlternative,
+} from "./local-api";
 
 type BanSuggestions = {
   list: { id: string; name: string }[] | null;
@@ -12,6 +16,7 @@ type Props = {
   resp: ComposeResponse | null;
   pending: boolean;
   error: string | null;
+  banBait: BanBaitWarning[];
   lockedIds: string[];
   pinnedIds: string[];
   alternatives: Record<string, SlotAlternative[] | "loading">;
@@ -29,6 +34,7 @@ export default function ResultsPanel({
   resp,
   pending,
   error,
+  banBait,
   lockedIds,
   pinnedIds,
   alternatives,
@@ -75,6 +81,22 @@ export default function ResultsPanel({
             low={resp.winProbabilityLow}
             high={resp.winProbabilityHigh}
           />
+
+          {banBait.length > 0 && (
+            <div style={banBaitBox}>
+              {banBait.map((w) => (
+                <p key={w.id} style={banBaitLine}>
+                  ⚠ <strong>{w.name}</strong> is banned in{" "}
+                  {(w.banRate * 100).toFixed(0)}% of lobbies at this rank
+                  {w.backup
+                    ? ` — backup: ${w.backup.name} (${
+                        w.backup.deltaProb >= 0 ? "+" : ""
+                      }${(w.backup.deltaProb * 100).toFixed(1)}%)`
+                    : ""}
+                </p>
+              ))}
+            </div>
+          )}
 
           <div
             style={{
@@ -486,6 +508,20 @@ const altButton: CSSProperties = {
   border: "1px solid var(--border)",
   background: "var(--card)",
   color: "var(--text)",
+};
+
+const banBaitBox: CSSProperties = {
+  marginTop: 10,
+  padding: "8px 12px",
+  borderRadius: 8,
+  border: "1px solid color-mix(in oklab, var(--accent) 45%, transparent)",
+  background: "color-mix(in oklab, var(--accent) 10%, transparent)",
+};
+
+const banBaitLine: CSSProperties = {
+  margin: "2px 0",
+  fontSize: 12.5,
+  lineHeight: 1.45,
 };
 
 const banChip: CSSProperties = {

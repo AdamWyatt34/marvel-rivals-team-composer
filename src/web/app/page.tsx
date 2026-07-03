@@ -11,12 +11,14 @@ import HeroGrid, { type Bucket, type Membership } from "./HeroGrid";
 import ResultsPanel from "./ResultsPanel";
 import {
   composeTeam,
+  getBanBaitWarnings,
   getHeroes,
   getMaps,
   getSnapshotMeta,
   getThreatsDetailed,
   slotAlternatives,
   suggestBansFor,
+  type BanBaitWarning,
   type ComposePayload,
   type ComposeResponse,
   type Hero,
@@ -83,6 +85,7 @@ export default function Home() {
     list: { id: string; name: string }[] | null;
     loading: boolean;
   }>({ list: null, loading: false });
+  const [banBait, setBanBait] = useState<BanBaitWarning[]>([]);
 
   // localStorage hydration (after mount, to keep static prerender consistent)
   useEffect(() => {
@@ -171,6 +174,15 @@ export default function Home() {
         if (composeSeq.current === seq) {
           setResp(r);
           setError(null);
+        }
+        if (payload.myLocked.length > 0) {
+          const warnings = await getBanBaitWarnings(
+            payload,
+            r.primary.map((p) => p.id),
+          );
+          if (composeSeq.current === seq) setBanBait(warnings);
+        } else if (composeSeq.current === seq) {
+          setBanBait([]);
         }
       } catch (e) {
         if (composeSeq.current === seq) {
@@ -408,6 +420,7 @@ export default function Home() {
           resp={resp}
           pending={pending}
           error={error}
+          banBait={banBait}
           lockedIds={my}
           pinnedIds={pinned}
           alternatives={alternatives}
