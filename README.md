@@ -1,163 +1,79 @@
-
 # Marvel Rivals Team Composer
 
-End-to-end sample that suggests optimal 6-hero team comps for **Marvel Rivals** with:
-- locked picks (immutable on your side),
-- symmetric bans (yours + enemy remove from both pools),
-- hard role rules (**≥ 2 Strategists**, **≥ 1 Vanguard** by default),
-- backups per role within 5% of optimal,
-- optional short explanation via a small LLM,
-- infra for Azure (Functions, Static Web Apps, Blob, App Configuration),
-- CI/CD via GitHub Actions.
+Suggests the ideal 6-hero team comp for **Marvel Rivals** given your locked picks
+(e.g. you play Thor, your duo plays Winter Soldier), the enemy's known picks, and
+any bans. Runs entirely in the browser from a daily data snapshot — no backend,
+hosted for free on GitHub Pages.
 
----
+- Locked picks (immutable on your side), enemy picks, bans
+- Hard role rules: **≥ 2 Strategists, ≥ 1 Vanguard, ≥ 1 Duelist**, team of 6
+- Live composition — recommendations update as you click
+- Rank-band filtering (All / Gold+ / Platinum+ / Diamond+ / Grandmaster+)
+- Per-map hero deltas, hero-vs-hero matchups, team-up bonuses
+- Backups per role, adversarial ban suggestions, rule-based explanations
 
-## Repo layout
+## How it works
 
 ```
 marvel-rivals-team-composer/
-├─ meta/                          # local seed data for quick dev
-│  ├─ heroes.json                 # id, name, role, tags (tier:*)
-│  ├─ counters.json               # per-hero vs enemy multipliers
-│  ├─ synergy.json                # pair bonuses (additive)
-│  └─ weights.json                # scoring weights
-├─ src/
-│  ├─ Composer.Core/              # scorer library
-│  ├─ Composer.Functions/         # Azure Functions (dotnet-isolated)
-│  └─ web/                        # Next.js app (works with SWA)
-└─ infra/azure/                   # Bicep templates
+├─ data/reference/            # slow-moving: hero ids/roles, maps, team-up defs
+├─ src/web/
+│  ├─ app/                    # Next.js UI (static export)
+│  ├─ lib/data/               # snapshot zod schema + loader
+│  ├─ lib/engine/             # scoring engine (see below) + beam-search composer
+│  ├─ scripts/ingest/         # daily RivalsMeta → snapshot pipeline
+│  └─ public/data/snapshot.json  # committed daily by GitHub Actions
+└─ .github/workflows/
+   ├─ refresh-data.yml        # daily 04:00 UTC: fetch, validate, commit snapshot
+   └─ deploy-pages.yml        # on push to master: test, build, deploy to Pages
 ```
 
----
+**Data** comes from rivalsmeta.com's (unofficial, undocumented) stats API and
+matchup pages: per-rank win/pick/ban counts, per-map win rates, hero-vs-hero
+matchup matrix (Diamond+), and team-up stats. The ingest validates everything
+(zod schema + sanity gates) and refuses to overwrite the last good snapshot on
+failure. Season rollovers are detected automatically by probing the next
+season id when data goes stale.
 
-## Quickstart (local)
+**Scoring** is a transparent additive log-odds model, not ML:
 
-**Prereqs**: .NET 8 SDK, Node 18+, Azure Functions Core Tools
+- Hero strength = empirical-Bayes-shrunk win rate delta vs the rank band's mean.
+  Niche heroes get a stronger prior (specialist/one-trick bias), and strengths
+  are soft-capped (`tanh`) so a 59%-win-rate one-trick hero can't dominate.
+- Matchup terms shrink each pair's win rate toward the hero's own baseline.
+- Map deltas shrink per-map rates toward the hero's overall rate.
+- Team-up bonuses are corrected for member strength and clamped.
+- Team score = weighted sum → sigmoid → win probability. Every term is
+  inspectable; the "why this lineup" list is the model's own contributions.
 
-1) **Build & run API**
-```bash
-dotnet build src/Composer.Functions
-cd src/Composer.Functions
-func start
-```
-API: `http://localhost:7071/api/compose`
+The composer is a beam search over the hero pool honoring locks, bans, and role
+minimums. Ban suggestions greedily search for the ban that most improves your
+best comp vs the enemy's best response.
 
-2) **Run Web (dev)**
-```bash
+## Local development
+
+```powershell
 cd src/web
-npm i
-npm run dev
-```
-Web: `http://localhost:3000`
-
-3) **Local data**
-- `src/Composer.Functions/Program.cs` loads `/meta` by default when `USE_AZURE=false`.
-- To force local meta: set env `USE_AZURE=false` before `func start`.
-
----
-
-## Data model (meta/*)
-
-### heroes.json
-```json
-[ { "id":"loki", "name":"Loki", "role":"Strategist", "tags":["tier:S"] } ]
+npm ci
+npm run dev              # UI at http://localhost:3000
+npm run test             # vitest: engine + ingest suites
+npm run ingest           # refresh public/data/snapshot.json from rivalsmeta.com
+npm run build-reference  # regenerate data/reference/* (run when a new hero ships)
 ```
 
-### counters.json
-Per hero → enemy multipliers. `1.15` means “strong vs”, values near `1.0` are neutral.
-```json
-[ { "hero":"loki", "counters": { "groot": 1.05, "peni-parker": 1.1 } } ]
-```
+New hero shipped? `npm run build-reference -- --live`, review the diff in
+`data/reference/`, commit, then `npm run ingest`.
 
-### synergy.json
-Pair bonuses (additive). Use your hero **ids** and pick one direction (no need to duplicate reverse).
-```json
-[ { "pair":["loki","phoenix"], "score": 1.2, "note": "Anchor enables burst" } ]
-```
+## Deployment
 
-### weights.json
-```json
-{ "roleCoverage": 2.0, "synergy": 1.0, "counters": 1.2, "antiSynergy": 0.0, "mapMods": 0.0, "banRisk": 0.0 }
-```
+Pushes to `master` that touch `src/web/**` deploy to GitHub Pages via
+`deploy-pages.yml` (repo Settings → Pages → Source: "GitHub Actions").
+The daily `refresh-data.yml` commit triggers a redeploy automatically, so the
+site never serves data older than ~24h while the source keeps updating.
 
-> Tip: if you put many synergy scores **>1**, consider reducing `weights.synergy` so counters and role coverage still matter.
+## Disclaimer
 
----
-
-## API
-
-### POST `/api/compose`
-**Body**
-```json
-{
-  "myLocked": ["phoenix","wanda","doctor-strange"],
-  "enemyLocked": ["loki","magneto"],
-  "myBans": ["storm"],
-  "enemyBans": ["panther"],
-  "map": null,
-  "rules": { "minStrategists": 2, "minVanguards": 1, "teamSize": 6 }
-}
-```
-**Response**
-```json
-{
-  "primary": [ {"role":"Vanguard","hero":"Photon"}, ... ],
-  "backups": { "Vanguard":["Hulk","Groot"], "Strategist":["Loki"] },
-  "suggestedBans": ["Magneto","Storm","Black Panther"],
-  "explanation": "Short rationale..."
-}
-```
-
-### GET `/api/heroes`
-Returns the canonical list of heroes from the loaded roster (so you **don’t** hard-code them in the UI). See code below.
-
-```json
-[ {"id":"loki","name":"Loki","role":"Strategist","tags":["tier:S"]}, ... ]
-```
-
-## Azure deployment
-
-### 1) Deploy infra
-```bash
-az group create -n rg-rivals-comp-dev -l eastus
-az deployment group create -g rg-rivals-comp-dev -f infra/azure/main.bicep -p appName=rivals-comp environment=dev
-```
-
-### 2) Upload meta to Blob
-```bash
-STG=$(az storage account list -g rg-rivals-comp-dev --query "[0].name" -o tsv)
-az storage blob upload-batch --account-name $STG -d meta/v1 -s meta
-```
-
-### 3) Set App Config
-```bash
-APPCE=$(az appconfig list -g rg-rivals-comp-dev --query "[0].endpoint" -o tsv)
-az appconfig kv set --endpoint $APPCE --key "meta.currentVersion" --value "v1"
-```
-
-### 4) CI/CD secrets (GitHub)
-- `FUNCTIONS_PUBLISH_PROFILE` (Function → Get publish profile → paste whole XML)
-- `SWA_DEPLOYMENT_TOKEN` (Static Web App → Manage deployment token)
-- Repo variable `FUNCTION_HOST` (e.g., `func-rivals-comp-dev.azurewebsites.net`)
-
-Push to `main` and the provided workflows will deploy API + Web.
-
----
-
-## Tuning & tips
-
-- **Weights**: tune `weights.json` live in production by swapping `meta.currentVersion` to a new folder (`v2`) with updated numbers/files.
-- **Suggested bans** appear only when `myBans` is empty. Adjust top-K in `BanRecommender`.
-- **LLM explainer** (optional): set `AI__Endpoint`, `AI__ApiKey`, `AI__Model`. Otherwise it returns a friendly off message.
-- **Performance**: `beamWidth` in `Composer.Compose` trades quality for speed. Start 16–32.
-- **Constraints**: If you over-constrain with locks + bans, API returns `400` with a hint.
-
----
-
-## Troubleshooting
-
-- **401/403 reading Blob/App Config**: ensure role assignments for the Function’s managed identity
-  - Storage Blob Data Reader on the Storage Account
-  - App Configuration Data Reader on the App Config
-- **Hero id mismatch**: ids must match `heroes.json` (e.g., `spider-man`, `mr-fantastic`, `cloak-and-dagger`).
-- **No feasible team**: not enough Strategists/Vanguards left after bans/locks → relax inputs or change rules.
+Not affiliated with NetEase or Marvel. Statistics are sourced from the
+community site [rivalsmeta.com](https://rivalsmeta.com); its endpoints are
+unofficial and may change without notice — the ingest pipeline fails safely
+and keeps the last good snapshot if they do.
