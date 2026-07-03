@@ -70,6 +70,18 @@ export function validateSnapshot(
     );
   }
 
+  // Role shapes: at least one bucket must carry the standard 2-2-2 comp
+  // with a meaningful sample, or the team-comps parse silently broke.
+  const shapeSample = Object.values(snapshot.roleShapes).reduce(
+    (max, perShape) => Math.max(max, perShape["2-2-2"]?.matches ?? 0),
+    0,
+  );
+  if (shapeSample < 1000) {
+    failures.push(
+      `role-shape data looks broken: best 2-2-2 bucket has only ${shapeSample} matches`,
+    );
+  }
+
   if (previous != null) {
     const prevTotal = totalWrMatches(previous);
     if (

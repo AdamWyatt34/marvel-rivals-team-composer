@@ -163,6 +163,7 @@ export async function composeTeam(
     teamIds,
     payload.enemyLocked,
     mapId,
+    banned,
   );
   const nameOf = (id: string) => tables.heroes.get(id)?.name ?? id;
 

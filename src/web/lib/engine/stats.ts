@@ -19,11 +19,20 @@ export const SCORING_PARAMS = {
   M_MATCHUP: 250,
   M_MAP: 150,
   M_TEAMUP: 250,
+  M_SHAPE: 500,
   /** Term weights in the additive model. */
   K_HERO: 0.85,
   K_MATCHUP: 0.8,
   K_MAP: 0.5,
   K_TEAMUP: 0.4,
+  K_SHAPE: 0.5,
+  /**
+   * Coverage: penalize teams with no answer (best matchup still negative)
+   * to a likely threat. Only gaps are penalized; redundant answers earn
+   * nothing.
+   */
+  K_COVERAGE: 0.6,
+  META_THREAT_COUNT: 8,
   /** Team-up bonus clamps: rarely hurt, and their stats inherit the same
    * specialist bias as hero win rates, so cap the upside too. */
   TEAMUP_MIN: -0.1,
@@ -103,6 +112,14 @@ export interface ScoringTables {
   teamUps: ActiveTeamUp[];
   /** Fraction of the band's matches in which the hero was banned. */
   banRate: Map<string, number>;
+  /** "V-D-S" (e.g. "2-2-2") -> log-odds delta of that role shape vs the band mean. */
+  shapeDelta: Map<string, number>;
+  /**
+   * The heroes an unknown enemy is most likely to field in this band
+   * (ranked by pick volume + bans) — the threat set for coverage scoring
+   * when enemy picks aren't known yet.
+   */
+  metaThreats: string[];
 }
 
 function aggregateBand(snapshot: Snapshot, band: TierBand) {
@@ -283,6 +300,32 @@ export function buildScoringTables(
     banRate.set(slug, totalMatches > 0 ? agg.bans / totalMatches : 0);
   }
 
+  // Role-shape prior: how role compositions (2-2-2, 1-3-2, …) perform in
+  // this band, beyond the hard minimums.
+  const shapeAgg = new Map<string, { matches: number; wins: number }>();
+  for (const code of TIER_BANDS[band]) {
+    const bucket = snapshot.roleShapes[code];
+    if (bucket == null) continue;
+    for (const [key, count] of Object.entries(bucket)) {
+      const agg = shapeAgg.get(key) ?? { matches: 0, wins: 0 };
+      agg.matches += count.matches;
+      agg.wins += count.wins;
+      shapeAgg.set(key, agg);
+    }
+  }
+  const shapeDelta = new Map<string, number>();
+  for (const [key, agg] of shapeAgg) {
+    const rate = shrunk(agg.wins, agg.matches, pBar, SCORING_PARAMS.M_SHAPE);
+    shapeDelta.set(key, logit(rate) - zBar);
+  }
+
+  // Likely-enemy threat set: most-fielded heroes weighted by ban pressure.
+  const metaThreats = [...perHero.entries()]
+    .map(([slug, agg]) => ({ slug, weight: agg.matches + 3 * agg.bans }))
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, SCORING_PARAMS.META_THREAT_COUNT)
+    .map((x) => x.slug);
+
   return {
     band,
     pBar,
@@ -293,5 +336,7 @@ export function buildScoringTables(
     mapDelta,
     teamUps,
     banRate,
+    shapeDelta,
+    metaThreats,
   };
 }

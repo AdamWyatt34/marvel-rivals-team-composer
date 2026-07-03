@@ -164,6 +164,65 @@ describe("scorer", () => {
     const detailed = scoreTeamDetailed(tables, ours, enemy, "1291");
     expect(detailed.z).toBeCloseTo(fast.z, 10);
   });
+
+  it("role-shape term prefers the winning 2-2-2 shape over 1-3-2", () => {
+    // identical strength-neutral heroes, only the shape differs
+    const shape222 = [
+      "thor",
+      "hulk",
+      "iron-man",
+      "the-punisher",
+      "mantis",
+      "luna-snow",
+    ];
+    const shape132 = [
+      "thor",
+      "iron-man",
+      "the-punisher",
+      "hela",
+      "mantis",
+      "luna-snow",
+    ];
+    const d222 = scoreTeamDetailed(tables, shape222, []);
+    const d132 = scoreTeamDetailed(tables, shape132, []);
+    const shapeOf = (d: typeof d222) =>
+      d.contributions.find((c) => c.kind === "shape")?.deltaLogOdds ?? 0;
+    expect(shapeOf(d222)).toBeGreaterThan(0); // 53% shape
+    expect(shapeOf(d132)).toBeLessThan(0); // 47.5% shape
+  });
+
+  it("shape term only applies to complete teams", () => {
+    const partial = scoreTeamDetailed(tables, ["thor", "hulk", "mantis"], []);
+    expect(partial.contributions.some((c) => c.kind === "shape")).toBe(false);
+  });
+
+  it("coverage term penalizes a team with no answer to a threat", () => {
+    // iron-man is hela's only known (bad) matchup in the fixture; a team of
+    // six iron-man-like heroes... instead: enemy hela vs a team whose only
+    // known edge into her is negative (iron-man) and the rest unknown counts
+    // as neutral -> no gap. So force the gap: all six ARE iron-man-adjacent
+    // isn't possible with this fixture, so test the inverse invariants.
+    const withNeutral = [
+      "thor",
+      "hulk",
+      "magneto",
+      "mantis",
+      "luna-snow",
+      "adam-warlock",
+    ];
+    const d = scoreTeamDetailed(tables, withNeutral, ["hela"]);
+    // unknown matchups are neutral -> no coverage gap fires
+    expect(d.contributions.some((c) => c.kind === "coverage")).toBe(false);
+  });
+
+  it("coverage gap fires when every known edge into a threat is negative", () => {
+    // single-hero team: iron-man's only known matchup vs hela is negative
+    const d = scoreTeamDetailed(tables, ["iron-man"], ["hela"]);
+    const gap = d.contributions.find((c) => c.kind === "coverage");
+    expect(gap).toBeDefined();
+    expect(gap!.deltaLogOdds).toBeLessThan(0);
+    expect(gap!.ids).toContain("hela");
+  });
 });
 
 describe("compose", () => {

@@ -24,8 +24,15 @@ export function explainTeam(
   ourIds: readonly string[],
   enemyIds: readonly string[],
   mapId?: string | null,
+  bannedIds: readonly string[] = [],
 ): Explanation {
-  const detailed = scoreTeamDetailed(tables, ourIds, enemyIds, mapId);
+  const detailed = scoreTeamDetailed(
+    tables,
+    ourIds,
+    enemyIds,
+    mapId,
+    bannedIds,
+  );
   const mapName =
     mapId != null
       ? (snapshot.maps.find((m) => m.id === mapId)?.name ?? mapId)
@@ -79,5 +86,11 @@ function renderLine(
         : `${c.label} underperforms on ${mapName ?? "this map"} (${pct})`;
     case "teamup":
       return `${c.label} team-up active (${pct})`;
+    case "shape":
+      return deltaP >= 0
+        ? `${c.label} compositions win at this rank (${pct})`
+        : `${c.label} compositions underperform at this rank (${pct})`;
+    case "coverage":
+      return `No good answer to ${c.label} (${pct})`;
   }
 }

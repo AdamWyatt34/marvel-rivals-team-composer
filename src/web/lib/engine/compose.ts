@@ -59,6 +59,7 @@ export function compose(
       team.map((h) => h.id),
       enemyIds,
       mapId,
+      input.bannedIds,
     );
 
   let beams: Beam[] = [{ team: [...locked], z: score(locked).z }];
@@ -123,6 +124,7 @@ export function compose(
       best.team.map((h) => h.id),
       enemyIds,
       mapId,
+      input.bannedIds,
     ).prob,
   };
 }

@@ -14,7 +14,7 @@ export const USER_AGENT =
   "marvel-rivals-team-composer/1.0 (+https://github.com/AdamWyatt34/marvel-rivals-team-composer; hobby project)";
 
 /** Current season's internal id. Season N maps to internal id 2N (half-seasons increment by 1). */
-export const CURRENT_SEASON_ID = 16;
+export const CURRENT_SEASON_ID = 17;
 
 /** Reject data older than this; triggers a probe of the next season id. */
 export const MAX_STALENESS_DAYS = 7;
@@ -124,6 +124,24 @@ export async function fetchMatchups(html?: string): Promise<RawMatchups> {
     );
   }
   return matrix;
+}
+
+/** [{rank, roles: [{role: "1,1,2,2,3,3", matches, wins}]}] — 1=Vanguard, 2=Duelist, 3=Strategist. */
+export type RawTeamComps = Array<{
+  rank: string;
+  roles: Array<{ role: string; matches: number; wins: number }>;
+}>;
+
+export async function fetchTeamComps(html?: string): Promise<RawTeamComps> {
+  const page =
+    html ?? (await (await get("https://rivalsmeta.com/team-comps")).text());
+  const comps = routeData<RawTeamComps>(parseNuxtPage(page));
+  if (!Array.isArray(comps) || comps.length === 0) {
+    throw new Error(
+      "team-comps payload has no rank buckets — page structure changed?",
+    );
+  }
+  return comps;
 }
 
 export function seasonLabel(internalId: number): string {

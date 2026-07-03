@@ -5,11 +5,12 @@ import { describe, expect, it } from "vitest";
 import { parseNuxtPage, routeData } from "../devalue-parse";
 import {
   fetchMatchups,
+  fetchTeamComps,
   isFresh,
   seasonLabel,
   type RawStats,
 } from "../rivalsmeta";
-import { normalize } from "../normalize";
+import { normalize, shapeKeyFromRoleCodes } from "../normalize";
 import { validateSnapshot } from "../validate";
 
 const FIXTURES = resolve(
@@ -23,9 +24,15 @@ const matchupsHtml = readFileSync(
 const rawStats = JSON.parse(
   readFileSync(resolve(FIXTURES, "stats-season16.json"), "utf8"),
 ) as RawStats;
+const teamCompsHtml = readFileSync(
+  resolve(FIXTURES, "team-comps.html"),
+  "utf8",
+);
 
 // The fixtures were captured 2026-07-03; freeze "now" near that.
 const NOW = new Date("2026-07-03T12:00:00Z");
+
+const teamComps = await fetchTeamComps(teamCompsHtml);
 
 describe("parseNuxtPage", () => {
   it("decodes the devalue payload and exposes route data", () => {
@@ -56,13 +63,13 @@ describe("fetchMatchups (from fixture html)", () => {
 describe("normalize", () => {
   it("produces a snapshot that passes validation", async () => {
     const matrix = await fetchMatchups(matchupsHtml);
-    const snapshot = normalize(rawStats, matrix, NOW);
+    const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     expect(() => validateSnapshot(snapshot, null)).not.toThrow();
   });
 
   it("maps rivalsmeta ids to slugs and drops mirror matchups", async () => {
     const matrix = await fetchMatchups(matchupsHtml);
-    const snapshot = normalize(rawStats, matrix, NOW);
+    const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     expect(snapshot.matchups["thor"]).toBeDefined();
     expect(snapshot.matchups["thor"]["thor"]).toBeUndefined();
     expect(snapshot.matchups["thor"]["winter-soldier"].matches).toBeGreaterThan(
@@ -79,14 +86,40 @@ describe("normalize", () => {
     const matrix = await fetchMatchups(matchupsHtml);
     const doctored = structuredClone(rawStats);
     doctored.heroes[0].heroes[0].hero_id = 9999;
-    expect(() => normalize(doctored, matrix, NOW)).toThrow(/9999/);
+    expect(() => normalize(doctored, matrix, teamComps, NOW)).toThrow(/9999/);
+  });
+
+  it("normalizes role compositions into V-D-S shape counts", async () => {
+    const matrix = await fetchMatchups(matchupsHtml);
+    const snapshot = normalize(rawStats, matrix, teamComps, NOW);
+    const buckets = Object.values(snapshot.roleShapes);
+    expect(buckets.length).toBeGreaterThan(0);
+    // the standard 2-2-2 comp must exist somewhere with real volume
+    const best = buckets.reduce(
+      (max, perShape) => Math.max(max, perShape["2-2-2"]?.matches ?? 0),
+      0,
+    );
+    expect(best).toBeGreaterThan(1000);
+  });
+});
+
+describe("shapeKeyFromRoleCodes", () => {
+  it("maps role code strings to V-D-S counts", () => {
+    expect(shapeKeyFromRoleCodes("1,1,2,2,3,3")).toBe("2-2-2");
+    expect(shapeKeyFromRoleCodes("1,2,2,2,3,3")).toBe("1-3-2");
+    expect(shapeKeyFromRoleCodes("3,3,3,1,1,1")).toBe("3-0-3");
+  });
+
+  it("rejects malformed inputs", () => {
+    expect(shapeKeyFromRoleCodes("1,2,3")).toBeNull();
+    expect(shapeKeyFromRoleCodes("1,2,3,4,5,6")).toBeNull();
   });
 });
 
 describe("validateSnapshot", () => {
   it("rejects a snapshot whose global WR drifts", async () => {
     const matrix = await fetchMatchups(matchupsHtml);
-    const snapshot = normalize(rawStats, matrix, NOW);
+    const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     for (const perHero of Object.values(snapshot.stats)) {
       for (const s of Object.values(perHero))
         s.wrWins = Math.round(s.wrMatches * 0.6);
@@ -96,7 +129,7 @@ describe("validateSnapshot", () => {
 
   it("rejects a big drop in volume vs the previous snapshot within a season", async () => {
     const matrix = await fetchMatchups(matchupsHtml);
-    const snapshot = normalize(rawStats, matrix, NOW);
+    const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     const previous = structuredClone(snapshot);
     for (const perHero of Object.values(previous.stats)) {
       for (const s of Object.values(perHero)) {

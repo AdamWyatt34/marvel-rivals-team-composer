@@ -50,6 +50,7 @@ export function buildBackups(
           mutated.map((h) => h.id),
           enemyIds,
           mapId,
+          bannedIds,
         );
         scored.push({ id: candidate.id, z });
       }

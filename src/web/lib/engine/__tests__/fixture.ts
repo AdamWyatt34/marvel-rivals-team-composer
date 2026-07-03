@@ -111,4 +111,11 @@ export const FIXTURE = {
       },
     },
   },
+  roleShapes: {
+    "5": {
+      "2-2-2": { matches: 8000, wins: 4240 }, // 53% — the winning shape
+      "1-3-2": { matches: 4000, wins: 1900 }, // 47.5%
+      "1-2-3": { matches: 1000, wins: 480 },
+    },
+  },
 } as unknown as Snapshot;

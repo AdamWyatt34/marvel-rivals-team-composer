@@ -8,7 +8,12 @@ import {
   type SnapshotMap,
   type SnapshotTeamUp,
 } from "../../lib/data/schema";
-import { seasonLabel, type RawMatchups, type RawStats } from "./rivalsmeta";
+import {
+  seasonLabel,
+  type RawMatchups,
+  type RawStats,
+  type RawTeamComps,
+} from "./rivalsmeta";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const REFERENCE_DIR = resolve(SCRIPT_DIR, "../../../../data/reference");
@@ -24,9 +29,23 @@ function sortKeys<T>(obj: Record<string, T>): Record<string, T> {
   );
 }
 
+/** "1,1,2,2,3,3" (1=Vanguard, 2=Duelist, 3=Strategist) -> "2-2-2" (V-D-S counts). */
+export function shapeKeyFromRoleCodes(roleCodes: string): string | null {
+  const counts = [0, 0, 0];
+  const parts = roleCodes.split(",");
+  if (parts.length !== 6) return null;
+  for (const part of parts) {
+    const code = Number(part);
+    if (code < 1 || code > 3 || !Number.isInteger(code)) return null;
+    counts[code - 1]++;
+  }
+  return counts.join("-");
+}
+
 export function normalize(
   stats: RawStats,
   matchups: RawMatchups,
+  teamComps: RawTeamComps,
   generatedAt: Date,
 ): Snapshot {
   const heroes = loadReference<SnapshotHero[]>("heroes.json");
@@ -122,6 +141,24 @@ export function normalize(
     teamUpStats[bucket.rank] = sortKeys(perTeamUp);
   }
 
+  // roleShapes[tier]["V-D-S"]
+  const roleShapes: Snapshot["roleShapes"] = {};
+  for (const bucket of teamComps) {
+    const perShape: Record<string, { matches: number; wins: number }> = {};
+    for (const entry of bucket.roles) {
+      const key = shapeKeyFromRoleCodes(entry.role);
+      if (key == null) {
+        console.warn(`Skipping unrecognized role composition "${entry.role}"`);
+        continue;
+      }
+      const agg = perShape[key] ?? { matches: 0, wins: 0 };
+      agg.matches += entry.matches;
+      agg.wins += entry.wins;
+      perShape[key] = agg;
+    }
+    roleShapes[bucket.rank] = sortKeys(perShape);
+  }
+
   if (unmapped.size > 0) {
     throw new Error(
       `Unmapped RivalsMeta hero ids: ${[...unmapped].sort().join(", ")}. ` +
@@ -162,5 +199,6 @@ export function normalize(
     heroMaps: sortKeys(heroMaps),
     matchups: sortKeys(matchupTable),
     teamUpStats: sortKeys(teamUpStats),
+    roleShapes: sortKeys(roleShapes),
   };
 }

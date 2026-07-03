@@ -6,7 +6,7 @@ import { z } from "zod";
  * the engine so scoring constants can change without re-ingesting.
  */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /**
  * RivalsMeta rank bucket codes, confirmed against the site's rank badge
@@ -99,6 +99,11 @@ export const snapshotSchema = z.object({
       }),
     ),
   ),
+  /**
+   * roleShapes[tierCode]["V-D-S"] — raw counts per role composition
+   * (e.g. "2-2-2" = 2 Vanguards, 2 Duelists, 2 Strategists).
+   */
+  roleShapes: z.record(z.string(), z.record(z.string(), countSchema)),
 });
 
 export type Snapshot = z.infer<typeof snapshotSchema>;

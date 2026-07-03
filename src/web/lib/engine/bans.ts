@@ -73,7 +73,9 @@ export function suggestBans(
     if (theirs == null) break;
     const theirIds = theirs.team.map((h) => h.id);
 
-    const baseline = scoreTeam(tables, ourIds, theirIds, mapId).prob;
+    const baseline = scoreTeam(tables, ourIds, theirIds, mapId, [
+      ...banned,
+    ]).prob;
 
     const baseCandidates = [...tables.heroes.keys()].filter(
       (id) => !ourSet.has(id) && !banned.has(id),
@@ -98,6 +100,7 @@ export function suggestBans(
         our2Ids,
         theirs2.team.map((h) => h.id),
         mapId,
+        [...testBans],
       ).prob;
       if (p > bestProb + 1e-9) {
         bestProb = p;
