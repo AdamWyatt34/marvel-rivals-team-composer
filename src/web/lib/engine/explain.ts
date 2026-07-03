@@ -80,6 +80,10 @@ function renderLine(
       return deltaP >= 0
         ? `${c.label} is favorable (${pct})`
         : `${c.label} is unfavorable (${pct})`;
+    case "field":
+      return deltaP >= 0
+        ? `${c.label} matches up well into the likely meta (${pct})`
+        : `${c.label} matches up poorly into the likely meta (${pct})`;
     case "map":
       return deltaP >= 0
         ? `${c.label} performs well on ${mapName ?? "this map"} (${pct})`

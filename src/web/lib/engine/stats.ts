@@ -142,6 +142,14 @@ export interface ScoringTables {
   metaThreats: string[];
   /** "a+b" (sorted slugs) -> log-odds synergy beyond individual strengths. */
   pairSynergy: Map<string, number>;
+  /**
+   * P(an unknown enemy slot is this hero | hero available) — availability-
+   * adjusted pick shares, normalized to sum 1. The scorer renormalizes at
+   * score time after removing bans and known enemy picks.
+   */
+  fieldShare: Map<string, number>;
+  /** Hero's expected matchup edge vs a fieldShare-weighted enemy slot. */
+  fieldMatchup: Map<string, number>;
   /** Mirror-excluded games per hero in this band (sample size for uncertainty). */
   strengthSamples: Map<string, number>;
   /** Fraction of hero-slots the hero occupies in this band (popularity). */
@@ -293,6 +301,27 @@ export function buildScoringTables(
         SCORING_PARAMS.M_MATCHUP,
       );
       matchup.set(`${h}|${e}`, logit(rate) - zBase);
+    }
+  }
+
+  // Likely-field distribution and each hero's expected edge into it: what an
+  // unknown enemy slot looks like before any locks. Powers the matchup term's
+  // unknown-slot fill so heroes that farm the actual meta outrank heroes that
+  // only beat off-meta picks.
+  const fieldShare = new Map<string, number>();
+  const fieldMatchup = new Map<string, number>();
+  const shareSum = [...adjustedShare.values()].reduce((sum, s) => sum + s, 0);
+  if (shareSum > 0) {
+    for (const [slug, share] of adjustedShare) {
+      fieldShare.set(slug, share / shareSum);
+    }
+    for (const h of heroes.keys()) {
+      let expected = 0;
+      for (const [e, share] of fieldShare) {
+        if (e === h) continue; // mirror slots are neutral
+        expected += share * (matchup.get(`${h}|${e}`) ?? 0);
+      }
+      if (expected !== 0) fieldMatchup.set(h, expected);
     }
   }
 
@@ -461,5 +490,7 @@ export function buildScoringTables(
     pairSynergy,
     strengthSamples,
     pickShare,
+    fieldShare,
+    fieldMatchup,
   };
 }

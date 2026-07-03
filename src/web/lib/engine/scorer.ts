@@ -6,7 +6,7 @@ import type { Contribution, DetailedTeamScore, TeamScore } from "./types";
  *
  *   z = zBar
  *     + K_HERO     * (1/teamSize) * (sum our strength - sum enemy strength)
- *     + K_MATCHUP  * norm * sum over (h in T, e in E) of m_he
+ *     + K_MATCHUP  * (|E|/6 * mean known-pair m_he  +  (6-|E|)/6 * mean field edge)
  *     + K_MAP      * (1/teamSize) * sum our map deltas
  *     + K_TEAMUP   * sum of active team-up bonuses
  *     + K_SHAPE    * role-shape delta (complete teams only)
@@ -65,14 +65,32 @@ function zOf(
   for (const e of enemyIds) strengthSum -= tables.strength.get(e) ?? 0;
   z += (K_HERO * strengthSum) / TEAM_SIZE;
 
-  if (enemyIds.length > 0 && ourIds.length > 0) {
-    let matchupSum = 0;
-    for (const h of ourIds) {
-      for (const e of enemyIds)
-        matchupSum += tables.matchup.get(`${h}|${e}`) ?? 0;
+  // Matchup term: known enemies fill |E| of the 6 enemy slots; the rest are
+  // filled with the field expectation (pick-probability-weighted matchup edge
+  // vs the band's likely meta, bans and known picks excluded). Heroes that
+  // farm the actual meta therefore outrank heroes that only beat off-meta
+  // picks even before the enemy locks anything.
+  if (ourIds.length > 0) {
+    let matchupTerm = 0;
+    if (enemyIds.length > 0) {
+      let matchupSum = 0;
+      for (const h of ourIds) {
+        for (const e of enemyIds)
+          matchupSum += tables.matchup.get(`${h}|${e}`) ?? 0;
+      }
+      matchupTerm +=
+        (enemyIds.length / TEAM_SIZE) *
+        (matchupSum / (ourIds.length * enemyIds.length));
     }
-    const norm = TEAM_SIZE / (ourIds.length * enemyIds.length);
-    z += K_MATCHUP * norm * (matchupSum / TEAM_SIZE);
+    if (enemyIds.length < TEAM_SIZE && tables.fieldMatchup.size > 0) {
+      const excluded = new Set([...bannedIds, ...enemyIds]);
+      let fieldSum = 0;
+      for (const h of ourIds) fieldSum += fieldEdge(tables, h, excluded);
+      matchupTerm +=
+        ((TEAM_SIZE - enemyIds.length) / TEAM_SIZE) *
+        (fieldSum / ourIds.length);
+    }
+    z += K_MATCHUP * matchupTerm;
   }
 
   if (mapId != null) {
@@ -99,6 +117,31 @@ function zOf(
   }
 
   return z;
+}
+
+/**
+ * Hero's expected matchup edge vs an unknown enemy slot, with the excluded
+ * heroes (bans + known enemy picks) removed from the field distribution and
+ * the remainder renormalized. Falls back to 0 if exclusions eat almost the
+ * whole field.
+ */
+function fieldEdge(
+  tables: ScoringTables,
+  heroId: string,
+  excluded: ReadonlySet<string>,
+): number {
+  let edge = tables.fieldMatchup.get(heroId) ?? 0;
+  let excludedShare = 0;
+  for (const x of excluded) {
+    const share = tables.fieldShare.get(x) ?? 0;
+    if (share === 0) continue;
+    excludedShare += share;
+    // mirror matchup (x === heroId) is neutral, so only the share moves
+    if (x !== heroId)
+      edge -= share * (tables.matchup.get(`${heroId}|${x}`) ?? 0);
+  }
+  const remaining = 1 - excludedShare;
+  return remaining > 0.05 ? edge / remaining : 0;
 }
 
 /** Role-shape delta for complete teams; null for partial teams or unknown shapes. */
@@ -208,7 +251,6 @@ export function scoreTeamDetailed(
   }
 
   if (enemyIds.length > 0 && ourIds.length > 0) {
-    const norm = TEAM_SIZE / (ourIds.length * enemyIds.length);
     for (const h of ourIds) {
       for (const e of enemyIds) {
         const m = tables.matchup.get(`${h}|${e}`) ?? 0;
@@ -217,9 +259,27 @@ export function scoreTeamDetailed(
           kind: "matchup",
           ids: [h, e],
           label: `${nameOf(h)} vs ${nameOf(e)}`,
-          deltaLogOdds: (K_MATCHUP * norm * m) / TEAM_SIZE,
+          deltaLogOdds: (K_MATCHUP * m) / (TEAM_SIZE * ourIds.length),
         });
       }
+    }
+  }
+  if (
+    enemyIds.length < TEAM_SIZE &&
+    ourIds.length > 0 &&
+    tables.fieldMatchup.size > 0
+  ) {
+    const excluded = new Set([...bannedIds, ...enemyIds]);
+    const weight = (TEAM_SIZE - enemyIds.length) / TEAM_SIZE;
+    for (const h of ourIds) {
+      const edge = fieldEdge(tables, h, excluded);
+      if (edge === 0) continue;
+      contributions.push({
+        kind: "field",
+        ids: [h],
+        label: nameOf(h),
+        deltaLogOdds: (K_MATCHUP * weight * edge) / ourIds.length,
+      });
     }
   }
 

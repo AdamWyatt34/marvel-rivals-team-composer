@@ -31,6 +31,7 @@ export type ContributionKind =
   | "hero"
   | "enemy"
   | "matchup"
+  | "field"
   | "map"
   | "teamup"
   | "shape"
