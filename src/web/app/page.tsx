@@ -121,6 +121,66 @@ export default function Home() {
       .catch((e) => setError(String(e)));
   }, [band]);
 
+  // Shareable links: restore the draft from the query string once heroes are
+  // known (so bogus slugs can't reach the engine), then mirror every change
+  // back into the URL so the current board is always copyable.
+  const urlReady = useRef(false);
+  useEffect(() => {
+    if (urlReady.current || allHeroes.length === 0) return;
+    urlReady.current = true;
+    const q = new URLSearchParams(window.location.search);
+    const known = new Set(allHeroes.map((h) => h.id));
+    const list = (key: string) =>
+      (q.get(key) ?? "")
+        .split(",")
+        .filter((id) => known.has(id))
+        .slice(0, 6);
+    const myQ = list("my");
+    const enemyQ = list("enemy");
+    const bansQ = list("bans");
+    const pinsQ = list("pins");
+    if (myQ.length > 0) setMy(myQ);
+    if (enemyQ.length > 0) setEnemy(enemyQ);
+    if (bansQ.length > 0) setBans(bansQ);
+    if (pinsQ.length > 0) setPinned(pinsQ);
+    const mapQ = q.get("map");
+    if (mapQ) setSelectedMap(mapQ);
+    const bandQ = q.get("band");
+    if (bandQ != null && bandQ in TIER_BANDS) setBand(bandQ as TierBand);
+  }, [allHeroes]);
+
+  useEffect(() => {
+    if (!urlReady.current) return;
+    const parts: string[] = [];
+    const add = (key: string, value: string) => {
+      if (value)
+        parts.push(`${key}=${encodeURIComponent(value).replace(/%2C/g, ",")}`);
+    };
+    add("my", my.join(","));
+    add("enemy", enemy.join(","));
+    add("bans", bans.join(","));
+    add("pins", pinned.join(","));
+    add("map", selectedMap ?? "");
+    add("band", band === "platinum+" ? "" : band);
+    const qs = parts.join("&");
+    window.history.replaceState(
+      null,
+      "",
+      qs ? `?${qs}` : window.location.pathname,
+    );
+  }, [my, enemy, bans, pinned, selectedMap, band]);
+
+  const [copied, setCopied] = useState(false);
+  function copyShareLink() {
+    navigator.clipboard
+      .writeText(window.location.href)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {});
+  }
+
   useEffect(() => {
     getThreatsDetailed(enemy, band)
       .then((map) => {
@@ -358,7 +418,15 @@ export default function Home() {
           ★ My pool only
         </button>
 
-        <button onClick={clearAll} style={clearBtn}>
+        <button
+          onClick={copyShareLink}
+          style={{ ...clearBtn, marginLeft: "auto" }}
+          title="Copy a link to this exact board (locks, enemy, bans, map, rank)"
+        >
+          {copied ? "Copied ✓" : "🔗 Share"}
+        </button>
+
+        <button onClick={clearAll} style={{ ...clearBtn, marginLeft: 0 }}>
           Clear
         </button>
       </div>
