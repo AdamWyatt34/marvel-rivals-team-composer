@@ -43,6 +43,7 @@ src/web/next-env.d.ts
 /src/Composer.Core/Composer.Core/bin
 /src/Composer.Core/Composer.Core/obj
 /src/web/.next
+/src/web/out
 /src/web/node_modules
 
 .playwright-mcp/
