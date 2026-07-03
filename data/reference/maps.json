@@ -1,0 +1,92 @@
+[
+  {
+    "id": "1230",
+    "name": "Shin-Shibuya",
+    "area": "Tokyo 2099",
+    "mode": "Convergence"
+  },
+  {
+    "id": "1231",
+    "name": "Yggdrasill Path",
+    "area": "Yggsgard",
+    "mode": "Convoy"
+  },
+  {
+    "id": "1245",
+    "name": "Spider-Islands",
+    "area": "Tokyo 2099",
+    "mode": "Convoy"
+  },
+  {
+    "id": "1267",
+    "name": "Hall of Djalia",
+    "area": "Intergalactic Empire of Wakanda",
+    "mode": "Convergence"
+  },
+  {
+    "id": "1272",
+    "name": "Birnin T'Challa",
+    "area": "Intergalactic Empire of Wakanda",
+    "mode": "Domination"
+  },
+  {
+    "id": "1288",
+    "name": "Hell's Heaven",
+    "area": "Hydra Charteris Base",
+    "mode": "Domination"
+  },
+  {
+    "id": "1290",
+    "name": "Symbiotic Surface",
+    "area": "Klyntar",
+    "mode": "Convergence"
+  },
+  {
+    "id": "1291",
+    "name": "Midtown",
+    "area": "Empire of Eternal Night",
+    "mode": "Convoy"
+  },
+  {
+    "id": "1292",
+    "name": "Central Park",
+    "area": "Empire of Eternal Night",
+    "mode": "Convergence"
+  },
+  {
+    "id": "1310",
+    "name": "Krakoa",
+    "area": "Hellfire Gala",
+    "mode": "Domination"
+  },
+  {
+    "id": "1311",
+    "name": "Arakko",
+    "area": "Hellfire Gala",
+    "mode": "Convoy"
+  },
+  {
+    "id": "1318",
+    "name": "Celestial Husk",
+    "area": "Klyntar",
+    "mode": "Domination"
+  },
+  {
+    "id": "1418",
+    "name": "Museum of Contemplation",
+    "area": "Museum of Contemplation",
+    "mode": "Convoy"
+  },
+  {
+    "id": "1421",
+    "name": "Unknown Map (1421)",
+    "area": "Unknown",
+    "mode": "Unknown"
+  },
+  {
+    "id": "2042",
+    "name": "Heart of Tiandu",
+    "area": "K'un-Lun",
+    "mode": "Convergence"
+  }
+]

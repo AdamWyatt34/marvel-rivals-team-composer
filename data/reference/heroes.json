@@ -1,0 +1,320 @@
+[
+  {
+    "id": "adam-warlock",
+    "name": "Adam Warlock",
+    "rivalsMetaId": 1046,
+    "role": "Strategist"
+  },
+  {
+    "id": "angela",
+    "name": "Angela",
+    "rivalsMetaId": 1056,
+    "role": "Vanguard"
+  },
+  {
+    "id": "black-cat",
+    "name": "Black Cat",
+    "rivalsMetaId": 1061,
+    "role": "Duelist"
+  },
+  {
+    "id": "black-panther",
+    "name": "Black Panther",
+    "rivalsMetaId": 1026,
+    "role": "Duelist"
+  },
+  {
+    "id": "black-widow",
+    "name": "Black Widow",
+    "rivalsMetaId": 1033,
+    "role": "Duelist"
+  },
+  {
+    "id": "blade",
+    "name": "Blade",
+    "rivalsMetaId": 1044,
+    "role": "Duelist"
+  },
+  {
+    "id": "captain-america",
+    "name": "Captain America",
+    "rivalsMetaId": 1022,
+    "role": "Vanguard"
+  },
+  {
+    "id": "cloak-dagger",
+    "name": "Cloak & Dagger",
+    "rivalsMetaId": 1025,
+    "role": "Strategist"
+  },
+  {
+    "id": "cyclops",
+    "name": "Cyclops",
+    "rivalsMetaId": 1063,
+    "role": "Duelist"
+  },
+  {
+    "id": "daredevil",
+    "name": "Daredevil",
+    "rivalsMetaId": 1055,
+    "role": "Duelist"
+  },
+  {
+    "id": "deadpool-duelist",
+    "name": "Deadpool (Duelist)",
+    "rivalsMetaId": 10572,
+    "role": "Duelist"
+  },
+  {
+    "id": "deadpool-strategist",
+    "name": "Deadpool (Strategist)",
+    "rivalsMetaId": 10573,
+    "role": "Strategist"
+  },
+  {
+    "id": "deadpool-vanguard",
+    "name": "Deadpool (Vanguard)",
+    "rivalsMetaId": 10571,
+    "role": "Vanguard"
+  },
+  {
+    "id": "devil-dinosaur",
+    "name": "Devil Dinosaur",
+    "rivalsMetaId": 1062,
+    "role": "Vanguard"
+  },
+  {
+    "id": "doctor-strange",
+    "name": "Doctor Strange",
+    "rivalsMetaId": 1018,
+    "role": "Vanguard"
+  },
+  {
+    "id": "elsa-bloodstone",
+    "name": "Elsa Bloodstone",
+    "rivalsMetaId": 1059,
+    "role": "Duelist"
+  },
+  {
+    "id": "emma-frost",
+    "name": "Emma Frost",
+    "rivalsMetaId": 1053,
+    "role": "Vanguard"
+  },
+  {
+    "id": "gambit",
+    "name": "Gambit",
+    "rivalsMetaId": 1058,
+    "role": "Strategist"
+  },
+  {
+    "id": "groot",
+    "name": "Groot",
+    "rivalsMetaId": 1027,
+    "role": "Vanguard"
+  },
+  {
+    "id": "hawkeye",
+    "name": "Hawkeye",
+    "rivalsMetaId": 1021,
+    "role": "Duelist"
+  },
+  {
+    "id": "hela",
+    "name": "Hela",
+    "rivalsMetaId": 1024,
+    "role": "Duelist"
+  },
+  {
+    "id": "hulk",
+    "name": "Hulk",
+    "rivalsMetaId": 1011,
+    "role": "Vanguard"
+  },
+  {
+    "id": "human-torch",
+    "name": "Human Torch",
+    "rivalsMetaId": 1017,
+    "role": "Duelist"
+  },
+  {
+    "id": "invisible-woman",
+    "name": "Invisible Woman",
+    "rivalsMetaId": 1050,
+    "role": "Strategist"
+  },
+  {
+    "id": "iron-fist",
+    "name": "Iron Fist",
+    "rivalsMetaId": 1052,
+    "role": "Duelist"
+  },
+  {
+    "id": "iron-man",
+    "name": "Iron Man",
+    "rivalsMetaId": 1034,
+    "role": "Duelist"
+  },
+  {
+    "id": "jeff-the-land-shark",
+    "name": "Jeff The Land Shark",
+    "rivalsMetaId": 1047,
+    "role": "Strategist"
+  },
+  {
+    "id": "loki",
+    "name": "Loki",
+    "rivalsMetaId": 1016,
+    "role": "Strategist"
+  },
+  {
+    "id": "luna-snow",
+    "name": "Luna Snow",
+    "rivalsMetaId": 1031,
+    "role": "Strategist"
+  },
+  {
+    "id": "magik",
+    "name": "Magik",
+    "rivalsMetaId": 1029,
+    "role": "Duelist"
+  },
+  {
+    "id": "magneto",
+    "name": "Magneto",
+    "rivalsMetaId": 1037,
+    "role": "Vanguard"
+  },
+  {
+    "id": "mantis",
+    "name": "Mantis",
+    "rivalsMetaId": 1020,
+    "role": "Strategist"
+  },
+  {
+    "id": "mister-fantastic",
+    "name": "Mister Fantastic",
+    "rivalsMetaId": 1040,
+    "role": "Duelist"
+  },
+  {
+    "id": "moon-knight",
+    "name": "Moon Knight",
+    "rivalsMetaId": 1030,
+    "role": "Duelist"
+  },
+  {
+    "id": "namor",
+    "name": "Namor",
+    "rivalsMetaId": 1045,
+    "role": "Duelist"
+  },
+  {
+    "id": "peni-parker",
+    "name": "Peni Parker",
+    "rivalsMetaId": 1042,
+    "role": "Vanguard"
+  },
+  {
+    "id": "phoenix",
+    "name": "Phoenix",
+    "rivalsMetaId": 1054,
+    "role": "Duelist"
+  },
+  {
+    "id": "psylocke",
+    "name": "Psylocke",
+    "rivalsMetaId": 1048,
+    "role": "Duelist"
+  },
+  {
+    "id": "rocket-raccoon",
+    "name": "Rocket Raccoon",
+    "rivalsMetaId": 1023,
+    "role": "Strategist"
+  },
+  {
+    "id": "rogue",
+    "name": "Rogue",
+    "rivalsMetaId": 1065,
+    "role": "Vanguard"
+  },
+  {
+    "id": "scarlet-witch",
+    "name": "Scarlet Witch",
+    "rivalsMetaId": 1038,
+    "role": "Duelist"
+  },
+  {
+    "id": "spider-man",
+    "name": "Spider-man",
+    "rivalsMetaId": 1036,
+    "role": "Duelist"
+  },
+  {
+    "id": "squirrel-girl",
+    "name": "Squirrel Girl",
+    "rivalsMetaId": 1032,
+    "role": "Duelist"
+  },
+  {
+    "id": "star-lord",
+    "name": "Star-lord",
+    "rivalsMetaId": 1043,
+    "role": "Duelist"
+  },
+  {
+    "id": "storm",
+    "name": "Storm",
+    "rivalsMetaId": 1015,
+    "role": "Duelist"
+  },
+  {
+    "id": "the-punisher",
+    "name": "The Punisher",
+    "rivalsMetaId": 1014,
+    "role": "Duelist"
+  },
+  {
+    "id": "the-thing",
+    "name": "The Thing",
+    "rivalsMetaId": 1051,
+    "role": "Vanguard"
+  },
+  {
+    "id": "thor",
+    "name": "Thor",
+    "rivalsMetaId": 1039,
+    "role": "Vanguard"
+  },
+  {
+    "id": "ultron",
+    "name": "Ultron",
+    "rivalsMetaId": 1028,
+    "role": "Strategist"
+  },
+  {
+    "id": "venom",
+    "name": "Venom",
+    "rivalsMetaId": 1035,
+    "role": "Vanguard"
+  },
+  {
+    "id": "white-fox",
+    "name": "White Fox",
+    "rivalsMetaId": 1060,
+    "role": "Strategist"
+  },
+  {
+    "id": "winter-soldier",
+    "name": "Winter Soldier",
+    "rivalsMetaId": 1041,
+    "role": "Duelist"
+  },
+  {
+    "id": "wolverine",
+    "name": "Wolverine",
+    "rivalsMetaId": 1049,
+    "role": "Duelist"
+  }
+]

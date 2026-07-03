@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "ingest": "tsx scripts/ingest/index.ts",
+    "build-reference": "tsx scripts/ingest/build-reference.ts"
   },
   "dependencies": {
     "next": "15.5.2",
@@ -18,8 +21,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "devalue": "^5.8.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
-    "typescript": "^5"
+    "tsx": "^4.22.5",
+    "typescript": "^5",
+    "vitest": "^4.1.9",
+    "zod": "^4.4.3"
   }
 }
