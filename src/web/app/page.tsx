@@ -15,10 +15,13 @@ import {
   getMaps,
   getSnapshotMeta,
   getThreatsDetailed,
+  slotAlternatives,
   suggestBansFor,
+  type ComposePayload,
   type ComposeResponse,
   type Hero,
   type MapItem,
+  type SlotAlternative,
   type SnapshotMeta,
 } from "./local-api";
 import { TIER_BANDS, type TierBand } from "../lib/engine";
@@ -33,6 +36,21 @@ const BAND_LABELS: Record<TierBand, string> = {
 
 const BUCKET_LIMITS: Record<Bucket, number> = { my: 6, enemy: 6, ban: 8 };
 
+type Preset = { name: string; locks: string[] };
+
+const LS_FAVORITES = "mrtc:favorites";
+const LS_PRESETS = "mrtc:presets";
+const LS_POOL_ONLY = "mrtc:poolOnly";
+
+function readLs<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw != null ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function Home() {
   const [allHeroes, setAllHeroes] = useState<Hero[]>([]);
   const [maps, setMaps] = useState<MapItem[]>([]);
@@ -41,20 +59,48 @@ export default function Home() {
   const [my, setMy] = useState<string[]>([]);
   const [enemy, setEnemy] = useState<string[]>([]);
   const [bans, setBans] = useState<string[]>([]);
+  const [pinned, setPinned] = useState<string[]>([]);
   const [selectedMap, setSelectedMap] = useState<string | undefined>(undefined);
   // Default to Platinum+ — the "all" band is dominated by low-rank data.
   const [band, setBand] = useState<TierBand>("platinum+");
   const [mode, setMode] = useState<Bucket>("my");
+
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [poolOnly, setPoolOnly] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
 
   const [resp, setResp] = useState<ComposeResponse | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warn, setWarn] = useState<Record<string, number>>({});
   const [warnWhy, setWarnWhy] = useState<Record<string, string>>({});
-  const [suggestedBans, setSuggestedBans] = useState<
-    { id: string; name: string }[] | null
-  >(null);
-  const [suggesting, setSuggesting] = useState(false);
+  const [alternatives, setAlternatives] = useState<
+    Record<string, SlotAlternative[] | "loading">
+  >({});
+  const [banSuggestions, setBanSuggestions] = useState<{
+    list: { id: string; name: string }[] | null;
+    loading: boolean;
+  }>({ list: null, loading: false });
+
+  // localStorage hydration (after mount, to keep static prerender consistent)
+  useEffect(() => {
+    setFavorites(readLs<string[]>(LS_FAVORITES, []));
+    setPresets(readLs<Preset[]>(LS_PRESETS, []));
+    setPoolOnly(readLs<boolean>(LS_POOL_ONLY, false));
+    setStorageReady(true);
+  }, []);
+  useEffect(() => {
+    if (storageReady)
+      localStorage.setItem(LS_FAVORITES, JSON.stringify(favorites));
+  }, [favorites, storageReady]);
+  useEffect(() => {
+    if (storageReady) localStorage.setItem(LS_PRESETS, JSON.stringify(presets));
+  }, [presets, storageReady]);
+  useEffect(() => {
+    if (storageReady)
+      localStorage.setItem(LS_POOL_ONLY, JSON.stringify(poolOnly));
+  }, [poolOnly, storageReady]);
 
   useEffect(() => {
     getMaps()
@@ -92,21 +138,35 @@ export default function Home() {
       });
   }, [enemy, band]);
 
+  const effectiveLocks = useMemo(
+    () => [...new Set([...my, ...pinned])],
+    [my, pinned],
+  );
+
+  const payload = useMemo<ComposePayload>(
+    () => ({
+      myLocked: effectiveLocks,
+      enemyLocked: enemy,
+      bans,
+      map: selectedMap,
+      band,
+      poolIds:
+        poolOnly && favorites.length > 0
+          ? [...new Set([...favorites, ...effectiveLocks])]
+          : undefined,
+    }),
+    [effectiveLocks, enemy, bans, selectedMap, band, poolOnly, favorites],
+  );
+
   // Live composition: debounce, keep the previous result while updating.
   const composeSeq = useRef(0);
   useEffect(() => {
     const seq = ++composeSeq.current;
     setPending(true);
-    setSuggestedBans(null);
+    setAlternatives({});
     const timer = setTimeout(async () => {
       try {
-        const r = await composeTeam({
-          myLocked: my,
-          enemyLocked: enemy,
-          bans,
-          map: selectedMap,
-          band,
-        });
+        const r = await composeTeam(payload);
         if (composeSeq.current === seq) {
           setResp(r);
           setError(null);
@@ -120,7 +180,29 @@ export default function Home() {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [my, enemy, bans, selectedMap, band]);
+  }, [payload]);
+
+  // Proactive ban suggestions: after the composition settles, if you have
+  // locks and open ban slots, search in the background.
+  const banSeq = useRef(0);
+  useEffect(() => {
+    const seq = ++banSeq.current;
+    if (my.length === 0 || bans.length >= 4) {
+      setBanSuggestions({ list: null, loading: false });
+      return;
+    }
+    setBanSuggestions((s) => ({ ...s, loading: true }));
+    const timer = setTimeout(async () => {
+      try {
+        const list = await suggestBansFor(payload);
+        if (banSeq.current === seq) setBanSuggestions({ list, loading: false });
+      } catch {
+        if (banSeq.current === seq)
+          setBanSuggestions({ list: [], loading: false });
+      }
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [payload, my.length, bans.length]);
 
   const membership = useMemo<Membership>(() => {
     const m: Membership = {};
@@ -133,43 +215,47 @@ export default function Home() {
   function toggleHero(id: string) {
     const current = membership[id];
     const remove = (list: string[]) => list.filter((x) => x !== id);
-    // Clicking a hero already in the active bucket removes it; otherwise it
-    // moves to the active bucket (respecting its limit).
     setMy((l) => remove(l));
     setEnemy((l) => remove(l));
     setBans((l) => remove(l));
+    setPinned((l) => remove(l));
     if (current === mode) return;
     const setter =
       mode === "my" ? setMy : mode === "enemy" ? setEnemy : setBans;
     setter((l) => (l.length >= BUCKET_LIMITS[mode] ? l : [...l, id]));
   }
 
-  async function onSuggestBans() {
-    setSuggesting(true);
-    try {
-      // Yield a frame so the button state paints before the sync search.
-      await new Promise((r) => setTimeout(r, 0));
-      setSuggestedBans(
-        await suggestBansFor({
-          myLocked: my,
-          enemyLocked: enemy,
-          bans,
-          map: selectedMap,
-          band,
-        }),
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setSuggesting(false);
-    }
+  function onExpandSlot(heroId: string) {
+    if (resp == null || alternatives[heroId] != null) return;
+    setAlternatives((a) => ({ ...a, [heroId]: "loading" }));
+    slotAlternatives(
+      payload,
+      resp.primary.map((p) => p.id),
+      heroId,
+    )
+      .then((alts) => setAlternatives((a) => ({ ...a, [heroId]: alts })))
+      .catch(() => setAlternatives((a) => ({ ...a, [heroId]: [] })));
+  }
+
+  function onPin(altId: string, displacedId: string) {
+    setPinned((l) => [...l.filter((id) => id !== displacedId), altId]);
   }
 
   function clearAll() {
     setMy([]);
     setEnemy([]);
     setBans([]);
-    setSuggestedBans(null);
+    setPinned([]);
+  }
+
+  function savePreset() {
+    if (my.length === 0) return;
+    const name = window.prompt("Preset name (e.g. Duo)", "Duo");
+    if (!name) return;
+    setPresets((p) => [
+      ...p.filter((x) => x.name !== name),
+      { name, locks: my },
+    ]);
   }
 
   const updatedAgo = meta ? timeAgo(meta.updatedAt) : null;
@@ -177,7 +263,7 @@ export default function Home() {
   return (
     <main style={page}>
       <header style={{ marginBottom: 10 }}>
-        <h1 style={{ margin: 0, fontSize: 24 }}>Marvel Rivals Team Composer</h1>
+        <h1 className="page-title">Marvel Rivals Team Composer</h1>
         <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
           Mark your locked picks, the enemy&apos;s picks, and any bans — the
           ideal team updates live.
@@ -191,7 +277,7 @@ export default function Home() {
         </p>
       </header>
 
-      <div style={controlBar}>
+      <div style={controlBar} className="control-bar">
         <div style={segmented} role="group" aria-label="Assignment mode">
           {(["my", "enemy", "ban"] as const).map((b) => (
             <button
@@ -240,19 +326,80 @@ export default function Home() {
           ))}
         </select>
 
+        <button
+          onClick={() => setPoolOnly((v) => !v)}
+          aria-pressed={poolOnly}
+          disabled={favorites.length === 0}
+          title={
+            favorites.length === 0
+              ? "Star some heroes first (☆ on the cards) to build your pool"
+              : "Only recommend heroes in my pool"
+          }
+          style={{
+            ...poolBtn,
+            background: poolOnly ? "var(--my)" : "var(--chip)",
+            color: poolOnly ? "#fff" : "var(--text)",
+            opacity: favorites.length === 0 ? 0.5 : 1,
+          }}
+        >
+          ★ My pool only
+        </button>
+
         <button onClick={clearAll} style={clearBtn}>
           Clear
         </button>
       </div>
+
+      {(presets.length > 0 || my.length > 0) && (
+        <div style={presetRow}>
+          {presets.map((p) => (
+            <span key={p.name} style={presetChip}>
+              <button
+                onClick={() => {
+                  setMy(p.locks.slice(0, 6));
+                  setPinned([]);
+                }}
+                style={presetApply}
+                title={`Lock: ${p.locks.join(", ")}`}
+              >
+                {p.name}
+              </button>
+              <button
+                onClick={() =>
+                  setPresets((all) => all.filter((x) => x.name !== p.name))
+                }
+                aria-label={`Delete preset ${p.name}`}
+                style={presetDelete}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {my.length > 0 && (
+            <button onClick={savePreset} style={presetSave}>
+              + Save current locks as preset
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="layout">
         <section style={{ minWidth: 0 }}>
           <HeroGrid
             heroes={allHeroes}
             membership={membership}
+            mode={mode}
             onToggle={toggleHero}
             warn={warn}
             warnWhy={warnWhy}
+            favorites={favorites}
+            onToggleFavorite={(id) =>
+              setFavorites((f) =>
+                f.includes(id) ? f.filter((x) => x !== id) : [...f, id],
+              )
+            }
+            band={band}
+            mapId={selectedMap ?? null}
           />
         </section>
 
@@ -261,10 +408,18 @@ export default function Home() {
           pending={pending}
           error={error}
           lockedIds={my}
-          suggestedBans={suggestedBans}
-          suggesting={suggesting}
-          onSuggestBans={onSuggestBans}
-          canSuggestBans={true}
+          pinnedIds={pinned}
+          alternatives={alternatives}
+          onExpandSlot={onExpandSlot}
+          onPin={onPin}
+          onUnpin={(id) => setPinned((l) => l.filter((x) => x !== id))}
+          onClearPins={() => setPinned([])}
+          banSuggestions={banSuggestions}
+          onAddBan={(id) =>
+            setBans((l) =>
+              l.includes(id) || l.length >= BUCKET_LIMITS.ban ? l : [...l, id],
+            )
+          }
         />
       </div>
 
@@ -278,6 +433,7 @@ export default function Home() {
         @media (max-width: 900px) {
           .layout {
             grid-template-columns: 1fr;
+            padding-bottom: 56px; /* room for the bottom sheet */
           }
         }
       `}</style>
@@ -320,12 +476,12 @@ const controlBar: CSSProperties = {
   alignItems: "center",
   flexWrap: "wrap",
   position: "sticky",
-  top: 0,
+  top: 45,
   zIndex: 10,
   background: "color-mix(in oklab, var(--bg) 85%, transparent)",
   backdropFilter: "blur(8px)",
   padding: "10px 0",
-  marginBottom: 12,
+  marginBottom: 8,
   borderBottom: "1px solid var(--border)",
 };
 
@@ -338,10 +494,11 @@ const segmented: CSSProperties = {
 };
 
 const segBtn: CSSProperties = {
-  padding: "8px 12px",
+  padding: "10px 12px",
   border: "none",
   fontSize: 13,
   fontWeight: 600,
+  minHeight: 40,
 };
 
 const select: CSSProperties = {
@@ -351,6 +508,15 @@ const select: CSSProperties = {
   background: "var(--card)",
   color: "var(--text)",
   fontSize: 13,
+  minHeight: 40,
+};
+
+const poolBtn: CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
+  fontSize: 13,
+  minHeight: 40,
 };
 
 const clearBtn: CSSProperties = {
@@ -361,4 +527,47 @@ const clearBtn: CSSProperties = {
   background: "var(--chip)",
   color: "var(--text)",
   fontSize: 13,
+  minHeight: 40,
+};
+
+const presetRow: CSSProperties = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+  marginBottom: 12,
+};
+
+const presetChip: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  border: "1px solid var(--my)",
+  borderRadius: 999,
+  overflow: "hidden",
+};
+
+const presetApply: CSSProperties = {
+  background: "transparent",
+  border: "none",
+  color: "var(--my)",
+  fontSize: 12,
+  fontWeight: 600,
+  padding: "4px 4px 4px 12px",
+};
+
+const presetDelete: CSSProperties = {
+  background: "transparent",
+  border: "none",
+  color: "var(--muted)",
+  fontSize: 13,
+  padding: "4px 10px 4px 4px",
+};
+
+const presetSave: CSSProperties = {
+  background: "transparent",
+  border: "1px dashed var(--border)",
+  borderRadius: 999,
+  color: "var(--muted-strong)",
+  fontSize: 12,
+  padding: "4px 12px",
 };

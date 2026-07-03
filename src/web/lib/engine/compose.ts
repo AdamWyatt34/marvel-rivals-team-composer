@@ -21,6 +21,8 @@ export interface ComposeInput {
   mapId?: string | null;
   rules: TeamRules;
   beamWidth?: number;
+  /** Restrict non-locked picks to this pool ("only recommend my heroes"). */
+  poolIds?: readonly string[] | null;
 }
 
 export interface ComposeResult {
@@ -49,8 +51,12 @@ export function compose(
   });
   const enemyIds = input.enemyIds.filter((id) => tables.heroes.has(id));
 
+  const allowed = input.poolIds != null ? new Set(input.poolIds) : null;
   const pool = [...tables.heroes.values()].filter(
-    (h) => !banned.has(h.id) && !lockedSet.has(h.id),
+    (h) =>
+      !banned.has(h.id) &&
+      !lockedSet.has(h.id) &&
+      (allowed == null || allowed.has(h.id)),
   );
 
   const score = (team: readonly EngineHero[]) =>

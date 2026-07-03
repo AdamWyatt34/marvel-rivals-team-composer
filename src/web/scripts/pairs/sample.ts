@@ -32,8 +32,11 @@ const STATE_PATH = resolve(PAIRS_DIR, "state.json");
 const PAIRS_TABLE_PATH = resolve(SCRIPT_DIR, "../../public/data/pairs.json");
 const REFERENCE_HEROES = resolve(REPO_ROOT, "data/reference/heroes.json");
 
-const MAX_REQUESTS = 2500;
+const MAX_REQUESTS = Number(process.env.SAMPLE_MAX_REQUESTS ?? 2500);
 const PLAYERS_PER_RUN = 150;
+/** The /update indexing endpoint is heavily rate-limited; pace and cap it. */
+const UPDATE_NUDGES_PER_RUN = 20;
+const UPDATE_NUDGE_SPACING_MS = 10_000;
 const WINDOW_DAYS = 60;
 /** Forget seen-match ids and player cursors older than this. */
 const STATE_RETENTION_DAYS = 70;
@@ -150,10 +153,37 @@ async function main() {
       .slice(0, PLAYERS_PER_RUN);
 
     const pendingMatches = new Map<string, number>(); // uid -> end epoch
+    let unindexed = 0;
+    let nudges = 0;
+    let nudgesEnabled = true;
     for (const uid of ordered) {
       if (client.budgetLeft <= pendingMatches.size + 10) break;
       const since = state.players[uid];
-      const history = await client.matchHistory(uid, since);
+      let history;
+      try {
+        history = await client.matchHistory(uid, since);
+      } catch (err) {
+        if (err instanceof RateLimitedError) throw err;
+        // The API 500s for players it hasn't indexed yet — nudge its indexer
+        // (heavily rate-limited, so paced and capped) and move on. History
+        // scanning continues regardless.
+        unindexed++;
+        if (nudgesEnabled && nudges < UPDATE_NUDGES_PER_RUN) {
+          try {
+            await client.requestPlayerUpdate(uid);
+            nudges++;
+            await new Promise((r) => setTimeout(r, UPDATE_NUDGE_SPACING_MS));
+          } catch (nudgeErr) {
+            if (nudgeErr instanceof RateLimitedError) {
+              console.warn(
+                "update endpoint rate-limited — no more indexing nudges this run",
+              );
+              nudgesEnabled = false;
+            }
+          }
+        }
+        continue;
+      }
       let newest = since ?? 0;
       for (const item of history) {
         if (item.match_time_stamp > newest) newest = item.match_time_stamp;
@@ -165,12 +195,19 @@ async function main() {
     }
 
     console.log(
-      `history pass done: ${client.used} requests, ${pendingMatches.size} new matches queued`,
+      `history pass done: ${client.used} requests, ${pendingMatches.size} new matches queued, ` +
+        `${unindexed} players unindexed (${nudges} indexing nudges sent)`,
     );
 
     for (const [matchUid, endEpoch] of pendingMatches) {
       if (client.budgetLeft <= 0) break;
-      const details = await client.matchDetails(matchUid);
+      let details;
+      try {
+        details = await client.matchDetails(matchUid);
+      } catch (err) {
+        if (err instanceof RateLimitedError) throw err;
+        continue; // skip matches the API can't serve; don't mark them seen
+      }
       state.seenMatches[matchUid] = nowEpoch;
       if (details == null) continue;
       const row = compFromDetails(details, slugById, endEpoch);

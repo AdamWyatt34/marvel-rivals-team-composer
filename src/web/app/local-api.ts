@@ -6,8 +6,11 @@ import {
   compose,
   DEFAULT_RULES,
   explainTeam,
+  scoreTeam,
+  SCORING_PARAMS,
   suggestBans,
   threatsAgainst,
+  TIER_BANDS,
   type ScoringTables,
   type TierBand,
 } from "../lib/engine";
@@ -17,7 +20,14 @@ import {
  * everything is computed in the browser from the committed snapshot.
  */
 
-export type Hero = { id: string; name: string; role: string; tags: string[] };
+export type Hero = {
+  id: string;
+  name: string;
+  role: string;
+  tags: string[];
+  pickShare: number;
+  banRate: number;
+};
 export type MapItem = { id: string; name: string };
 
 export type ComposePayload = {
@@ -26,6 +36,8 @@ export type ComposePayload = {
   bans?: string[];
   map?: string;
   band?: TierBand;
+  /** Restrict non-locked recommendations to these heroes ("my pool only"). */
+  poolIds?: string[];
 };
 
 export type ComposeResponse = {
@@ -33,6 +45,9 @@ export type ComposeResponse = {
   backups: Record<string, string[]>;
   explanationLines: string[];
   winProbability: number;
+  /** Honest range: sampling variance of the strength terms + model error. */
+  winProbabilityLow: number;
+  winProbabilityHigh: number;
 };
 
 export type SnapshotMeta = {
@@ -44,15 +59,6 @@ export type ThreatsResponse = Record<
   string,
   { mult: number; by?: { id: string; name: string; mult: number } }
 >;
-
-export type HeroDetails = {
-  id: string;
-  name: string;
-  role: string;
-  topCounters: string[];
-  topThreats: string[];
-  topSynergies: string[];
-};
 
 const tablesCache = new Map<TierBand, ScoringTables>();
 
@@ -91,6 +97,8 @@ export async function getHeroes(band: TierBand = "all"): Promise<Hero[]> {
     name: h.name,
     role: h.role,
     tags: [tiers.get(h.id) ?? "tier:D"],
+    pickShare: tables.pickShare.get(h.id) ?? 0,
+    banRate: tables.banRate.get(h.id) ?? 0,
   }));
 }
 
@@ -145,6 +153,7 @@ export async function composeTeam(
     bannedIds: banned,
     mapId,
     rules: DEFAULT_RULES,
+    poolIds: payload.poolIds ?? null,
   });
   const teamIds = result.team.map((h) => h.id);
 
@@ -167,6 +176,13 @@ export async function composeTeam(
   );
   const nameOf = (id: string) => tables.heroes.get(id)?.name ?? id;
 
+  const { low, high } = probabilityBand(
+    tables,
+    result.z,
+    teamIds,
+    payload.enemyLocked,
+  );
+
   return {
     primary: result.team.map((h) => ({ id: h.id, role: h.role, name: h.name })),
     backups: Object.fromEntries(
@@ -174,7 +190,35 @@ export async function composeTeam(
     ),
     explanationLines: explanation.lines,
     winProbability: explanation.winProbability,
+    winProbabilityLow: low,
+    winProbabilityHigh: high,
   };
+}
+
+/**
+ * Uncertainty band: sampling stderr of each hero-strength estimate
+ * (2/sqrt(n), the logit-rate variance) propagated through the K_HERO/6
+ * weights, plus a fixed model-error floor — the additive model itself is the
+ * bigger unknown than sampling noise at these volumes.
+ */
+const MODEL_SIGMA = 0.08;
+
+function probabilityBand(
+  tables: ScoringTables,
+  z: number,
+  teamIds: readonly string[],
+  enemyIds: readonly string[],
+): { low: number; high: number } {
+  const weight = SCORING_PARAMS.K_HERO / 6;
+  let variance = MODEL_SIGMA * MODEL_SIGMA;
+  for (const id of [...teamIds, ...enemyIds]) {
+    const n = (tables.strengthSamples.get(id) ?? 0) + SCORING_PARAMS.M_HERO;
+    const se = weight * (2 / Math.sqrt(n));
+    variance += se * se;
+  }
+  const sigma = Math.sqrt(variance);
+  const sig = (x: number) => 1 / (1 + Math.exp(-x));
+  return { low: sig(z - sigma), high: sig(z + sigma) };
 }
 
 /** Slow path — adversarial ban search; invoked from an explicit button. */
@@ -195,45 +239,307 @@ export async function suggestBansFor(
   return ids.map((id) => ({ id, name: tables.heroes.get(id)?.name ?? id }));
 }
 
-const DETAILS_TOP_N = 5;
+export type SlotAlternative = { id: string; name: string; deltaProb: number };
 
-export async function getHeroDetails(id: string): Promise<HeroDetails> {
-  // Details are informational; the matchup matrix is Diamond+ regardless of band.
-  const { tables, snapshot } = await getTables("all");
+/**
+ * Same-role alternatives for one slot of a composed team, ranked by the
+ * win-probability delta of swapping them in. Powers the what-if UI.
+ */
+export async function slotAlternatives(
+  payload: ComposePayload,
+  teamIds: string[],
+  slotHeroId: string,
+  topN = 5,
+): Promise<SlotAlternative[]> {
+  const band = payload.band ?? "all";
+  const { tables } = await getTables(band);
+  const slot = tables.heroes.get(slotHeroId);
+  if (slot == null) return [];
+  const banned = new Set(payload.bans ?? []);
+  const inTeam = new Set(teamIds);
+  const mapId = payload.map || null;
+  const pool = payload.poolIds != null ? new Set(payload.poolIds) : null;
+
+  const current = scoreTeam(
+    tables,
+    teamIds,
+    payload.enemyLocked,
+    mapId,
+    payload.bans ?? [],
+  ).prob;
+
+  const alternatives: SlotAlternative[] = [];
+  for (const hero of tables.heroes.values()) {
+    if (hero.role !== slot.role) continue;
+    if (inTeam.has(hero.id) || banned.has(hero.id)) continue;
+    if (pool != null && !pool.has(hero.id)) continue;
+    const mutated = teamIds.map((id) => (id === slotHeroId ? hero.id : id));
+    const prob = scoreTeam(
+      tables,
+      mutated,
+      payload.enemyLocked,
+      mapId,
+      payload.bans ?? [],
+    ).prob;
+    alternatives.push({
+      id: hero.id,
+      name: hero.name,
+      deltaProb: prob - current,
+    });
+  }
+  return alternatives.sort((a, b) => b.deltaProb - a.deltaProb).slice(0, topN);
+}
+
+export type HeroDossier = {
+  id: string;
+  name: string;
+  role: string;
+  tier: string;
+  winRate: number | null;
+  pickShare: number | null;
+  banRate: number;
+  /** heroes this hero beats hardest (with odds multiplier) */
+  beats: Array<{ name: string; edge: number }>;
+  /** heroes that beat this hero */
+  losesTo: Array<{ name: string; edge: number }>;
+  teamUpPartners: string[];
+  /** win-rate delta on the selected map, if any */
+  mapDelta: number | null;
+  /** best pair-synergy partners once sampled data exists */
+  pairPartners: Array<{ name: string; synergy: number }>;
+};
+
+export async function getHeroDossier(
+  id: string,
+  band: TierBand = "all",
+  mapId?: string | null,
+): Promise<HeroDossier> {
+  const { tables, snapshot } = await getTables(band);
   const hero = tables.heroes.get(id);
   if (hero == null) throw new Error(`Unknown hero: ${id}`);
   const nameOf = (heroId: string) => tables.heroes.get(heroId)?.name ?? heroId;
 
-  const edges: Array<{ enemy: string; edge: number }> = [];
+  const perTier = Object.values(snapshot.stats);
+  let wrMatches = 0;
+  let wrWins = 0;
+  let matches = 0;
+  let totalMatches = 0;
+  for (const bucket of perTier) {
+    for (const [slug, s] of Object.entries(bucket)) {
+      totalMatches += s.matches;
+      if (slug === id) {
+        wrMatches += s.wrMatches;
+        wrWins += s.wrWins;
+        matches += s.matches;
+      }
+    }
+  }
+
+  const edges: Array<{ other: string; edge: number }> = [];
   for (const other of tables.heroes.keys()) {
     if (other === id) continue;
     const edge = tables.matchup.get(`${id}|${other}`);
-    if (edge != null) edges.push({ enemy: other, edge });
+    if (edge != null && edge !== 0) edges.push({ other, edge });
   }
-  const topCounters = [...edges]
-    .sort((a, b) => b.edge - a.edge)
-    .slice(0, DETAILS_TOP_N)
+  const beats = [...edges]
     .filter((e) => e.edge > 0)
-    .map((e) => nameOf(e.enemy));
-  const topThreats = [...edges]
-    .sort((a, b) => a.edge - b.edge)
-    .slice(0, DETAILS_TOP_N)
+    .sort((a, b) => b.edge - a.edge)
+    .slice(0, 3)
+    .map((e) => ({ name: nameOf(e.other), edge: e.edge }));
+  const losesTo = [...edges]
     .filter((e) => e.edge < 0)
-    .map((e) => nameOf(e.enemy));
+    .sort((a, b) => a.edge - b.edge)
+    .slice(0, 3)
+    .map((e) => ({ name: nameOf(e.other), edge: e.edge }));
 
-  const topSynergies = snapshot.teamUps
+  const teamUpPartners = snapshot.teamUps
     .filter((t) => t.currentlyActive && t.heroes.includes(id))
     .flatMap((t) => t.heroes.filter((h) => h !== id))
     .filter((v, i, all) => all.indexOf(v) === i)
-    .slice(0, DETAILS_TOP_N)
     .map(nameOf);
+
+  const pairPartners: Array<{ name: string; synergy: number }> = [];
+  for (const [key, syn] of tables.pairSynergy) {
+    const [a, b] = key.split("+");
+    if (a !== id && b !== id) continue;
+    if (syn <= 0) continue;
+    pairPartners.push({ name: nameOf(a === id ? b : a), synergy: syn });
+  }
+  pairPartners.sort((a, b) => b.synergy - a.synergy).splice(3);
+
+  const heroesList = await getHeroes(band);
+  const tier =
+    heroesList.find((h) => h.id === id)?.tags[0]?.split(":")[1] ?? "-";
 
   return {
     id,
     name: hero.name,
     role: hero.role,
-    topCounters,
-    topThreats,
-    topSynergies,
+    tier,
+    winRate: wrMatches > 0 ? wrWins / wrMatches : null,
+    pickShare: totalMatches > 0 ? matches / totalMatches : null,
+    banRate: tables.banRate.get(id) ?? 0,
+    beats,
+    losesTo,
+    teamUpPartners,
+    mapDelta: mapId ? (tables.mapDelta.get(`${id}|${mapId}`) ?? null) : null,
+    pairPartners,
   };
+}
+
+/* ---------- meta explorer data ---------- */
+
+export type TierListRow = {
+  id: string;
+  name: string;
+  role: string;
+  tier: string;
+  /** de-biased strength as a WR-equivalent delta vs the band mean */
+  adjustedDelta: number;
+  rawWinRate: number | null;
+  pickShare: number;
+  banRate: number;
+};
+
+export async function getTierList(band: TierBand): Promise<TierListRow[]> {
+  const { tables, snapshot } = await getTables(band);
+  const tiers = tierTags(tables);
+  const raw = new Map<string, { m: number; w: number }>();
+  for (const bucket of Object.values(snapshot.stats)) {
+    for (const [slug, s] of Object.entries(bucket)) {
+      const agg = raw.get(slug) ?? { m: 0, w: 0 };
+      agg.m += s.wrMatches;
+      agg.w += s.wrWins;
+      raw.set(slug, agg);
+    }
+  }
+  return snapshot.heroes
+    .map((h) => {
+      const r = raw.get(h.id);
+      return {
+        id: h.id,
+        name: h.name,
+        role: h.role,
+        tier: tiers.get(h.id)?.split(":")[1] ?? "-",
+        // dp/dz at the mean is ~0.25: log-odds delta -> percentage points
+        adjustedDelta: (tables.strength.get(h.id) ?? 0) * 0.25,
+        rawWinRate: r != null && r.m > 0 ? r.w / r.m : null,
+        pickShare: tables.pickShare.get(h.id) ?? 0,
+        banRate: tables.banRate.get(h.id) ?? 0,
+      };
+    })
+    .sort((a, b) => b.adjustedDelta - a.adjustedDelta);
+}
+
+export type MatchupRow = {
+  id: string;
+  name: string;
+  role: string;
+  /** log-odds edge of the selected hero into this one */
+  edge: number;
+  winRate: number;
+  matches: number;
+};
+
+export async function getMatchupTable(heroId: string): Promise<MatchupRow[]> {
+  const { tables, snapshot } = await getTables("all");
+  const row = snapshot.matchups[heroId] ?? {};
+  const out: MatchupRow[] = [];
+  for (const [other, count] of Object.entries(row)) {
+    const hero = tables.heroes.get(other);
+    if (hero == null || count.matches === 0) continue;
+    out.push({
+      id: other,
+      name: hero.name,
+      role: hero.role,
+      edge: tables.matchup.get(`${heroId}|${other}`) ?? 0,
+      winRate: count.wins / count.matches,
+      matches: count.matches,
+    });
+  }
+  return out.sort((a, b) => b.edge - a.edge);
+}
+
+export type TeamUpRow = {
+  id: number;
+  name: string;
+  members: string[];
+  variants: Array<{ members: string[]; winRate: number; matches: number }>;
+};
+
+export async function getTeamUpStats(band: TierBand): Promise<TeamUpRow[]> {
+  const { tables, snapshot } = await getTables(band);
+  const nameOf = (id: string) => tables.heroes.get(id)?.name ?? id;
+  const codes = TIER_BANDS[band] as readonly string[];
+
+  const rows: TeamUpRow[] = [];
+  for (const def of snapshot.teamUps) {
+    if (!def.currentlyActive) continue;
+    const variantAgg = new Map<string, { m: number; w: number }>();
+    for (const code of codes) {
+      const bucket = snapshot.teamUpStats[code]?.[String(def.id)];
+      if (bucket == null) continue;
+      for (const [combo, count] of Object.entries(bucket.variants)) {
+        const agg = variantAgg.get(combo) ?? { m: 0, w: 0 };
+        agg.m += count.matches;
+        agg.w += count.wins;
+        variantAgg.set(combo, agg);
+      }
+    }
+    const variants = [...variantAgg.entries()]
+      .filter(([, agg]) => agg.m >= 50)
+      .map(([combo, agg]) => ({
+        members: combo.split("+").map(nameOf),
+        winRate: agg.w / agg.m,
+        matches: agg.m,
+      }))
+      .sort((a, b) => b.matches - a.matches);
+    if (variants.length === 0) continue;
+    rows.push({
+      id: def.id,
+      name: def.name,
+      members: def.heroes.map(nameOf),
+      variants,
+    });
+  }
+  return rows.sort(
+    (a, b) =>
+      b.variants.reduce((s, v) => s + v.matches, 0) -
+      a.variants.reduce((s, v) => s + v.matches, 0),
+  );
+}
+
+export type RoleShapeRow = {
+  shape: string;
+  label: string;
+  matches: number;
+  winRate: number;
+};
+
+export async function getRoleShapes(band: TierBand): Promise<RoleShapeRow[]> {
+  const { snapshot } = await getTables(band);
+  const codes = TIER_BANDS[band] as readonly string[];
+  const agg = new Map<string, { m: number; w: number }>();
+  for (const code of codes) {
+    const bucket = snapshot.roleShapes[code];
+    if (bucket == null) continue;
+    for (const [shape, count] of Object.entries(bucket)) {
+      const a = agg.get(shape) ?? { m: 0, w: 0 };
+      a.m += count.matches;
+      a.w += count.wins;
+      agg.set(shape, a);
+    }
+  }
+  return [...agg.entries()]
+    .filter(([, a]) => a.m >= 100)
+    .map(([shape, a]) => {
+      const [v, d, s] = shape.split("-");
+      return {
+        shape,
+        label: `${v} Vanguard / ${d} Duelist / ${s} Strategist`,
+        matches: a.m,
+        winRate: a.w / a.m,
+      };
+    })
+    .sort((a, b) => b.matches - a.matches);
 }

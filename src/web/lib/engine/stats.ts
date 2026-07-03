@@ -46,7 +46,7 @@ export const SCORING_PARAMS = {
   /** Team-up bonus clamps: rarely hurt, and their stats inherit the same
    * specialist bias as hero win rates, so cap the upside too. */
   TEAMUP_MIN: -0.1,
-  TEAMUP_MAX: 0.3,
+  TEAMUP_MAX: 0.2,
   /**
    * Soft cap on hero strength (log-odds; 0.15 ~ a 53.7% hero at a 50% mean).
    * Extreme win rates on niche heroes are specialist/one-trick selection
@@ -132,6 +132,10 @@ export interface ScoringTables {
   metaThreats: string[];
   /** "a+b" (sorted slugs) -> log-odds synergy beyond individual strengths. */
   pairSynergy: Map<string, number>;
+  /** Mirror-excluded games per hero in this band (sample size for uncertainty). */
+  strengthSamples: Map<string, number>;
+  /** Fraction of hero-slots the hero occupies in this band (popularity). */
+  pickShare: Map<string, number>;
 }
 
 function aggregateBand(snapshot: Snapshot, band: TierBand) {
@@ -223,8 +227,16 @@ export function buildScoringTables(
 
   const heroRate = shrunkHeroRates(perHero, pBar);
   const strength = new Map<string, number>();
-  for (const [slug, rate] of heroRate)
-    strength.set(slug, capStrength(logit(rate) - zBar));
+  // Raw (uncapped) strengths: used wherever we subtract member strength from
+  // an observed group win rate (team-ups). Subtracting the CAPPED value there
+  // would let the specialist bias removed from hero strength leak back in
+  // through the group term.
+  const rawStrength = new Map<string, number>();
+  for (const [slug, rate] of heroRate) {
+    const raw = logit(rate) - zBar;
+    rawStrength.set(slug, raw);
+    strength.set(slug, capStrength(raw));
+  }
 
   // Matchup deltas are shrunk toward the hero's own baseline AT THE MATRIX'S
   // tier (Diamond+), not toward 0.5 — a sparse matchup then contributes ~0.
@@ -291,12 +303,16 @@ export function buildScoringTables(
       if (Number(idPart) !== def.id) continue;
       const members = combo.split("+");
       const rate = shrunk(agg.wins, agg.matches, pBar, SCORING_PARAMS.M_TEAMUP);
-      const meanStrength =
-        members.reduce((sum, m) => sum + (strength.get(m) ?? 0), 0) /
-        members.length;
+      // Expected WR with all members present shifts by the SUM of their
+      // individual (raw) deltas under independence — only performance beyond
+      // that is team-up value.
+      const expectedDelta = members.reduce(
+        (sum, m) => sum + (rawStrength.get(m) ?? 0),
+        0,
+      );
       const bonus = Math.min(
         SCORING_PARAMS.TEAMUP_MAX,
-        Math.max(SCORING_PARAMS.TEAMUP_MIN, logit(rate) - zBar - meanStrength),
+        Math.max(SCORING_PARAMS.TEAMUP_MIN, logit(rate) - zBar - expectedDelta),
       );
       variants.push({ members, bonus });
     }
@@ -338,6 +354,20 @@ export function buildScoringTables(
     .sort((a, b) => b.weight - a.weight)
     .slice(0, SCORING_PARAMS.META_THREAT_COUNT)
     .map((x) => x.slug);
+
+  const strengthSamples = new Map<string, number>();
+  const pickShare = new Map<string, number>();
+  const totalHeroMatches = [...perHero.values()].reduce(
+    (sum, a) => sum + a.matches,
+    0,
+  );
+  for (const [slug, agg] of perHero) {
+    strengthSamples.set(slug, agg.wrMatches);
+    pickShare.set(
+      slug,
+      totalHeroMatches > 0 ? agg.matches / totalHeroMatches : 0,
+    );
+  }
 
   // Pair synergy from sampled matches (optional data source). The pair's
   // baseline is the WR expected from both heroes' individual deltas, so a
@@ -392,5 +422,7 @@ export function buildScoringTables(
     shapeDelta,
     metaThreats,
     pairSynergy,
+    strengthSamples,
+    pickShare,
   };
 }
