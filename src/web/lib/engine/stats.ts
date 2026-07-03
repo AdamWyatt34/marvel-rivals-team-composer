@@ -59,6 +59,16 @@ export const SCORING_PARAMS = {
    * shrinkage prior (specialists supply most of their games), capped at 8x.
    */
   PICK_SHARE_PRIOR_MAX: 8,
+  /**
+   * Market-demand tilt: the community's revealed valuation of a hero is
+   * their availability-adjusted pick share (picks scaled up for how often
+   * they're ban-removed). Win rates alone invert the meta — mass-picked
+   * staples regress below 50% while ignored heroes' specialist samples
+   * inflate — so strength gets a log-scaled tilt toward demand:
+   * K_DEMAND * ln(adjustedShare / medianShare), clamped to ±DEMAND_CAP.
+   */
+  K_DEMAND: 0.1,
+  DEMAND_CAP: 0.15,
 };
 
 /**
@@ -226,16 +236,43 @@ export function buildScoringTables(
   );
 
   const heroRate = shrunkHeroRates(perHero, pBar);
+
+  // Market-demand tilt: availability-adjusted pick share vs the median.
+  // A hero banned in 60% of games would be picked ~2.5x as often if allowed,
+  // so bans count as demand rather than suppressing it.
+  const gamesInBand =
+    [...perHero.values()].reduce((sum, a) => sum + a.matches, 0) / 12;
+  const totalSlots = gamesInBand * 12;
+  const adjustedShare = new Map<string, number>();
+  for (const [slug, agg] of perHero) {
+    const share = totalSlots > 0 ? agg.matches / totalSlots : 0;
+    const availability =
+      gamesInBand > 0 ? Math.max(0.1, 1 - agg.bans / gamesInBand) : 1;
+    adjustedShare.set(slug, share / availability);
+  }
+  const shareValues = [...adjustedShare.values()].sort((a, b) => a - b);
+  const medianShare = shareValues[Math.floor(shareValues.length / 2)] ?? 0;
+  const demandDelta = (slug: string): number => {
+    const share = adjustedShare.get(slug) ?? 0;
+    if (share <= 0 || medianShare <= 0) return -SCORING_PARAMS.DEMAND_CAP;
+    const tilt = SCORING_PARAMS.K_DEMAND * Math.log(share / medianShare);
+    return Math.min(
+      SCORING_PARAMS.DEMAND_CAP,
+      Math.max(-SCORING_PARAMS.DEMAND_CAP, tilt),
+    );
+  };
+
   const strength = new Map<string, number>();
-  // Raw (uncapped) strengths: used wherever we subtract member strength from
-  // an observed group win rate (team-ups). Subtracting the CAPPED value there
-  // would let the specialist bias removed from hero strength leak back in
-  // through the group term.
+  // Raw (uncapped) WR-only strengths: used wherever we subtract member
+  // strength from an observed group win rate (team-ups) — those observations
+  // embed the actual (specialist) players, so the demand tilt must NOT be in
+  // the value we subtract, and subtracting the CAPPED value would let the
+  // specialist bias leak back in through the group term.
   const rawStrength = new Map<string, number>();
   for (const [slug, rate] of heroRate) {
     const raw = logit(rate) - zBar;
     rawStrength.set(slug, raw);
-    strength.set(slug, capStrength(raw));
+    strength.set(slug, capStrength(raw + demandDelta(slug)));
   }
 
   // Matchup deltas are shrunk toward the hero's own baseline AT THE MATRIX'S

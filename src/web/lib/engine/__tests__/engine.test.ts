@@ -24,10 +24,13 @@ describe("stats / shrinkage", () => {
   });
 
   it("hero strength matches the hand-computed empirical-Bayes value", () => {
-    // hela: shrunk(2750, 5000, 0.5, 400) = 2950/5400, then soft-capped
-    const expected = capStrength(logit(2950 / 5400));
+    // hela: shrunk(2750, 5000, 0.5, 400) = 2950/5400, plus the market-demand
+    // tilt (banned in 3000 of 5000 games -> availability 0.4 -> adjusted
+    // share 2.5x the median), then soft-capped
+    const demandTilt = SCORING_PARAMS.K_DEMAND * Math.log(0.1 / 0.4 / 0.1);
+    const expected = capStrength(logit(2950 / 5400) + demandTilt);
     expect(tables.strength.get("hela")).toBeCloseTo(expected, 10);
-    // an average hero shrinks to exactly the mean -> strength 0
+    // an average hero (median demand, mean WR) -> strength 0
     expect(tables.strength.get("thor")).toBeCloseTo(0, 10);
   });
 
