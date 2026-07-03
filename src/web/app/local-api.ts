@@ -23,18 +23,21 @@ export type MapItem = { id: string; name: string };
 export type ComposePayload = {
   myLocked: string[];
   enemyLocked: string[];
-  myBans?: string[];
-  enemyBans?: string[];
+  bans?: string[];
   map?: string;
   band?: TierBand;
 };
 
 export type ComposeResponse = {
-  primary: { role: string; hero: string }[];
+  primary: { id: string; role: string; name: string }[];
   backups: Record<string, string[]>;
-  suggestedBans?: string[];
-  explanation: string;
+  explanationLines: string[];
   winProbability: number;
+};
+
+export type SnapshotMeta = {
+  seasonLabel: string;
+  updatedAt: string;
 };
 
 export type ThreatsResponse = Record<
@@ -119,12 +122,21 @@ export async function getThreatsDetailed(
   return result;
 }
 
+export async function getSnapshotMeta(): Promise<SnapshotMeta> {
+  const snapshot = await loadSnapshot();
+  return {
+    seasonLabel: snapshot.season.label,
+    updatedAt: new Date(snapshot.sourceTimestamp * 1000).toISOString(),
+  };
+}
+
+/** Fast path — runs live on every selection change; no ban search. */
 export async function composeTeam(
   payload: ComposePayload,
 ): Promise<ComposeResponse> {
   const band = payload.band ?? "all";
   const { tables, snapshot } = await getTables(band);
-  const banned = [...(payload.myBans ?? []), ...(payload.enemyBans ?? [])];
+  const banned = payload.bans ?? [];
   const mapId = payload.map || null;
 
   const result = compose(tables, {
@@ -145,20 +157,6 @@ export async function composeTeam(
     mapId,
   );
 
-  // Like the old API: only suggest bans when the user hasn't entered their own.
-  const suggested =
-    (payload.myBans ?? []).length === 0
-      ? suggestBans(
-          tables,
-          payload.myLocked,
-          payload.enemyLocked,
-          banned,
-          DEFAULT_RULES,
-          3,
-          mapId,
-        )
-      : [];
-
   const explanation = explainTeam(
     tables,
     snapshot,
@@ -169,14 +167,31 @@ export async function composeTeam(
   const nameOf = (id: string) => tables.heroes.get(id)?.name ?? id;
 
   return {
-    primary: result.team.map((h) => ({ role: h.role, hero: h.name })),
+    primary: result.team.map((h) => ({ id: h.id, role: h.role, name: h.name })),
     backups: Object.fromEntries(
       Object.entries(backups).map(([role, ids]) => [role, ids.map(nameOf)]),
     ),
-    suggestedBans: suggested.map(nameOf),
-    explanation: explanation.lines.join(" "),
+    explanationLines: explanation.lines,
     winProbability: explanation.winProbability,
   };
+}
+
+/** Slow path — adversarial ban search; invoked from an explicit button. */
+export async function suggestBansFor(
+  payload: ComposePayload,
+): Promise<{ id: string; name: string }[]> {
+  const band = payload.band ?? "all";
+  const { tables } = await getTables(band);
+  const ids = suggestBans(
+    tables,
+    payload.myLocked,
+    payload.enemyLocked,
+    payload.bans ?? [],
+    DEFAULT_RULES,
+    3,
+    payload.map || null,
+  );
+  return ids.map((id) => ({ id, name: tables.heroes.get(id)?.name ?? id }));
 }
 
 const DETAILS_TOP_N = 5;
