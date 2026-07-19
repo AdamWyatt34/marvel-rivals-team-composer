@@ -162,6 +162,12 @@
     "role": "Strategist"
   },
   {
+    "id": "jubilee",
+    "name": "Jubilee",
+    "rivalsMetaId": 1064,
+    "role": "Strategist"
+  },
+  {
     "id": "loki",
     "name": "Loki",
     "rivalsMetaId": 1016,

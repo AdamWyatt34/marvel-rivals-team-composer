@@ -1,205 +1,176 @@
 [
   {
-    "id": 100001,
-    "name": "RAGNAROK REBIRTH",
-    "anchor": "hela",
+    "id": 1011001,
+    "name": "SAVAGE SLAM",
+    "anchor": "hulk",
     "heroes": [
-      "hela",
-      "loki",
-      "thor"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100002,
-    "name": "METALLIC CHAOS",
-    "anchor": "scarlet-witch",
-    "heroes": [
-      "scarlet-witch",
-      "magneto"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100003,
-    "name": "VOLTAIC UNION",
-    "anchor": "thor",
-    "heroes": [
-      "thor",
-      "storm",
+      "hulk",
       "captain-america"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100004,
-    "name": "PLANET X PALS",
-    "anchor": "groot",
+    "id": 1011002,
+    "name": "GAMMA FASTBALL",
+    "anchor": "hulk",
     "heroes": [
-      "groot",
-      "rocket-raccoon",
+      "hulk",
+      "wolverine"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1014001,
+    "name": "AMMO OVERLOAD",
+    "anchor": "the-punisher",
+    "heroes": [
+      "the-punisher",
+      "rocket-raccoon"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1014002,
+    "name": "BESTIAL HUNT",
+    "anchor": "the-punisher",
+    "heroes": [
+      "the-punisher",
+      "daredevil"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1015001,
+    "name": "GODS OF THUNDER",
+    "anchor": "storm",
+    "heroes": [
+      "storm",
+      "thor"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1015002,
+    "name": "JAWS OF FATE",
+    "anchor": "storm",
+    "heroes": [
+      "storm",
       "jeff-the-land-shark"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100005,
-    "name": "SYMBIOTE BOND",
-    "anchor": "venom",
+    "id": 1016001,
+    "name": "VIBRANT VITALITY",
+    "anchor": "loki",
     "heroes": [
-      "venom",
-      "spider-man",
-      "peni-parker"
+      "loki",
+      "mantis"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100006,
-    "name": "GAMMA CHARGE",
-    "anchor": "hulk",
+    "id": 1016002,
+    "name": "VILLAIN'S ILLUSION",
+    "anchor": "loki",
     "heroes": [
-      "hulk",
-      "iron-man",
-      "namor"
+      "loki",
+      "hela"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100007,
-    "name": "AMMO OVERLOAD",
-    "anchor": "rocket-raccoon",
+    "id": 1017001,
+    "name": "FIERY SPARKS",
+    "anchor": "human-torch",
     "heroes": [
-      "rocket-raccoon",
-      "the-punisher"
+      "human-torch",
+      "jubilee"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100008,
-    "name": "DIMENSIONAL SHORTCUT",
-    "anchor": "magik",
-    "heroes": [
-      "magik",
-      "black-panther"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100009,
-    "name": "LUNAR FORCE",
-    "anchor": "cloak-dagger",
-    "heroes": [
-      "cloak-dagger",
-      "moon-knight"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100010,
-    "name": "GUARDIAN REVIVAL",
-    "anchor": "adam-warlock",
-    "heroes": [
-      "adam-warlock",
-      "mantis",
-      "star-lord"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100011,
-    "name": "CHILLING CHARISMA",
-    "anchor": "luna-snow",
-    "heroes": [
-      "luna-snow",
-      "jeff-the-land-shark"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100013,
-    "name": "ALLIED AGENTS",
-    "anchor": "hawkeye",
-    "heroes": [
-      "hawkeye",
-      "black-widow"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100014,
+    "id": 1017002,
     "name": "STORMING IGNITION",
     "anchor": "human-torch",
     "heroes": [
       "human-torch",
       "storm"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100015,
-    "name": "FASTBALL SPECIAL",
-    "anchor": "wolverine",
+    "id": 1018001,
+    "name": "GAMMA MAELSTROM",
+    "anchor": "doctor-strange",
     "heroes": [
-      "wolverine",
-      "hulk",
-      "the-thing"
+      "doctor-strange",
+      "hulk"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100016,
-    "name": "ATLAS BOND",
-    "anchor": "iron-fist",
-    "heroes": [
-      "iron-fist",
-      "luna-snow"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100017,
-    "name": "FANTASTIC FOUR",
-    "anchor": "invisible-woman",
-    "heroes": [
-      "invisible-woman",
-      "human-torch",
-      "mister-fantastic",
-      "the-thing"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100018,
-    "name": "ESU ALUMNUS",
-    "anchor": "spider-man",
-    "heroes": [
-      "spider-man",
-      "squirrel-girl"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100019,
-    "name": "STARK PROTOCOL",
-    "anchor": "iron-man",
-    "heroes": [
-      "iron-man",
-      "ultron"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100020,
-    "name": "ARCANE ORDER",
+    "id": 1018002,
+    "name": "PSIONIC VORTEX",
     "anchor": "doctor-strange",
     "heroes": [
       "doctor-strange",
-      "scarlet-witch"
+      "invisible-woman"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100021,
+    "id": 1020001,
+    "name": "STAR BLOSSOM",
+    "anchor": "mantis",
+    "heroes": [
+      "mantis",
+      "star-lord"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1020002,
+    "name": "VITALITY PACT",
+    "anchor": "mantis",
+    "heroes": [
+      "mantis",
+      "adam-warlock"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1021001,
+    "name": "MOONLIT SLASH",
+    "anchor": "hawkeye",
+    "heroes": [
+      "hawkeye",
+      "cloak-dagger"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1021002,
+    "name": "SENBONZAKURA STRIKE",
+    "anchor": "hawkeye",
+    "heroes": [
+      "hawkeye",
+      "psylocke"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1022001,
+    "name": "STARS ALIGNED",
+    "anchor": "captain-america",
+    "heroes": [
+      "captain-america",
+      "thor"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1022002,
     "name": "STARS ALIGNED",
     "anchor": "captain-america",
     "heroes": [
@@ -209,245 +180,37 @@
     "currentlyActive": true
   },
   {
-    "id": 100022,
-    "name": "GAMMA CHARGE",
-    "anchor": "hulk",
-    "heroes": [
-      "hulk",
-      "namor"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100023,
-    "name": "MENTAL PROJECTION",
-    "anchor": "emma-frost",
-    "heroes": [
-      "emma-frost",
-      "magneto",
-      "psylocke"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100024,
-    "name": "PRIMAL FLAME",
-    "anchor": "phoenix",
-    "heroes": [
-      "phoenix",
-      "wolverine"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100025,
-    "name": "FASTBALL SPECIAL",
-    "anchor": "wolverine",
-    "heroes": [
-      "wolverine",
-      "hulk"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100026,
-    "name": "PSIONIC MIGHT",
-    "anchor": "invisible-woman",
-    "heroes": [
-      "invisible-woman",
-      "mister-fantastic"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100027,
-    "name": "DIVINE ARMORY",
-    "anchor": "angela",
-    "heroes": [
-      "angela",
-      "thor"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100029,
-    "name": "ROCKET NETWORK",
+    "id": 1023001,
+    "name": "PLANET X PALS",
     "anchor": "rocket-raccoon",
     "heroes": [
       "rocket-raccoon",
-      "peni-parker"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100030,
-    "name": "CHILLING ASSAULT",
-    "anchor": "luna-snow",
-    "heroes": [
-      "luna-snow",
-      "hawkeye"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100031,
-    "name": "SYMBIOTE SHENANIGANS",
-    "anchor": "venom",
-    "heroes": [
-      "venom",
-      "jeff-the-land-shark"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100032,
-    "name": "OPERATION: MICROCHIP",
-    "anchor": "the-punisher",
-    "heroes": [
-      "the-punisher",
-      "black-widow"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100033,
-    "name": "JEFF-NADO",
-    "anchor": "storm",
-    "heroes": [
-      "storm",
-      "jeff-the-land-shark"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100034,
-    "name": "EVER-BURNING BOND",
-    "anchor": "human-torch",
-    "heroes": [
-      "human-torch",
-      "spider-man"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100035,
-    "name": "STARK PROTOCOL",
-    "anchor": "iron-man",
-    "heroes": [
-      "iron-man",
-      "ultron",
-      "squirrel-girl"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100036,
-    "name": "SYMBIOTE SHENANIGANS",
-    "anchor": "venom",
-    "heroes": [
-      "venom",
-      "hela",
-      "jeff-the-land-shark"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100037,
-    "name": "LUNAR FORCE",
-    "anchor": "cloak-dagger",
-    "heroes": [
-      "cloak-dagger",
-      "moon-knight",
-      "blade"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100039,
-    "name": "ROCKET NETWORK",
-    "anchor": "rocket-raccoon",
-    "heroes": [
-      "rocket-raccoon",
-      "peni-parker",
-      "star-lord"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100040,
-    "name": "DUALITY DANCE",
-    "anchor": "adam-warlock",
-    "heroes": [
-      "adam-warlock",
-      "luna-snow"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100041,
-    "name": "VIBRANT VITALITY",
-    "anchor": "mantis",
-    "heroes": [
-      "mantis",
-      "loki",
       "groot"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100042,
-    "name": "FIRST STEPS",
-    "anchor": "human-torch",
+    "id": 1023002,
+    "name": "MAMMALIAN BOND",
+    "anchor": "rocket-raccoon",
     "heroes": [
-      "human-torch",
-      "the-thing"
+      "rocket-raccoon",
+      "squirrel-girl"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100043,
-    "name": "RAGNAROK REBIRTH",
+    "id": 1024001,
+    "name": "HEL TENDRILS",
     "anchor": "hela",
     "heroes": [
       "hela",
-      "thor"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100044,
-    "name": "ARCANE ORDER",
-    "anchor": "doctor-strange",
-    "heroes": [
-      "doctor-strange",
-      "magik",
-      "scarlet-witch"
+      "venom"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100045,
-    "name": "GAMMA CHARGE",
-    "anchor": "hulk",
-    "heroes": [
-      "hulk",
-      "black-panther",
-      "namor"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100046,
-    "name": "BESTIAL HUNT",
-    "anchor": "daredevil",
-    "heroes": [
-      "daredevil",
-      "the-punisher"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100047,
+    "id": 1024002,
     "name": "DEEP WRATH",
     "anchor": "hela",
     "heroes": [
@@ -457,203 +220,741 @@
     "currentlyActive": true
   },
   {
-    "id": 100048,
-    "name": "GAMMA CHARGE",
-    "anchor": "hulk",
+    "id": 1025001,
+    "name": "OBLIVION SHROUD",
+    "anchor": "cloak-dagger",
     "heroes": [
-      "hulk",
-      "black-panther"
+      "cloak-dagger"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100049,
-    "name": "EXPLOSIVE ENTANGLEMENT",
-    "anchor": "gambit",
-    "heroes": [
-      "gambit",
-      "magneto"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100050,
-    "name": "SWORD OF DUALITY",
+    "id": 1025002,
+    "name": "FROZEN HAVEN",
     "anchor": "cloak-dagger",
     "heroes": [
       "cloak-dagger",
-      "hawkeye"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100051,
-    "name": "BLADE OF KHONSHU",
-    "anchor": "moon-knight",
-    "heroes": [
-      "moon-knight",
-      "blade"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100052,
-    "name": "PRIMAL FLAME",
-    "anchor": "phoenix",
-    "heroes": [
-      "phoenix",
-      "black-widow",
-      "wolverine"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100053,
-    "name": "CHILLING ASSAULT",
-    "anchor": "luna-snow",
-    "heroes": [
-      "luna-snow",
-      "iron-fist",
-      "emma-frost"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100054,
-    "name": "SWORD OF DUALITY",
-    "anchor": "cloak-dagger",
-    "heroes": [
-      "cloak-dagger",
-      "hawkeye",
-      "psylocke"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100055,
-    "name": "EXPLOSIVE ENTANGLEMENT",
-    "anchor": "gambit",
-    "heroes": [
-      "gambit",
-      "magneto",
-      "rogue"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100056,
-    "name": "MR. POOL'S INTERDIMENSIONAL TOY BOX",
-    "anchor": null,
-    "heroes": [
-      "jeff-the-land-shark"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100057,
-    "name": "PARKER POWER-UP",
-    "anchor": "peni-parker",
-    "heroes": [
-      "peni-parker",
-      "spider-man"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100058,
-    "name": "ROCKET NETWORK",
-    "anchor": "rocket-raccoon",
-    "heroes": [
-      "rocket-raccoon",
-      "star-lord"
-    ],
-    "currentlyActive": false
-  },
-  {
-    "id": 100059,
-    "name": "PSIONIC MAYHEM",
-    "anchor": "invisible-woman",
-    "heroes": [
-      "invisible-woman",
-      "doctor-strange"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100060,
-    "name": "GAMMA CHARGE",
-    "anchor": "hulk",
-    "heroes": [
-      "hulk",
-      "black-panther",
-      "the-thing"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100061,
-    "name": "MR. POOL'S INTERDIMENSIONAL TOY BOX",
-    "anchor": null,
-    "heroes": [
-      "jeff-the-land-shark",
-      "elsa-bloodstone"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100062,
-    "name": "ROCKET NETWORK",
-    "anchor": "rocket-raccoon",
-    "heroes": [
-      "rocket-raccoon",
-      "mister-fantastic",
-      "star-lord"
-    ],
-    "currentlyActive": true
-  },
-  {
-    "id": 100063,
-    "name": "BLESSING OF THE KUMIHO",
-    "anchor": "white-fox",
-    "heroes": [
-      "white-fox",
       "luna-snow"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100064,
-    "name": "COSMIC CYCLONE",
-    "anchor": "storm",
+    "id": 1026001,
+    "name": "DAMISA-YAO",
+    "anchor": "black-panther",
     "heroes": [
-      "storm",
-      "adam-warlock"
+      "black-panther",
+      "storm"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100065,
-    "name": "LUCKY LOAN",
-    "anchor": "black-cat",
+    "id": 1026002,
+    "name": "DIMENSIONAL SHORTCUT",
+    "anchor": "black-panther",
     "heroes": [
-      "black-cat",
-      "captain-america",
+      "black-panther",
+      "magik"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1027001,
+    "name": "WILD WALL",
+    "anchor": "groot",
+    "heroes": [
+      "groot",
+      "mantis"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1027002,
+    "name": "BUBBLE BUDDIES",
+    "anchor": "groot",
+    "heroes": [
+      "groot",
+      "jeff-the-land-shark"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1028001,
+    "name": "SP//DR SYNC",
+    "anchor": "ultron",
+    "heroes": [
+      "ultron",
+      "iron-man"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1028002,
+    "name": "STARK PROTOCOL",
+    "anchor": "ultron",
+    "heroes": [
+      "ultron",
+      "peni-parker"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1029001,
+    "name": "CHAIN OF CYTTORAK",
+    "anchor": "magik",
+    "heroes": [
+      "magik",
+      "doctor-strange"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1029002,
+    "name": "VOID PENTAGRAM",
+    "anchor": "magik",
+    "heroes": [
+      "magik"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1030001,
+    "name": "LUMINOUS MOON",
+    "anchor": "moon-knight",
+    "heroes": [
+      "moon-knight",
+      "cloak-dagger"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1030002,
+    "name": "BLOOD MOON",
+    "anchor": "moon-knight",
+    "heroes": [
+      "moon-knight",
+      "elsa-bloodstone"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1031001,
+    "name": "ATLAS BOND",
+    "anchor": "luna-snow",
+    "heroes": [
+      "luna-snow",
       "white-fox"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100066,
-    "name": "BLAST SLASH",
-    "anchor": "cyclops",
+    "id": 1031002,
+    "name": "DUALITY DANCE",
+    "anchor": "luna-snow",
     "heroes": [
-      "cyclops",
-      "wolverine"
+      "luna-snow",
+      "adam-warlock"
     ],
     "currentlyActive": true
   },
   {
-    "id": 100067,
+    "id": 1032001,
+    "name": "SQUIRREL MISSILE",
+    "anchor": "squirrel-girl",
+    "heroes": [
+      "squirrel-girl",
+      "iron-man"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1032002,
+    "name": "ESU ALUMNUS",
+    "anchor": "squirrel-girl",
+    "heroes": [
+      "squirrel-girl",
+      "spider-man"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1033001,
+    "name": "ALLIED AGENTS",
+    "anchor": "black-widow",
+    "heroes": [
+      "black-widow",
+      "hawkeye"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1033002,
+    "name": "BURNING BULLETS",
+    "anchor": "black-widow",
+    "heroes": [
+      "black-widow",
+      "phoenix"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1034001,
+    "name": "GAMMA CHARGE",
+    "anchor": "iron-man",
+    "heroes": [
+      "iron-man",
+      "hulk"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1034002,
+    "name": "THUNDER OVERDRIVE",
+    "anchor": "iron-man",
+    "heroes": [
+      "iron-man",
+      "thor"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1035001,
+    "name": "BLOOD LEECH",
+    "anchor": "venom",
+    "heroes": [
+      "venom",
+      "blade"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1035002,
+    "name": "ABYSSAL FLAMES",
+    "anchor": "venom",
+    "heroes": [
+      "venom",
+      "phoenix"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1036001,
+    "name": "SYMBIOTE BOND",
+    "anchor": "spider-man",
+    "heroes": [
+      "spider-man",
+      "venom"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1036002,
+    "name": "PARKER POWER-UP",
+    "anchor": "spider-man",
+    "heroes": [
+      "spider-man",
+      "peni-parker"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1037001,
+    "name": "METALLIC CHAOS",
+    "anchor": "magneto",
+    "heroes": [
+      "magneto",
+      "scarlet-witch"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1037002,
+    "name": "MAGNETIC RESONANCE",
+    "anchor": "magneto",
+    "heroes": [
+      "magneto",
+      "emma-frost"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1038001,
+    "name": "SORCERERS SUPREME",
+    "anchor": "scarlet-witch",
+    "heroes": [
+      "scarlet-witch",
+      "doctor-strange"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1038002,
+    "name": "HEX FIREWORKS",
+    "anchor": "scarlet-witch",
+    "heroes": [
+      "scarlet-witch",
+      "jubilee"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1039001,
+    "name": "RAGNAROK REBIRTH",
+    "anchor": "thor",
+    "heroes": [
+      "thor",
+      "hela"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1039002,
+    "name": "DIVINE ARMORY",
+    "anchor": "thor",
+    "heroes": [
+      "thor",
+      "angela"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1040001,
+    "name": "FANTASTIC AMPLIFIER",
+    "anchor": "mister-fantastic",
+    "heroes": [
+      "mister-fantastic",
+      "rocket-raccoon"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1040002,
+    "name": "CLOBBERIN' RESEARCH DEPT.",
+    "anchor": "mister-fantastic",
+    "heroes": [
+      "mister-fantastic",
+      "the-thing"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1041001,
+    "name": "TIMELESS VETERANS",
+    "anchor": "winter-soldier",
+    "heroes": [
+      "winter-soldier",
+      "the-punisher"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1041002,
+    "name": "EXPERT INSTINCT",
+    "anchor": "winter-soldier",
+    "heroes": [
+      "winter-soldier",
+      "elsa-bloodstone"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1042001,
+    "name": "VIBRANIUM MECH",
+    "anchor": "peni-parker",
+    "heroes": [
+      "peni-parker",
+      "black-panther"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1042002,
+    "name": "ROCKET NETWORK",
+    "anchor": "peni-parker",
+    "heroes": [
+      "peni-parker",
+      "rocket-raccoon"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1043001,
+    "name": "FLORA MUNITIONS",
+    "anchor": "star-lord",
+    "heroes": [
+      "star-lord",
+      "groot"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1043002,
+    "name": "STAR-SOUL",
+    "anchor": "star-lord",
+    "heroes": [
+      "star-lord",
+      "adam-warlock"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1044001,
+    "name": "BLADE OF KHONSHU",
+    "anchor": "blade",
+    "heroes": [
+      "blade",
+      "moon-knight"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1044002,
+    "name": "BLEED FOR BATTLE",
+    "anchor": "blade",
+    "heroes": [
+      "blade",
+      "captain-america"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1045001,
+    "name": "CHILLING CHARISMA",
+    "anchor": "namor",
+    "heroes": [
+      "namor",
+      "luna-snow"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1045002,
+    "name": "GAMMA MONSTRO",
+    "anchor": "namor",
+    "heroes": [
+      "namor",
+      "hulk"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1046001,
+    "name": "COSMIC CYCLONE",
+    "anchor": "adam-warlock",
+    "heroes": [
+      "adam-warlock",
+      "storm"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1046002,
+    "name": "FLAWLESS DESIGN",
+    "anchor": "adam-warlock",
+    "heroes": [
+      "adam-warlock",
+      "ultron"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1047001,
+    "name": "GUARDIAN OF THE DEEP",
+    "anchor": "jeff-the-land-shark",
+    "heroes": [
+      "jeff-the-land-shark",
+      "venom"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1047002,
+    "name": "MR. POOL'S INTERDIMENSIONAL TOY BOX",
+    "anchor": "jeff-the-land-shark",
+    "heroes": [
+      "jeff-the-land-shark"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1048001,
+    "name": "LIGHT & DARK DARTS",
+    "anchor": "psylocke",
+    "heroes": [
+      "psylocke",
+      "cloak-dagger"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1048002,
+    "name": "MENTAL PROJECTION",
+    "anchor": "psylocke",
+    "heroes": [
+      "psylocke",
+      "emma-frost"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1049001,
+    "name": "BLAST SLASH",
+    "anchor": "wolverine",
+    "heroes": [
+      "wolverine",
+      "cyclops"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1049002,
+    "name": "PAIR OF THREES",
+    "anchor": "wolverine",
+    "heroes": [
+      "wolverine",
+      "gambit"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1050001,
+    "name": "UNITED SIBLINGS",
+    "anchor": "invisible-woman",
+    "heroes": [
+      "invisible-woman",
+      "human-torch"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1050002,
+    "name": "FIRST FAMILY",
+    "anchor": "invisible-woman",
+    "heroes": [
+      "invisible-woman",
+      "mister-fantastic"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1051001,
+    "name": "TWO-IN-ONE",
+    "anchor": "the-thing",
+    "heroes": [
+      "the-thing",
+      "human-torch"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1051002,
+    "name": "UNBREAKABLE FORCES",
+    "anchor": "the-thing",
+    "heroes": [
+      "the-thing",
+      "invisible-woman"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1052001,
+    "name": "KUMIHO PALM",
+    "anchor": "iron-fist",
+    "heroes": [
+      "iron-fist",
+      "white-fox"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1052002,
+    "name": "IRON & STONE",
+    "anchor": "iron-fist",
+    "heroes": [
+      "iron-fist",
+      "the-thing"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1053001,
+    "name": "ICED OUT DIAMOND",
+    "anchor": "emma-frost",
+    "heroes": [
+      "emma-frost",
+      "luna-snow"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1053002,
+    "name": "SPIRIT BREAKER",
+    "anchor": "emma-frost",
+    "heroes": [
+      "emma-frost",
+      "mantis"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1054001,
+    "name": "CIRCLE OF LIFE",
+    "anchor": "phoenix",
+    "heroes": [
+      "phoenix",
+      "hela"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1054002,
+    "name": "TELEKINETIC BEATDOWN",
+    "anchor": "phoenix",
+    "heroes": [
+      "phoenix",
+      "rogue"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1055001,
+    "name": "COMPREHENSIVE DEFENSE",
+    "anchor": "daredevil",
+    "heroes": [
+      "daredevil",
+      "iron-fist"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1055002,
+    "name": "DEVILISH AFFAIR",
+    "anchor": "daredevil",
+    "heroes": [
+      "daredevil",
+      "black-widow"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1056001,
+    "name": "ODIN'S UNACKNOWLEDGED",
+    "anchor": "angela",
+    "heroes": [
+      "angela",
+      "loki"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1056002,
+    "name": "ASGARDIANS OF THE GALAXY",
+    "anchor": "angela",
+    "heroes": [
+      "angela",
+      "star-lord"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1057001,
+    "name": "GUMBO CHIMICHANGAS",
+    "anchor": null,
+    "heroes": [
+      "gambit"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1057002,
+    "name": "\"HEL-YEAH, HONEY\"",
+    "anchor": null,
+    "heroes": [
+      "hela"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1058001,
+    "name": "FAVORABLE ODDS",
+    "anchor": "gambit",
+    "heroes": [
+      "gambit",
+      "magneto"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1058002,
+    "name": "SPARKLING STAFF",
+    "anchor": "gambit",
+    "heroes": [
+      "gambit",
+      "jubilee"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1059001,
+    "name": "PREHISTORIC TRAP",
+    "anchor": "elsa-bloodstone",
+    "heroes": [
+      "elsa-bloodstone",
+      "devil-dinosaur"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1059002,
+    "name": "LOUDMOUTH MERCS",
+    "anchor": "elsa-bloodstone",
+    "heroes": [
+      "elsa-bloodstone"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1060001,
+    "name": "LUCKY LOAN",
+    "anchor": "white-fox",
+    "heroes": [
+      "white-fox",
+      "black-cat"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1060002,
+    "name": "PSIONIC FOX",
+    "anchor": "white-fox",
+    "heroes": [
+      "white-fox",
+      "psylocke"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1061001,
+    "name": "FELINE ALLIANCE",
+    "anchor": "black-cat",
+    "heroes": [
+      "black-cat",
+      "black-panther"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1061002,
+    "name": "BINDING TIES",
+    "anchor": "black-cat",
+    "heroes": [
+      "black-cat",
+      "spider-man"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1062001,
     "name": "PRIMAL PUNISHMENT",
     "anchor": "devil-dinosaur",
     "heroes": [
@@ -663,21 +964,71 @@
     "currentlyActive": true
   },
   {
-    "id": 100068,
-    "name": "MR. POOL'S INTERDIMENSIONAL TOY BOX",
-    "anchor": null,
+    "id": 1062002,
+    "name": "SURF & TURF",
+    "anchor": "devil-dinosaur",
     "heroes": [
-      "elsa-bloodstone"
+      "devil-dinosaur",
+      "jeff-the-land-shark"
     ],
-    "currentlyActive": false
+    "currentlyActive": true
   },
   {
-    "id": 100069,
-    "name": "PRIMAL FLAME",
-    "anchor": "phoenix",
+    "id": 1063001,
+    "name": "SLIM AND RED",
+    "anchor": "cyclops",
     "heroes": [
-      "phoenix",
-      "black-widow"
+      "cyclops",
+      "phoenix"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1063002,
+    "name": "KINETIC KIN",
+    "anchor": "cyclops",
+    "heroes": [
+      "cyclops",
+      "gambit"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1064001,
+    "name": "HELLFIRE SPARKS",
+    "anchor": "jubilee",
+    "heroes": [
+      "jubilee"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1064002,
+    "name": "VAMPIRIC KIN",
+    "anchor": "jubilee",
+    "heroes": [
+      "jubilee",
+      "blade"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1065001,
+    "name": "MR. & MRS. X",
+    "anchor": "rogue",
+    "heroes": [
+      "rogue",
+      "gambit"
+    ],
+    "currentlyActive": true
+  },
+  {
+    "id": 1065002,
+    "name": "EXPLOSIVE ENTANGLEMENT",
+    "anchor": "rogue",
+    "heroes": [
+      "rogue",
+      "magneto"
     ],
     "currentlyActive": true
   }
