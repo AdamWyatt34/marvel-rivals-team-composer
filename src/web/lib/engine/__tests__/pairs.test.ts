@@ -60,6 +60,17 @@ describe("aggregatePairs", () => {
       wins: 1,
     });
   });
+
+  it("counts cross-team counter pairs from both orientations", () => {
+    const table = aggregatePairs([row("a")], NOW, 60);
+    // thor's team beat magneto's team; the reverse key records the loss
+    expect(table.counters?.["thor|magneto"]).toEqual({ matches: 1, wins: 1 });
+    expect(table.counters?.["magneto|thor"]).toEqual({ matches: 1, wins: 0 });
+    // hulk and iron-man appear on both sides — mirror pairs are skipped,
+    // but each still faces the other team's remaining heroes
+    expect(table.counters?.["hulk|hulk"]).toBeUndefined();
+    expect(table.counters?.["hulk|iron-man"]).toEqual({ matches: 2, wins: 1 });
+  });
 });
 
 describe("compFromDetails", () => {

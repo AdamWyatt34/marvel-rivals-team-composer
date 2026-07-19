@@ -78,6 +78,7 @@ export function compFromDetails(
   details: MatchDetails,
   slugById: Map<number, string>,
   endEpoch: number,
+  mapId?: string,
 ): CompRow | null {
   const players = details.match_players ?? [];
   if (players.length !== 12) return null;
@@ -107,7 +108,9 @@ export function compFromDetails(
   const aWins = teamA.filter((p) => p.is_win === 1).length;
   const bWins = teamB.filter((p) => p.is_win === 1).length;
   if (aWins === bWins) return null; // draw or inconsistent data
-  return { t: endEpoch, w: aWins > bWins ? "a" : "b", a, b };
+  const row: CompRow = { t: endEpoch, w: aWins > bWins ? "a" : "b", a, b };
+  if (mapId != null) row.m = mapId;
+  return row;
 }
 
 function loadCompRows(): CompRow[] {
@@ -153,7 +156,7 @@ async function main() {
       .slice(0, PLAYERS_PER_RUN);
     playersTried = ordered.length;
 
-    const pendingMatches = new Map<string, number>(); // uid -> end epoch
+    const pendingMatches = new Map<string, { t: number; m?: string }>();
     for (const uid of ordered) {
       if (client.budgetLeft <= pendingMatches.size + 10) break;
       const since = state.players[uid];
@@ -172,7 +175,10 @@ async function main() {
         if (item.match_time_stamp > newest) newest = item.match_time_stamp;
         if (since != null && item.match_time_stamp <= since) continue;
         if (state.seenMatches[item.match_uid] != null) continue;
-        pendingMatches.set(item.match_uid, item.match_time_stamp);
+        pendingMatches.set(item.match_uid, {
+          t: item.match_time_stamp,
+          m: item.match_map_id != null ? String(item.match_map_id) : undefined,
+        });
       }
       state.players[uid] = newest;
     }
@@ -186,7 +192,7 @@ async function main() {
         (failures.length > 0 ? `, failures: ${failures}` : ""),
     );
 
-    for (const [matchUid, endEpoch] of pendingMatches) {
+    for (const [matchUid, pending] of pendingMatches) {
       if (client.budgetLeft <= 0) break;
       let details;
       try {
@@ -197,7 +203,7 @@ async function main() {
       }
       state.seenMatches[matchUid] = nowEpoch;
       if (details == null) continue;
-      const row = compFromDetails(details, slugById, endEpoch);
+      const row = compFromDetails(details, slugById, pending.t, pending.m);
       if (row != null) newRows.push(row);
     }
   } catch (err) {

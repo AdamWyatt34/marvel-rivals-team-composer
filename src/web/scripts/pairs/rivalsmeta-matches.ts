@@ -36,6 +36,7 @@ export interface MatchHistoryItem {
   match_uid: string;
   game_mode_id: number; // 2 = competitive
   match_time_stamp: number; // epoch seconds
+  match_map_id?: number;
 }
 
 export interface MatchPlayer {

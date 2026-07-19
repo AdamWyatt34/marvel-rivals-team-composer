@@ -16,6 +16,8 @@ export interface CompRow {
   w: "a" | "b";
   a: string[];
   b: string[];
+  /** snapshot map id; absent in rows sampled before map capture */
+  m?: string;
 }
 
 export function pairKey(x: string, y: string): string {
@@ -29,15 +31,16 @@ export function aggregatePairs(
 ): PairsTable {
   const cutoff = now.getTime() / 1000 - windowDays * 86400;
   const pairs = new Map<string, { matches: number; wins: number }>();
+  const counters = new Map<string, { matches: number; wins: number }>();
   let totalMatches = 0;
 
   for (const row of rows) {
     if (row.t < cutoff) continue;
     if (row.a.length !== 6 || row.b.length !== 6) continue;
     totalMatches++;
-    for (const [team, won] of [
-      [row.a, row.w === "a"],
-      [row.b, row.w === "b"],
+    for (const [team, opp, won] of [
+      [row.a, row.b, row.w === "a"],
+      [row.b, row.a, row.w === "b"],
     ] as const) {
       for (let i = 0; i < team.length; i++) {
         for (let j = i + 1; j < team.length; j++) {
@@ -49,16 +52,27 @@ export function aggregatePairs(
           pairs.set(key, agg);
         }
       }
+      for (const x of team) {
+        for (const y of opp) {
+          if (x === y) continue; // mirror picks carry no counter signal
+          const key = `${x}|${y}`;
+          const agg = counters.get(key) ?? { matches: 0, wins: 0 };
+          agg.matches++;
+          if (won) agg.wins++;
+          counters.set(key, agg);
+        }
+      }
     }
   }
 
+  const sorted = <V>(m: Map<string, V>) =>
+    Object.fromEntries([...m.entries()].sort(([x], [y]) => x.localeCompare(y)));
   return {
     schemaVersion: PAIRS_SCHEMA_VERSION,
     generatedAt: now.toISOString(),
     windowDays,
     totalMatches,
-    pairs: Object.fromEntries(
-      [...pairs.entries()].sort(([x], [y]) => x.localeCompare(y)),
-    ),
+    pairs: sorted(pairs),
+    counters: sorted(counters),
   };
 }
