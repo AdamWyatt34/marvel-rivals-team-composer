@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: write
 
 concurrency:
   group: refresh-data
@@ -16,9 +18,9 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -29,10 +31,37 @@ jobs:
         run: npm ci
 
       - name: Ingest RivalsMeta snapshot
+        id: ingest
+        continue-on-error: true
         working-directory: src/web
-        run: npm run ingest
+        run: |
+          set -o pipefail
+          npm run ingest 2>&1 | tee ingest.log
+
+      - name: Open reference-refresh PR for unmapped heroes
+        if: steps.ingest.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Only the new-hero failure is auto-recoverable; anything else must
+          # fail the run so the issue step below fires.
+          grep -q "Unmapped RivalsMeta hero ids" src/web/ingest.log
+          (cd src/web && npm run build-reference -- --live && npm run ingest)
+          branch="auto/reference-refresh"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add data/reference src/web/public/data/snapshot.json
+          git commit -m "fix(data): refresh reference for new heroes"
+          git push -f origin "$branch"
+          if [ -z "$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --head "$branch" \
+              --title "fix(data): refresh reference for new heroes" \
+              --body "$(printf '**What/Why** — Ingest failed on unmapped RivalsMeta hero ids (a new hero shipped). This is the automated build-reference --live output; merging unblocks the daily snapshot refresh.\n\n**Verify** — Check the hero and team-up diff against the in-game roster.')"
+          fi
 
       - name: Commit snapshot if changed
+        if: steps.ingest.outcome == 'success'
         run: |
           if git diff --quiet -- src/web/public/data/snapshot.json; then
             echo "Snapshot unchanged; nothing to commit."
@@ -43,3 +72,15 @@ jobs:
           git add src/web/public/data/snapshot.json
           git commit -m "chore(data): refresh snapshot $(date -u +%F)"
           git push
+
+      - name: File failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Scheduled workflow failing: ${{ github.workflow }}"
+          open=$(gh issue list --state open --json title --jq '[.[] | select(.title == "'"$title"'")] | length')
+          if [ "$open" = "0" ]; then
+            gh issue create --title "$title" \
+              --body "First failing run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Later runs keep failing while this issue is open; close it once the workflow is green again."
+          fi

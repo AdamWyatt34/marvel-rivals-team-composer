@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: sample-matches
@@ -16,9 +17,9 @@ jobs:
   sample:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -49,3 +50,15 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(data): sample matches $(date -u +%F)"
           git push
+
+      - name: File failure issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Scheduled workflow failing: ${{ github.workflow }}"
+          open=$(gh issue list --state open --json title --jq '[.[] | select(.title == "'"$title"'")] | length')
+          if [ "$open" = "0" ]; then
+            gh issue create --title "$title" \
+              --body "First failing run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Later runs keep failing while this issue is open; close it once the workflow is green again."
+          fi
