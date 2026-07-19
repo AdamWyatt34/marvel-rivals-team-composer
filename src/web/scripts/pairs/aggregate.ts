@@ -24,12 +24,20 @@ export function pairKey(x: string, y: string): string {
   return x < y ? `${x}+${y}` : `${y}+${x}`;
 }
 
+/**
+ * Balance patches invalidate old comps overnight, so matches decay with a
+ * half-life instead of counting fully until a hard cutoff. windowDays stays
+ * as the guard beyond which rows are dropped entirely (~4 half-lives).
+ */
+const HALF_LIFE_DAYS = 21;
+
 export function aggregatePairs(
   rows: readonly CompRow[],
   now: Date,
   windowDays: number,
 ): PairsTable {
-  const cutoff = now.getTime() / 1000 - windowDays * 86400;
+  const nowEpoch = now.getTime() / 1000;
+  const cutoff = nowEpoch - windowDays * 86400;
   const pairs = new Map<string, { matches: number; wins: number }>();
   const counters = new Map<string, { matches: number; wins: number }>();
   let totalMatches = 0;
@@ -38,6 +46,8 @@ export function aggregatePairs(
     if (row.t < cutoff) continue;
     if (row.a.length !== 6 || row.b.length !== 6) continue;
     totalMatches++;
+    const ageDays = Math.max(0, (nowEpoch - row.t) / 86400);
+    const weight = Math.pow(0.5, ageDays / HALF_LIFE_DAYS);
     for (const [team, opp, won] of [
       [row.a, row.b, row.w === "a"],
       [row.b, row.a, row.w === "b"],
@@ -47,8 +57,8 @@ export function aggregatePairs(
           if (team[i] === team[j]) continue;
           const key = pairKey(team[i], team[j]);
           const agg = pairs.get(key) ?? { matches: 0, wins: 0 };
-          agg.matches++;
-          if (won) agg.wins++;
+          agg.matches += weight;
+          if (won) agg.wins += weight;
           pairs.set(key, agg);
         }
       }
@@ -57,16 +67,24 @@ export function aggregatePairs(
           if (x === y) continue; // mirror picks carry no counter signal
           const key = `${x}|${y}`;
           const agg = counters.get(key) ?? { matches: 0, wins: 0 };
-          agg.matches++;
-          if (won) agg.wins++;
+          agg.matches += weight;
+          if (won) agg.wins += weight;
           counters.set(key, agg);
         }
       }
     }
   }
 
-  const sorted = <V>(m: Map<string, V>) =>
-    Object.fromEntries([...m.entries()].sort(([x], [y]) => x.localeCompare(y)));
+  const round = (x: number) => Math.round(x * 1000) / 1000;
+  const sorted = (m: Map<string, { matches: number; wins: number }>) =>
+    Object.fromEntries(
+      [...m.entries()]
+        .sort(([x], [y]) => x.localeCompare(y))
+        .map(([k, v]) => [
+          k,
+          { matches: round(v.matches), wins: round(v.wins) },
+        ]),
+    );
   return {
     schemaVersion: PAIRS_SCHEMA_VERSION,
     generatedAt: now.toISOString(),

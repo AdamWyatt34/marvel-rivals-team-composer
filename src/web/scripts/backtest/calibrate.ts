@@ -32,7 +32,7 @@ const P_CLAMP = 1e-6;
 /** Below this many usable matches the holdout split is skipped (in-sample). */
 const MIN_HOLDOUT_MATCHES = 400;
 const HOLDOUT_FRACTION = 0.25;
-const WINDOW_DAYS = 60;
+const WINDOW_DAYS = 84;
 
 export interface Prediction {
   p: number;

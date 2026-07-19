@@ -9,9 +9,10 @@ import { z } from "zod";
 
 export const PAIRS_SCHEMA_VERSION = 1;
 
+/** Fractional: matches are recency-weighted (half-life decay), not counted. */
 const countSchema = z.object({
-  matches: z.number().int().nonnegative(),
-  wins: z.number().int().nonnegative(),
+  matches: z.number().nonnegative(),
+  wins: z.number().nonnegative(),
 });
 
 export const pairsTableSchema = z.object({

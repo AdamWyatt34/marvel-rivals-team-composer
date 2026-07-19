@@ -37,7 +37,8 @@ const REFERENCE_HEROES = resolve(REPO_ROOT, "data/reference/heroes.json");
 
 const MAX_REQUESTS = Number(process.env.SAMPLE_MAX_REQUESTS ?? 2500);
 const PLAYERS_PER_RUN = 150;
-const WINDOW_DAYS = 60;
+/** Hard guard; inside it, matches decay with a 21-day half-life (aggregate). */
+const WINDOW_DAYS = 84;
 /** Forget seen-match ids and player cursors older than this. */
 const STATE_RETENTION_DAYS = 70;
 
