@@ -31,6 +31,10 @@ const PAIRS_DIR = resolve(REPO_ROOT, "data/pairs");
 const BACKTEST_DIR = resolve(REPO_ROOT, "data/backtest");
 const SNAPSHOT_PATH = resolve(SCRIPT_DIR, "../../public/data/snapshot.json");
 const PAIRS_TABLE_PATH = resolve(SCRIPT_DIR, "../../public/data/pairs.json");
+const CALIBRATION_PATH = resolve(
+  SCRIPT_DIR,
+  "../../public/data/calibration.json",
+);
 
 const MIN_MATCHES = Number(process.env.BACKTEST_MIN_MATCHES ?? 200);
 
@@ -71,12 +75,18 @@ function loadPairsTable(): PairsTable | null {
 
 function printReport(report: BacktestReport) {
   const fmt = (x: number) => (Number.isNaN(x) ? "—" : x.toFixed(4));
+  const scope = report.holdout
+    ? `held-out ${report.holdout.testMatches} of ${report.nMatches + report.holdout.trainMatches}`
+    : `in-sample ${report.nMatches} (too few for a holdout)`;
   console.log(
-    `\nBacktest @ ${report.band} — ${report.nMatches} matches` +
+    `\nBacktest @ ${report.band} — ${scope} matches` +
       ` (${report.nPredictions} predictions, ${report.nSkipped} rows skipped)`,
   );
   console.log(
     `  log loss  ${fmt(report.logLoss)}  (coin flip ${fmt(report.logLossBaseline)})`,
+  );
+  console.log(
+    `  with T    ${fmt(report.logLossCalibrated)}  (temperature ${report.temperature.toFixed(2)})`,
   );
   console.log(
     `  Brier     ${fmt(report.brier)}  (coin flip ${fmt(report.brierBaseline)})`,
@@ -100,6 +110,18 @@ function printReport(report: BacktestReport) {
     for (const a of report.ablations) {
       const sign = a.delta >= 0 ? "+" : "";
       console.log(`    ${a.param.padEnd(11)} ${sign}${a.delta.toFixed(5)}`);
+    }
+  }
+
+  const moved = report.multipliers.filter((m) => m.best !== 1);
+  if (moved.length > 0) {
+    console.log(
+      "\n  weight suggestions (train-fitted multiplier on current value):",
+    );
+    for (const m of moved) {
+      console.log(
+        `    ${m.param.padEnd(11)} ×${m.best}  (train Δ ${m.delta.toFixed(5)})`,
+      );
     }
   }
 }
@@ -145,11 +167,30 @@ function main() {
       band: report.band,
       nMatches: report.nMatches,
       logLoss: report.logLoss,
+      logLossCalibrated: report.logLossCalibrated,
       brier: report.brier,
       accuracy: report.accuracy,
+      temperature: report.temperature,
+      heldOut: report.holdout != null,
     }) + "\n",
   );
   console.log(`\nWrote data/backtest/latest.json (+ history.jsonl).`);
+
+  if (report.productionTemperature != null) {
+    writeFileSync(
+      CALIBRATION_PATH,
+      JSON.stringify({
+        schemaVersion: 1,
+        generatedAt: report.generatedAt,
+        band: report.band,
+        temperature: Number(report.productionTemperature.toFixed(4)),
+        nPredictions: report.nPredictions,
+      }) + "\n",
+    );
+    console.log(
+      `Wrote public/data/calibration.json (temperature ${report.productionTemperature.toFixed(2)}).`,
+    );
+  }
 }
 
 main();

@@ -39,7 +39,7 @@ jobs:
 
       - name: Commit pair data if changed
         run: |
-          git add data/pairs data/backtest src/web/public/data/pairs.json
+          git add data/pairs data/backtest src/web/public/data/pairs.json src/web/public/data/calibration.json
           if git diff --cached --quiet; then
             echo "No new pair data; nothing to commit."
             exit 0
