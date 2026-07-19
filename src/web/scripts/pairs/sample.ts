@@ -13,7 +13,12 @@ import { USER_AGENT } from "../ingest/rivalsmeta";
 import type { SnapshotHero } from "../../lib/data/schema";
 import { pairsTableSchema } from "../../lib/data/pairs-schema";
 import { aggregatePairs, type CompRow } from "./aggregate";
-import { MrApiClient, RateLimitedError, type MatchDetails } from "./mrapi";
+import {
+  HttpError,
+  MrApiClient,
+  RateLimitedError,
+  type MatchDetails,
+} from "./mrapi";
 
 /**
  * Daily match sampler: pulls recent competitive matches of leaderboard
@@ -144,6 +149,9 @@ async function main() {
   const state = loadState();
   const client = new MrApiClient(apiKey, MAX_REQUESTS);
   const newRows: CompRow[] = [];
+  let playersTried = 0;
+  let historyOk = 0;
+  const failureCounts = new Map<string, number>();
 
   try {
     const uids = await fetchLeaderboardUids();
@@ -151,6 +159,7 @@ async function main() {
     const ordered = [...uids]
       .sort((x, y) => (state.players[x] ?? 0) - (state.players[y] ?? 0))
       .slice(0, PLAYERS_PER_RUN);
+    playersTried = ordered.length;
 
     const pendingMatches = new Map<string, number>(); // uid -> end epoch
     let unindexed = 0;
@@ -165,8 +174,14 @@ async function main() {
       } catch (err) {
         if (err instanceof RateLimitedError) throw err;
         // The API 500s for players it hasn't indexed yet — nudge its indexer
-        // (heavily rate-limited, so paced and capped) and move on. History
-        // scanning continues regardless.
+        // (heavily rate-limited, so paced and capped) and move on. Any other
+        // status (502 while the API is down, auth failures) isn't fixable by
+        // nudging, so just tally it for the summary.
+        if (!(err instanceof HttpError) || err.status !== 500) {
+          const key = err instanceof HttpError ? `${err.status}` : "network";
+          failureCounts.set(key, (failureCounts.get(key) ?? 0) + 1);
+          continue;
+        }
         unindexed++;
         if (nudgesEnabled && nudges < UPDATE_NUDGES_PER_RUN) {
           try {
@@ -184,6 +199,7 @@ async function main() {
         }
         continue;
       }
+      historyOk++;
       let newest = since ?? 0;
       for (const item of history) {
         if (item.match_time_stamp > newest) newest = item.match_time_stamp;
@@ -194,9 +210,14 @@ async function main() {
       state.players[uid] = newest;
     }
 
+    const failures = [...failureCounts]
+      .map(([status, n]) => `${n}x ${status}`)
+      .join(", ");
     console.log(
       `history pass done: ${client.used} requests, ${pendingMatches.size} new matches queued, ` +
-        `${unindexed} players unindexed (${nudges} indexing nudges sent)`,
+        `${historyOk}/${ordered.length} histories fetched, ${unindexed} players unindexed ` +
+        `(${nudges} indexing nudges sent)` +
+        (failures.length > 0 ? `, other failures: ${failures}` : ""),
     );
 
     for (const [matchUid, endEpoch] of pendingMatches) {
@@ -239,12 +260,28 @@ async function main() {
 
   const table = aggregatePairs(loadCompRows(), now, WINDOW_DAYS);
   pairsTableSchema.parse(table);
-  writeFileSync(PAIRS_TABLE_PATH, JSON.stringify(table) + "\n");
+  // Skip the write when only generatedAt would change, so the workflow's
+  // commit step stays a no-op on days with nothing new.
+  const stripStamp = (t: object) => JSON.stringify({ ...t, generatedAt: null });
+  const prev = existsSync(PAIRS_TABLE_PATH)
+    ? (JSON.parse(readFileSync(PAIRS_TABLE_PATH, "utf8")) as object)
+    : null;
+  if (prev == null || stripStamp(prev) !== stripStamp(table)) {
+    writeFileSync(PAIRS_TABLE_PATH, JSON.stringify(table) + "\n");
+  }
 
   console.log(
     `Sampled ${newRows.length} new matches (${client.used} requests). ` +
       `Pair table now covers ${table.totalMatches} matches / ${Object.keys(table.pairs).length} pairs.`,
   );
+
+  if (playersTried > 0 && historyOk === 0) {
+    console.error(
+      "Every match-history request failed — the API is down, the key is bad, " +
+        "or no leaderboard player is indexed. Failing the run so it's visible.",
+    );
+    process.exitCode = 1;
+  }
 }
 
 main().catch((err) => {
