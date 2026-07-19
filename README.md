@@ -75,11 +75,26 @@ npm run build-reference  # regenerate data/reference/* (run when a new hero ship
 New hero shipped? `npm run build-reference -- --live`, review the diff in
 `data/reference/`, commit, then `npm run ingest`.
 
-**Pair synergy data** accumulates via `sample-matches.yml`, which samples
-leaderboard players' competitive matches from RivalsMeta's player-match API
-(the same endpoints its player pages call; no key needed). Without data the
-engine's pair term is simply zero. Expect the term to become meaningful after
-~2–4 weeks of daily accumulation.
+**Pair synergy & counter data** accumulates via `sample-matches.yml`, which
+samples leaderboard players' competitive matches from RivalsMeta's
+player-match API (the same endpoints its player pages call; no key needed).
+Each sampled comp feeds three things: same-team pair synergy, cross-team
+learned counters, and the daily backtest. Without data those terms are simply
+zero. Expect them to become meaningful after ~2–4 weeks of daily accumulation.
+
+**Backtest & calibration** (`npm run backtest`, run daily after sampling)
+holds out the newest quarter of sampled matches, scores them with tables
+built from the rest, and reports log loss / Brier / accuracy, per-term
+ablations, and train-fitted weight-multiplier suggestions. It also fits the
+sigmoid temperature and writes `public/data/calibration.json`, which the app
+loads so displayed win probabilities match observed outcome rates.
+
+**Profile import** (optional) lets a visitor build their hero pool from
+their own recent competitive matches. RivalsMeta sends no CORS headers, so
+the feature needs a tiny forwarding proxy: deploy
+`infra/rivalsmeta-proxy.js` as a Cloudflare Worker, set the repo Actions
+variable `PROFILE_PROXY_URL` to the worker URL, and redeploy. The import UI
+stays hidden until the build sees that variable.
 
 ## Deployment
 

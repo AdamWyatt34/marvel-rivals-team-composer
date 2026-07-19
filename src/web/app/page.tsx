@@ -28,6 +28,7 @@ import {
   type SnapshotMeta,
 } from "./local-api";
 import { TIER_BANDS, type TierBand } from "../lib/engine";
+import { importProfile, poolOf, profileImportEnabled } from "./profile-import";
 
 const BAND_LABELS: Record<TierBand, string> = {
   all: "All ranks",
@@ -45,6 +46,7 @@ type Preset = { name: string; locks: string[] };
 const LS_FAVORITES = "mrtc:favorites";
 const LS_PRESETS = "mrtc:presets";
 const LS_POOL_ONLY = "mrtc:poolOnly";
+const LS_PROFILE_UID = "mrtc:profileUid";
 
 function readLs<T>(key: string, fallback: T): T {
   try {
@@ -94,6 +96,11 @@ export default function Home() {
     setFavorites(readLs<string[]>(LS_FAVORITES, []));
     setPresets(readLs<Preset[]>(LS_PRESETS, []));
     setPoolOnly(readLs<boolean>(LS_POOL_ONLY, false));
+    try {
+      setProfileUid(localStorage.getItem(LS_PROFILE_UID) ?? "");
+    } catch {
+      /* storage unavailable */
+    }
     setStorageReady(true);
   }, []);
   useEffect(() => {
@@ -171,6 +178,45 @@ export default function Home() {
       qs ? `?${qs}` : window.location.pathname,
     );
   }, [my, enemy, bans, pinned, selectedMap, band]);
+
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileUid, setProfileUid] = useState("");
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [profileMsg, setProfileMsg] = useState<string | null>(null);
+
+  function runImport() {
+    const uid = profileUid.trim();
+    if (uid === "" || profileBusy) return;
+    setProfileBusy(true);
+    setProfileMsg(null);
+    importProfile(uid)
+      .then((profile) => {
+        const pool = poolOf(profile);
+        if (pool.length === 0) {
+          setProfileMsg(
+            `Found ${profile.matches} matches but no hero with 3+ games — nothing to import.`,
+          );
+          return;
+        }
+        setFavorites(pool);
+        setPoolOnly(true);
+        localStorage.setItem(LS_PROFILE_UID, uid);
+        const top = profile.heroes
+          .slice(0, 3)
+          .map(
+            (h) =>
+              `${h.name} ${h.games}g/${Math.round((100 * h.wins) / h.games)}%`,
+          )
+          .join(", ");
+        setProfileMsg(
+          `Imported ${profile.matches} matches — pool of ${pool.length} heroes (top: ${top}).`,
+        );
+      })
+      .catch((e: unknown) =>
+        setProfileMsg(String(e instanceof Error ? e.message : e)),
+      )
+      .finally(() => setProfileBusy(false));
+  }
 
   const [copied, setCopied] = useState(false);
   function copyShareLink() {
@@ -353,6 +399,8 @@ export default function Home() {
               {" "}
               Data: {meta.seasonLabel}
               {updatedAgo ? `, updated ${updatedAgo}` : ""} (rivalsmeta.com).
+              {meta.pairMatches > 0 &&
+                ` Synergy & counters: ${meta.pairMatches.toLocaleString()} sampled top-500 ladder matches.`}
             </>
           )}
         </p>
@@ -426,6 +474,21 @@ export default function Home() {
           ★ My pool only
         </button>
 
+        {profileImportEnabled && (
+          <button
+            onClick={() => setProfileOpen((v) => !v)}
+            aria-expanded={profileOpen}
+            style={{
+              ...poolBtn,
+              background: profileOpen ? "var(--my)" : "var(--chip)",
+              color: profileOpen ? "#fff" : "var(--text)",
+            }}
+            title="Build your hero pool from your recent competitive matches"
+          >
+            👤 Import profile
+          </button>
+        )}
+
         <button
           onClick={copyShareLink}
           style={{ ...clearBtn, marginLeft: "auto" }}
@@ -438,6 +501,37 @@ export default function Home() {
           Clear
         </button>
       </div>
+
+      {profileImportEnabled && profileOpen && (
+        <div style={profileRow}>
+          <input
+            value={profileUid}
+            onChange={(e) => setProfileUid(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && runImport()}
+            placeholder="In-game UID (on your profile card)"
+            inputMode="numeric"
+            aria-label="Player UID"
+            style={profileInput}
+          />
+          <button
+            onClick={runImport}
+            disabled={profileBusy || profileUid.trim() === ""}
+            style={{
+              ...poolBtn,
+              background: "var(--my)",
+              color: "#fff",
+              opacity: profileBusy || profileUid.trim() === "" ? 0.5 : 1,
+            }}
+          >
+            {profileBusy ? "Importing…" : "Import"}
+          </button>
+          {profileMsg && (
+            <span style={{ fontSize: 12, color: "var(--muted)" }}>
+              {profileMsg}
+            </span>
+          )}
+        </div>
+      )}
 
       {(presets.length > 0 || my.length > 0) && (
         <div style={presetRow}>
@@ -627,6 +721,25 @@ const presetRow: CSSProperties = {
   flexWrap: "wrap",
   alignItems: "center",
   marginBottom: 12,
+};
+
+const profileRow: CSSProperties = {
+  display: "flex",
+  gap: 8,
+  flexWrap: "wrap",
+  alignItems: "center",
+  marginBottom: 12,
+};
+
+const profileInput: CSSProperties = {
+  padding: "8px 12px",
+  borderRadius: 10,
+  border: "1px solid var(--border)",
+  background: "var(--card)",
+  color: "var(--text)",
+  fontSize: 13,
+  minHeight: 40,
+  width: 260,
 };
 
 const presetChip: CSSProperties = {

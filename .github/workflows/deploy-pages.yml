@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_BASE_PATH: /marvel-rivals-team-composer
+      # Optional CORS proxy for the profile-import feature; the UI stays
+      # hidden while this repo variable is unset (see infra/rivalsmeta-proxy.js).
+      NEXT_PUBLIC_PROFILE_PROXY: ${{ vars.PROFILE_PROXY_URL }}
     steps:
       - uses: actions/checkout@v7
 
