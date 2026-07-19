@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-07-19T19:13:02.319Z",
+  "band": "grandmaster+",
+  "nMatches": 1787,
+  "nSkipped": 0,
+  "nPredictions": 3574,
+  "logLoss": 0.6747847768468305,
+  "logLossBaseline": 0.6931471805599453,
+  "brier": 0.24102822945641214,
+  "brierBaseline": 0.25,
+  "accuracy": 0.5528819250139899,
+  "calibration": [
+    {
+      "lo": 0.2,
+      "hi": 0.3,
+      "count": 2,
+      "meanPredicted": 0.2974928948909676,
+      "actualRate": 0
+    },
+    {
+      "lo": 0.3,
+      "hi": 0.4,
+      "count": 510,
+      "meanPredicted": 0.3727538451115919,
+      "actualRate": 0.22941176470588234
+    },
+    {
+      "lo": 0.4,
+      "hi": 0.5,
+      "count": 2697,
+      "meanPredicted": 0.45615891450673585,
+      "actualRate": 0.5164998146088247
+    },
+    {
+      "lo": 0.5,
+      "hi": 0.6,
+      "count": 365,
+      "meanPredicted": 0.5131838358925783,
+      "actualRate": 0.7589041095890411
+    }
+  ],
+  "ablations": [
+    {
+      "param": "K_HERO",
+      "logLoss": 0.6800342940829426,
+      "delta": 0.005249517236112111
+    },
+    {
+      "param": "K_MATCHUP",
+      "logLoss": 0.6771763070660155,
+      "delta": 0.002391530219185034
+    },
+    {
+      "param": "K_TEAMUP",
+      "logLoss": 0.6705783791583003,
+      "delta": -0.00420639768853015
+    },
+    {
+      "param": "K_SHAPE",
+      "logLoss": 0.6856800035928473,
+      "delta": 0.01089522674601684
+    },
+    {
+      "param": "K_COVERAGE",
+      "logLoss": 0.6686271419497819,
+      "delta": -0.0061576348970485695
+    },
+    {
+      "param": "K_PAIR",
+      "logLoss": 0.6838822495583703,
+      "delta": 0.009097472711539822
+    },
+    {
+      "param": "K_DEMAND",
+      "logLoss": 0.6746733906127919,
+      "delta": -0.00011138623403861292
+    }
+  ]
+}
