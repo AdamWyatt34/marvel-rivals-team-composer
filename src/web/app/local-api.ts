@@ -1,8 +1,9 @@
-import { loadPairs, loadSnapshot } from "../lib/data/load";
+import { loadCalibration, loadPairs, loadSnapshot } from "../lib/data/load";
 import type { Snapshot } from "../lib/data/schema";
 import {
   buildBackups,
   buildScoringTables,
+  calibratedProb,
   compose,
   DEFAULT_RULES,
   explainTeam,
@@ -53,6 +54,8 @@ export type ComposeResponse = {
 export type SnapshotMeta = {
   seasonLabel: string;
   updatedAt: string;
+  /** Sampled matches behind the pair-synergy/counter terms (top-500 ladder). */
+  pairMatches: number;
 };
 
 export type ThreatsResponse = Record<
@@ -65,10 +68,19 @@ const tablesCache = new Map<TierBand, ScoringTables>();
 async function getTables(
   band: TierBand,
 ): Promise<{ tables: ScoringTables; snapshot: Snapshot }> {
-  const [snapshot, pairs] = await Promise.all([loadSnapshot(), loadPairs()]);
+  const [snapshot, pairs, calibration] = await Promise.all([
+    loadSnapshot(),
+    loadPairs(),
+    loadCalibration(),
+  ]);
   let tables = tablesCache.get(band);
   if (tables == null) {
-    tables = buildScoringTables(snapshot, band, pairs);
+    tables = buildScoringTables(
+      snapshot,
+      band,
+      pairs,
+      calibration?.temperature ?? 1,
+    );
     tablesCache.set(band, tables);
   }
   return { tables, snapshot };
@@ -131,10 +143,11 @@ export async function getThreatsDetailed(
 }
 
 export async function getSnapshotMeta(): Promise<SnapshotMeta> {
-  const snapshot = await loadSnapshot();
+  const [snapshot, pairs] = await Promise.all([loadSnapshot(), loadPairs()]);
   return {
     seasonLabel: snapshot.season.label,
     updatedAt: new Date(snapshot.sourceTimestamp * 1000).toISOString(),
+    pairMatches: pairs?.totalMatches ?? 0,
   };
 }
 
@@ -217,8 +230,10 @@ function probabilityBand(
     variance += se * se;
   }
   const sigma = Math.sqrt(variance);
-  const sig = (x: number) => 1 / (1 + Math.exp(-x));
-  return { low: sig(z - sigma), high: sig(z + sigma) };
+  return {
+    low: calibratedProb(tables, z - sigma),
+    high: calibratedProb(tables, z + sigma),
+  };
 }
 
 /** Slow path — adversarial ban search; invoked from an explicit button. */

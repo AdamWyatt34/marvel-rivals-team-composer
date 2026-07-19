@@ -43,6 +43,15 @@ export const SCORING_PARAMS = {
   M_PAIR: 300,
   K_PAIR: 0.6,
   PAIR_SYNERGY_CAP: 0.2,
+  /**
+   * Learned counter edges from the same sampled matches: observed WR of hero
+   * x's team when y is on the enemy team, shrunk toward the WR expected from
+   * both heroes' individual strengths. Overlaps conceptually with the
+   * RivalsMeta matchup matrix — the backtest ablations arbitrate the weights.
+   */
+  M_COUNTER: 400,
+  K_COUNTER: 0.3,
+  COUNTER_CAP: 0.2,
   /** Team-up bonus clamps: rarely hurt, and their stats inherit the same
    * specialist bias as hero win rates, so cap the upside too. */
   TEAMUP_MIN: -0.1,
@@ -142,6 +151,13 @@ export interface ScoringTables {
   metaThreats: string[];
   /** "a+b" (sorted slugs) -> log-odds synergy beyond individual strengths. */
   pairSynergy: Map<string, number>;
+  /** "h|e" -> h's learned log-odds edge (beyond strengths) vs enemy e. */
+  counterEdge: Map<string, number>;
+  /**
+   * Probability calibration temperature: P = sigmoid(zBar + T*(z - zBar)).
+   * Fitted by the backtest against real match outcomes; 1 = uncalibrated.
+   */
+  temperature: number;
   /**
    * P(an unknown enemy slot is this hero | hero available) — availability-
    * adjusted pick shares, normalized to sum 1. The scorer renormalizes at
@@ -231,6 +247,7 @@ export function buildScoringTables(
   snapshot: Snapshot,
   band: TierBand,
   pairs: PairsTable | null = null,
+  temperature = 1,
 ): ScoringTables {
   const perHero = aggregateBand(snapshot, band);
   const pBar = globalMean(perHero);
@@ -475,6 +492,35 @@ export function buildScoringTables(
     }
   }
 
+  // Learned counter edges, same recipe as pair synergy but cross-team: the
+  // expected WR of x-vs-y is the strength difference, so only residual
+  // counter effect survives shrinkage.
+  const counterEdge = new Map<string, number>();
+  if (pairs?.counters != null) {
+    const cap = SCORING_PARAMS.COUNTER_CAP;
+    for (const [key, count] of Object.entries(pairs.counters)) {
+      const [x, y] = key.split("|");
+      const rateX = heroRate.get(x);
+      const rateY = heroRate.get(y);
+      if (rateX == null || rateY == null) continue;
+      const expected = Math.min(
+        0.95,
+        Math.max(0.05, pBar + (rateX - pBar) - (rateY - pBar)),
+      );
+      const observed = shrunk(
+        count.wins,
+        count.matches,
+        expected,
+        SCORING_PARAMS.M_COUNTER,
+      );
+      const edge = Math.min(
+        cap,
+        Math.max(-cap, logit(observed) - logit(expected)),
+      );
+      if (edge !== 0) counterEdge.set(key, edge);
+    }
+  }
+
   return {
     band,
     pBar,
@@ -488,6 +534,8 @@ export function buildScoringTables(
     shapeDelta,
     metaThreats,
     pairSynergy,
+    counterEdge,
+    temperature,
     strengthSamples,
     pickShare,
     fieldShare,

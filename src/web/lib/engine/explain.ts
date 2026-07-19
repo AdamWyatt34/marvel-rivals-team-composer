@@ -1,6 +1,6 @@
 import type { Snapshot } from "../data/schema";
-import { scoreTeamDetailed } from "./scorer";
-import { sigmoid, type ScoringTables } from "./stats";
+import { calibratedProb, scoreTeamDetailed } from "./scorer";
+import type { ScoringTables } from "./stats";
 import type { Contribution } from "./types";
 
 /**
@@ -41,7 +41,9 @@ export function explainTeam(
   const withDelta = detailed.contributions
     .map((c) => ({
       contribution: c,
-      deltaP: sigmoid(detailed.z) - sigmoid(detailed.z - c.deltaLogOdds),
+      deltaP:
+        calibratedProb(tables, detailed.z) -
+        calibratedProb(tables, detailed.z - c.deltaLogOdds),
     }))
     .filter((c) => Math.abs(c.deltaP) >= 0.001);
 
@@ -100,5 +102,9 @@ function renderLine(
       return deltaP >= 0
         ? `${c.label} overperform together (${pct})`
         : `${c.label} underperform together (${pct})`;
+    case "counter":
+      return deltaP >= 0
+        ? `${c.label} is a learned counter (${pct})`
+        : `${c.label} gets countered in real matches (${pct})`;
   }
 }

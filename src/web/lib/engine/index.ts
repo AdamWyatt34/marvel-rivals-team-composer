@@ -5,7 +5,7 @@ export {
   type ScoringTables,
   type TierBand,
 } from "./stats";
-export { scoreTeam, scoreTeamDetailed } from "./scorer";
+export { calibratedProb, scoreTeam, scoreTeamDetailed } from "./scorer";
 export {
   compose,
   meetsHardRules,

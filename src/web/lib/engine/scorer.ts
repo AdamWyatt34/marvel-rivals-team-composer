@@ -38,6 +38,11 @@ function pairSynergySum(
   return sum;
 }
 
+/** Calibrated probability: temperature scales deviation from the base rate. */
+export function calibratedProb(tables: ScoringTables, z: number): number {
+  return sigmoid(tables.zBar + tables.temperature * (z - tables.zBar));
+}
+
 export function scoreTeam(
   tables: ScoringTables,
   ourIds: readonly string[],
@@ -46,7 +51,7 @@ export function scoreTeam(
   bannedIds: readonly string[] = [],
 ): TeamScore {
   const z = zOf(tables, ourIds, enemyIds, mapId ?? null, bannedIds);
-  return { prob: sigmoid(z), z };
+  return { prob: calibratedProb(tables, z), z };
 }
 
 function zOf(
@@ -91,6 +96,21 @@ function zOf(
         (fieldSum / ourIds.length);
     }
     z += K_MATCHUP * matchupTerm;
+  }
+
+  // Learned counter term: counterEdge("h|e") is directional (h's side vs
+  // e's side) and the sample records both orientations, so one direction
+  // covers both teams without double counting.
+  if (ourIds.length > 0 && enemyIds.length > 0 && tables.counterEdge.size > 0) {
+    let counterSum = 0;
+    for (const h of ourIds) {
+      for (const e of enemyIds)
+        counterSum += tables.counterEdge.get(`${h}|${e}`) ?? 0;
+    }
+    z +=
+      SCORING_PARAMS.K_COUNTER *
+      (enemyIds.length / TEAM_SIZE) *
+      (counterSum / (ourIds.length * enemyIds.length));
   }
 
   if (mapId != null) {
@@ -283,6 +303,24 @@ export function scoreTeamDetailed(
     }
   }
 
+  if (ourIds.length > 0 && enemyIds.length > 0 && tables.counterEdge.size > 0) {
+    const weight = enemyIds.length / TEAM_SIZE;
+    for (const h of ourIds) {
+      for (const e of enemyIds) {
+        const edge = tables.counterEdge.get(`${h}|${e}`) ?? 0;
+        if (edge === 0) continue;
+        contributions.push({
+          kind: "counter",
+          ids: [h, e],
+          label: `${nameOf(h)} vs ${nameOf(e)}`,
+          deltaLogOdds:
+            (SCORING_PARAMS.K_COUNTER * weight * edge) /
+            (ourIds.length * enemyIds.length),
+        });
+      }
+    }
+  }
+
   if (mapId != null) {
     for (const h of ourIds) {
       const d = tables.mapDelta.get(`${h}|${mapId}`) ?? 0;
@@ -361,5 +399,5 @@ export function scoreTeamDetailed(
 
   const z =
     tables.zBar + contributions.reduce((sum, c) => sum + c.deltaLogOdds, 0);
-  return { prob: sigmoid(z), z, contributions };
+  return { prob: calibratedProb(tables, z), z, contributions };
 }

@@ -36,7 +36,8 @@ export type ContributionKind =
   | "teamup"
   | "shape"
   | "coverage"
-  | "pair";
+  | "pair"
+  | "counter";
 
 export interface Contribution {
   kind: ContributionKind;
