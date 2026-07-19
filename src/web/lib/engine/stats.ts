@@ -139,6 +139,8 @@ export interface ScoringTables {
   /** "h|mapId" -> d: h's log-odds delta on that map vs h's own baseline. */
   mapDelta: Map<string, number>;
   teamUps: ActiveTeamUp[];
+  /** hero id -> indexes into teamUps that hero can participate in. */
+  teamUpsByHero: Map<string, number[]>;
   /** Fraction of the band's matches in which the hero was banned. */
   banRate: Map<string, number>;
   /** "V-D-S" (e.g. "2-2-2") -> log-odds delta of that role shape vs the band mean. */
@@ -403,6 +405,17 @@ export function buildScoringTables(
     variants.sort((a, b) => b.members.length - a.members.length);
     teamUps.push({ id: def.id, name: def.name, variants });
   }
+  // Per-hero index so the scorer only checks team-ups a present hero can
+  // trigger — with 100+ active team-ups the full scan dominated scoring.
+  const teamUpsByHero = new Map<string, number[]>();
+  teamUps.forEach((teamUp, idx) => {
+    const members = new Set(teamUp.variants.flatMap((v) => v.members));
+    for (const m of members) {
+      const list = teamUpsByHero.get(m);
+      if (list == null) teamUpsByHero.set(m, [idx]);
+      else list.push(idx);
+    }
+  });
 
   // Ban rates: bans / total matches in band (each match has ~12 hero slots).
   const totalMatches =
@@ -530,6 +543,7 @@ export function buildScoringTables(
     matchup,
     mapDelta,
     teamUps,
+    teamUpsByHero,
     banRate,
     shapeDelta,
     metaThreats,

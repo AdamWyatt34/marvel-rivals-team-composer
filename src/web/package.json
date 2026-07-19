@@ -11,7 +11,8 @@
     "ingest": "tsx scripts/ingest/index.ts",
     "build-reference": "tsx scripts/ingest/build-reference.ts",
     "sample-pairs": "tsx scripts/pairs/sample.ts",
-    "backtest": "tsx scripts/backtest/index.ts"
+    "backtest": "tsx scripts/backtest/index.ts",
+    "bench": "tsx scripts/bench.mts"
   },
   "dependencies": {
     "next": "^15.5.20",

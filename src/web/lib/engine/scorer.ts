@@ -54,6 +54,55 @@ export function scoreTeam(
   return { prob: calibratedProb(tables, z), z };
 }
 
+/**
+ * Per-hero cross terms (matchup vs known enemies, field edge, counter sum,
+ * map delta) depend only on (hero, enemy set, map, bans) — constant across a
+ * whole compose/ban search. One cached row per hero turns ~80 string-keyed
+ * lookups per score into 6 array reads. Single-entry cache: the context only
+ * changes between user interactions, not within a search.
+ */
+interface CrossContext {
+  key: string;
+  perHero: Map<string, [number, number, number, number]>;
+}
+const crossCache = new WeakMap<ScoringTables, CrossContext>();
+
+function crossTerms(
+  tables: ScoringTables,
+  h: string,
+  enemyIds: readonly string[],
+  mapId: string | null,
+  bannedIds: readonly string[],
+  excluded: ReadonlySet<string>,
+): [number, number, number, number] {
+  const key = `${enemyIds.join(",")}|${mapId ?? ""}|${bannedIds.join(",")}`;
+  let ctx = crossCache.get(tables);
+  if (ctx == null || ctx.key !== key) {
+    ctx = { key, perHero: new Map() };
+    crossCache.set(tables, ctx);
+  }
+  const hit = ctx.perHero.get(h);
+  if (hit != null) return hit;
+  let matchupSum = 0;
+  let counterSum = 0;
+  for (const e of enemyIds) {
+    matchupSum += tables.matchup.get(`${h}|${e}`) ?? 0;
+    counterSum += tables.counterEdge.get(`${h}|${e}`) ?? 0;
+  }
+  const field =
+    tables.fieldMatchup.size > 0 ? fieldEdge(tables, h, excluded) : 0;
+  const mapDelta =
+    mapId != null ? (tables.mapDelta.get(`${h}|${mapId}`) ?? 0) : 0;
+  const row: [number, number, number, number] = [
+    matchupSum,
+    field,
+    counterSum,
+    mapDelta,
+  ];
+  ctx.perHero.set(h, row);
+  return row;
+}
+
 function zOf(
   tables: ScoringTables,
   ourIds: readonly string[],
@@ -70,65 +119,67 @@ function zOf(
   for (const e of enemyIds) strengthSum -= tables.strength.get(e) ?? 0;
   z += (K_HERO * strengthSum) / TEAM_SIZE;
 
-  // Matchup term: known enemies fill |E| of the 6 enemy slots; the rest are
-  // filled with the field expectation (pick-probability-weighted matchup edge
-  // vs the band's likely meta, bans and known picks excluded). Heroes that
-  // farm the actual meta therefore outrank heroes that only beat off-meta
-  // picks even before the enemy locks anything.
   if (ourIds.length > 0) {
+    const excluded = new Set([...bannedIds, ...enemyIds]);
+    let matchupSum = 0;
+    let fieldSum = 0;
+    let counterSum = 0;
+    let mapSum = 0;
+    for (const h of ourIds) {
+      const [m, f, c, d] = crossTerms(
+        tables,
+        h,
+        enemyIds,
+        mapId,
+        bannedIds,
+        excluded,
+      );
+      matchupSum += m;
+      fieldSum += f;
+      counterSum += c;
+      mapSum += d;
+    }
+
+    // Matchup term: known enemies fill |E| of the 6 enemy slots; the rest
+    // are filled with the field expectation (pick-probability-weighted edge
+    // vs the band's likely meta, bans and known picks excluded). Heroes that
+    // farm the actual meta therefore outrank heroes that only beat off-meta
+    // picks even before the enemy locks anything.
     let matchupTerm = 0;
     if (enemyIds.length > 0) {
-      let matchupSum = 0;
-      for (const h of ourIds) {
-        for (const e of enemyIds)
-          matchupSum += tables.matchup.get(`${h}|${e}`) ?? 0;
-      }
       matchupTerm +=
         (enemyIds.length / TEAM_SIZE) *
         (matchupSum / (ourIds.length * enemyIds.length));
     }
     if (enemyIds.length < TEAM_SIZE && tables.fieldMatchup.size > 0) {
-      const excluded = new Set([...bannedIds, ...enemyIds]);
-      let fieldSum = 0;
-      for (const h of ourIds) fieldSum += fieldEdge(tables, h, excluded);
       matchupTerm +=
         ((TEAM_SIZE - enemyIds.length) / TEAM_SIZE) *
         (fieldSum / ourIds.length);
     }
     z += K_MATCHUP * matchupTerm;
-  }
 
-  // Learned counter term: counterEdge("h|e") is directional (h's side vs
-  // e's side) and the sample records both orientations, so one direction
-  // covers both teams without double counting.
-  if (ourIds.length > 0 && enemyIds.length > 0 && tables.counterEdge.size > 0) {
-    let counterSum = 0;
-    for (const h of ourIds) {
-      for (const e of enemyIds)
-        counterSum += tables.counterEdge.get(`${h}|${e}`) ?? 0;
+    // Learned counter term: counterEdge("h|e") is directional (h's side vs
+    // e's side) and the sample records both orientations, so one direction
+    // covers both teams without double counting.
+    if (enemyIds.length > 0) {
+      z +=
+        SCORING_PARAMS.K_COUNTER *
+        (enemyIds.length / TEAM_SIZE) *
+        (counterSum / (ourIds.length * enemyIds.length));
     }
-    z +=
-      SCORING_PARAMS.K_COUNTER *
-      (enemyIds.length / TEAM_SIZE) *
-      (counterSum / (ourIds.length * enemyIds.length));
-  }
 
-  if (mapId != null) {
-    let mapSum = 0;
-    for (const h of ourIds) mapSum += tables.mapDelta.get(`${h}|${mapId}`) ?? 0;
-    z += (K_MAP * mapSum) / TEAM_SIZE;
+    if (mapId != null) z += (K_MAP * mapSum) / TEAM_SIZE;
   }
 
   // Team-ups and pair synergies cut both ways: the enemy's active combos
   // lower our win probability just as ours raise it.
-  z += K_TEAMUP * teamUpBonus(tables, ourIds).total;
-  z -= K_TEAMUP * teamUpBonus(tables, enemyIds).total;
+  const ourTotals = sideTotals(tables, ourIds);
+  const enemyTotals = sideTotals(tables, enemyIds);
+  z += K_TEAMUP * (ourTotals.teamUp - enemyTotals.teamUp);
   z += K_SHAPE * (shapeDeltaOf(tables, ourIds) ?? 0);
   z +=
-    SCORING_PARAMS.K_PAIR * (pairSynergySum(tables, ourIds) / FULL_TEAM_PAIRS);
-  z -=
-    SCORING_PARAMS.K_PAIR *
-    (pairSynergySum(tables, enemyIds) / FULL_TEAM_PAIRS);
+    (SCORING_PARAMS.K_PAIR * (ourTotals.pairs - enemyTotals.pairs)) /
+    FULL_TEAM_PAIRS;
 
   const gaps = coverageGaps(tables, ourIds, enemyIds, bannedIds);
   if (gaps.length > 0) {
@@ -193,15 +244,11 @@ function coverageGaps(
   bannedIds: readonly string[],
 ): Array<{ threat: string; gap: number }> {
   if (ourIds.length === 0) return [];
-  const banned = new Set(bannedIds);
-  const threats = new Set(enemyIds);
-  for (const t of tables.metaThreats) {
-    if (threats.size >= SCORING_PARAMS.META_THREAT_COUNT) break;
-    if (!banned.has(t)) threats.add(t);
-  }
+  const ctx = threatContext(tables, enemyIds, bannedIds);
 
   const gaps: Array<{ threat: string; gap: number }> = [];
-  for (const threat of threats) {
+  for (let ti = 0; ti < ctx.threats.length; ti++) {
+    const threat = ctx.threats[ti];
     let best = -Infinity;
     for (const h of ourIds) {
       if (h === threat) {
@@ -210,12 +257,53 @@ function coverageGaps(
       }
       // Unknown matchups count as neutral — a gap requires every hero's
       // known edge into the threat to be negative.
-      const edge = tables.matchup.get(`${h}|${threat}`) ?? 0;
+      const edge = threatEdgeRow(tables, ctx, h)[ti];
       if (edge > best) best = edge;
     }
     if (best < 0) gaps.push({ threat, gap: best });
   }
   return gaps;
+}
+
+/** Threat set and per-hero edge rows, cached per (enemy, bans) context —
+ * both are constant across a whole compose/ban search. */
+interface ThreatContext {
+  key: string;
+  threats: string[];
+  edgeRows: Map<string, number[]>;
+}
+const threatCache = new WeakMap<ScoringTables, ThreatContext>();
+
+function threatContext(
+  tables: ScoringTables,
+  enemyIds: readonly string[],
+  bannedIds: readonly string[],
+): ThreatContext {
+  const key = `${enemyIds.join(",")}|${bannedIds.join(",")}`;
+  let ctx = threatCache.get(tables);
+  if (ctx != null && ctx.key === key) return ctx;
+  const banned = new Set(bannedIds);
+  const threats = new Set(enemyIds);
+  for (const t of tables.metaThreats) {
+    if (threats.size >= SCORING_PARAMS.META_THREAT_COUNT) break;
+    if (!banned.has(t)) threats.add(t);
+  }
+  ctx = { key, threats: [...threats], edgeRows: new Map() };
+  threatCache.set(tables, ctx);
+  return ctx;
+}
+
+function threatEdgeRow(
+  tables: ScoringTables,
+  ctx: ThreatContext,
+  h: string,
+): number[] {
+  let row = ctx.edgeRows.get(h);
+  if (row == null) {
+    row = ctx.threats.map((t) => tables.matchup.get(`${h}|${t}`) ?? 0);
+    ctx.edgeRows.set(h, row);
+  }
+  return row;
 }
 
 function teamUpBonus(
@@ -225,10 +313,18 @@ function teamUpBonus(
   total: number;
   active: Array<{ name: string; members: string[]; bonus: number }>;
 } {
+  // Only team-ups a present hero can trigger are worth checking; the full
+  // 100+-entry scan dominated beam-search scoring.
+  const candidates = new Set<number>();
+  for (const id of ourIds) {
+    const idxs = tables.teamUpsByHero.get(id);
+    if (idxs != null) for (const idx of idxs) candidates.add(idx);
+  }
   const ours = new Set(ourIds);
   let total = 0;
   const active: Array<{ name: string; members: string[]; bonus: number }> = [];
-  for (const teamUp of tables.teamUps) {
+  for (const idx of candidates) {
+    const teamUp = tables.teamUps[idx];
     // variants are sorted most-members-first; take the biggest one present
     const hit = teamUp.variants.find((v) =>
       v.members.every((m) => ours.has(m)),
@@ -238,6 +334,37 @@ function teamUpBonus(
     active.push({ name: teamUp.name, members: hit.members, bonus: hit.bonus });
   }
   return { total, active };
+}
+
+/**
+ * Memoized per-side totals for the terms that depend only on one team's
+ * hero set. During a compose the enemy side never changes and beam prefixes
+ * repeat, so these hit constantly.
+ */
+const sideTotalsCache = new WeakMap<
+  ScoringTables,
+  Map<string, { teamUp: number; pairs: number }>
+>();
+
+function sideTotals(
+  tables: ScoringTables,
+  ids: readonly string[],
+): { teamUp: number; pairs: number } {
+  let cache = sideTotalsCache.get(tables);
+  if (cache == null) {
+    cache = new Map();
+    sideTotalsCache.set(tables, cache);
+  }
+  const key = [...ids].sort().join(",");
+  const hit = cache.get(key);
+  if (hit != null) return hit;
+  const value = {
+    teamUp: teamUpBonus(tables, ids).total,
+    pairs: pairSynergySum(tables, ids),
+  };
+  if (cache.size > 8192) cache.clear();
+  cache.set(key, value);
+  return value;
 }
 
 /** Same score plus per-term contributions; used for explanations, not the beam. */
