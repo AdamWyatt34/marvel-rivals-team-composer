@@ -1,2 +1,3 @@
 {"generatedAt":"2026-07-19T19:13:02.319Z","band":"grandmaster+","nMatches":1787,"logLoss":0.6747847768468305,"brier":0.24102822945641214,"accuracy":0.5528819250139899}
 {"generatedAt":"2026-07-19T20:28:19.720Z","band":"grandmaster+","nMatches":772,"logLoss":0.67450593094991,"logLossCalibrated":0.6724490895666967,"brier":0.24088021199239987,"accuracy":0.5550518134715026,"temperature":1.9173908017193355,"heldOut":true}
+{"generatedAt":"2026-07-19T20:48:56.008Z","band":"grandmaster+","nMatches":1062,"logLoss":0.6734240561980092,"logLossCalibrated":0.6708270337040019,"brier":0.24034343756845208,"accuracy":0.5541431261770244,"temperature":1.9985194981878265,"heldOut":true}
