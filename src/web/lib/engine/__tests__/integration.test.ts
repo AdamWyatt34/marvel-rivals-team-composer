@@ -82,7 +82,9 @@ describe("engine against the real snapshot", () => {
     for (const ban of bans) expect(teamIds).not.toContain(ban);
     expect(explanation.lines.length).toBeGreaterThan(0);
 
-    expect(elapsed).toBeLessThan(2000);
+    // Smoke bound, not an SLO: season 18 quadrupled active team-ups, which
+    // put the old 2s budget at ~100% utilization and made CI flaky.
+    expect(elapsed).toBeLessThan(4000);
   });
 
   it("every tier band builds usable tables", () => {
