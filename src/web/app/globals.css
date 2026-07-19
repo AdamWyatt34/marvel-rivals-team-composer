@@ -142,6 +142,15 @@ input {
   box-shadow: 0 2px 8px color-mix(in oklab, var(--accent) 40%, transparent);
 }
 
+.stale-banner {
+  margin: 0;
+  padding: 7px 24px;
+  font-size: 13px;
+  color: var(--accent-soft);
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--accent) 35%, transparent);
+}
+
 .nav-link {
   padding: 7px 12px;
   border-radius: 8px;
