@@ -27,7 +27,7 @@ marvel-rivals-team-composer/
 │  └─ public/data/            # snapshot.json + pairs.json, committed by Actions
 └─ .github/workflows/
    ├─ refresh-data.yml        # daily 04:00 UTC: fetch, validate, commit snapshot
-   ├─ sample-matches.yml      # daily 06:00 UTC: sample matches (needs MRAPI_KEY)
+   ├─ sample-matches.yml      # daily 06:00 UTC: sample matches (rivalsmeta.com)
    └─ deploy-pages.yml        # on push to master: test, build, deploy to Pages
 ```
 
@@ -76,10 +76,10 @@ New hero shipped? `npm run build-reference -- --live`, review the diff in
 `data/reference/`, commit, then `npm run ingest`.
 
 **Pair synergy data** accumulates via `sample-matches.yml`, which samples
-leaderboard players' competitive matches from marvelrivalsapi.com (free tier,
-3k requests/day). It needs an `MRAPI_KEY` repository secret; without it the
-workflow no-ops and the engine's pair term is simply zero. Expect the term to
-become meaningful after ~2–4 weeks of daily accumulation.
+leaderboard players' competitive matches from RivalsMeta's player-match API
+(the same endpoints its player pages call; no key needed). Without data the
+engine's pair term is simply zero. Expect the term to become meaningful after
+~2–4 weeks of daily accumulation.
 
 ## Deployment
 

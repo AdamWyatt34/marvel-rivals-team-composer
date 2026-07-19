@@ -31,8 +31,6 @@ jobs:
 
       - name: Sample matches
         working-directory: src/web
-        env:
-          MRAPI_KEY: ${{ secrets.MRAPI_KEY }}
         run: npm run sample-pairs
 
       - name: Backtest scoring model against sampled matches

@@ -6,7 +6,7 @@ import {
   type CompRow,
 } from "../../../scripts/pairs/aggregate";
 import { compFromDetails } from "../../../scripts/pairs/sample";
-import type { MatchDetails } from "../../../scripts/pairs/mrapi";
+import type { MatchDetails } from "../../../scripts/pairs/rivalsmeta-matches";
 import { scoreTeamDetailed } from "../scorer";
 import { buildScoringTables, logit, shrunk, SCORING_PARAMS } from "../stats";
 import { FIXTURE } from "./fixture";

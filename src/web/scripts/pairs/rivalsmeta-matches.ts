@@ -1,10 +1,14 @@
+import { USER_AGENT } from "../ingest/rivalsmeta";
+
 /**
- * Minimal marvelrivalsapi.com client for match sampling (free tier,
- * x-api-key auth, 3k requests/day). Response shapes mirror the ones the old
- * .NET crawler consumed (see git history: MarvelRivalsApiClient.cs).
+ * Minimal client for RivalsMeta's unofficial player-match API — the same
+ * endpoints its player pages call from the browser; no key needed. Response
+ * shapes mirror the game's own API, which is why they're identical to the
+ * marvelrivalsapi.com client this replaced (see git history: mrapi.ts) —
+ * that service stopped serving match history in July 2026.
  */
 
-const BASE_URL = "https://marvelrivalsapi.com";
+const BASE_URL = "https://rivalsmeta.com/api";
 const REQUEST_DELAY_MS = 600;
 /** On 429, escalating backoff, up to MAX_RETRIES times. */
 const RETRY_DEFAULT_MS = 30_000;
@@ -13,7 +17,7 @@ const MAX_RETRIES = 3;
 
 export class RateLimitedError extends Error {
   constructor() {
-    super("marvelrivalsapi.com rate limit reached");
+    super("rivalsmeta.com rate limit reached");
     this.name = "RateLimitedError";
   }
 }
@@ -45,13 +49,10 @@ export interface MatchDetails {
   match_players: MatchPlayer[];
 }
 
-export class MrApiClient {
+export class RivalsMetaMatchClient {
   private requestsUsed = 0;
 
-  constructor(
-    private readonly apiKey: string,
-    private readonly maxRequests: number,
-  ) {}
+  constructor(private readonly maxRequests: number) {}
 
   get used(): number {
     return this.requestsUsed;
@@ -67,12 +68,10 @@ export class MrApiClient {
     await new Promise((r) => setTimeout(r, REQUEST_DELAY_MS));
     for (let attempt = 0; ; attempt++) {
       const res = await fetch(`${BASE_URL}${path}`, {
-        headers: { "x-api-key": this.apiKey, Accept: "application/json" },
+        headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
       });
       if (res.status === 404) return null;
       if (res.status === 429) {
-        // Short-window limit; the Retry-After header is unreliable (says 1s
-        // while the window is much longer), so back off on our own schedule.
         if (attempt >= MAX_RETRIES) throw new RateLimitedError();
         const waitMs = Math.min(RETRY_MAX_MS, RETRY_DEFAULT_MS * (attempt + 1));
         console.warn(
@@ -87,34 +86,18 @@ export class MrApiClient {
   }
 
   /**
-   * Ask the API to (re)index a player. It 500s on match-history for players
-   * it hasn't crawled yet; this queues them so future runs succeed.
+   * Competitive match history for a player, newest first — first page only;
+   * the daily cadence means anything deeper is already in the seen-set.
+   * hero_id=0 (all heroes) is required; omitting it 500s.
    */
-  async requestPlayerUpdate(uid: string): Promise<void> {
-    try {
-      await this.get(`/api/v1/player/${encodeURIComponent(uid)}/update`);
-    } catch (err) {
-      if (err instanceof RateLimitedError) throw err;
-      // indexing nudges are best-effort
-    }
-  }
-
-  /** Competitive match history for a player uid, newest first. */
-  async matchHistory(
-    uid: string,
-    sinceEpoch?: number,
-  ): Promise<MatchHistoryItem[]> {
-    const since = sinceEpoch != null ? `&timestamp=${sinceEpoch}` : "";
-    const res = await this.get<{ match_history?: MatchHistoryItem[] }>(
-      `/api/v2/player/${encodeURIComponent(uid)}/match-history?game_mode=2&limit=40&page=1${since}`,
+  async matchHistory(uid: string, season: number): Promise<MatchHistoryItem[]> {
+    const res = await this.get<MatchHistoryItem[]>(
+      `/player-match-history/${encodeURIComponent(uid)}?skip=0&game_mode_id=2&hero_id=0&season=${season}`,
     );
-    return (res?.match_history ?? []).filter((m) => m.game_mode_id === 2);
+    return (res ?? []).filter((m) => m.game_mode_id === 2);
   }
 
   async matchDetails(matchUid: string): Promise<MatchDetails | null> {
-    const res = await this.get<{ match_details?: MatchDetails }>(
-      `/api/v1/match/${encodeURIComponent(matchUid)}`,
-    );
-    return res?.match_details ?? null;
+    return this.get<MatchDetails>(`/matches/${encodeURIComponent(matchUid)}`);
   }
 }

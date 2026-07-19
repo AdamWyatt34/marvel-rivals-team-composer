@@ -15,19 +15,16 @@ import { pairsTableSchema } from "../../lib/data/pairs-schema";
 import { aggregatePairs, type CompRow } from "./aggregate";
 import {
   HttpError,
-  MrApiClient,
   RateLimitedError,
+  RivalsMetaMatchClient,
   type MatchDetails,
-} from "./mrapi";
+} from "./rivalsmeta-matches";
 
 /**
  * Daily match sampler: pulls recent competitive matches of leaderboard
- * players from marvelrivalsapi.com, appends the 6v6 comps to
+ * players from RivalsMeta's player-match API, appends the 6v6 comps to
  * data/pairs/comps-YYYY-MM.jsonl, and recomputes the pair-count table the
- * engine's synergy term consumes.
- *
- * Needs MRAPI_KEY. Exits 0 with a notice when it's missing so the workflow
- * can land before the secret exists.
+ * engine's synergy term consumes. No key needed.
  */
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
@@ -35,13 +32,11 @@ const REPO_ROOT = resolve(SCRIPT_DIR, "../../../..");
 const PAIRS_DIR = resolve(REPO_ROOT, "data/pairs");
 const STATE_PATH = resolve(PAIRS_DIR, "state.json");
 const PAIRS_TABLE_PATH = resolve(SCRIPT_DIR, "../../public/data/pairs.json");
+const SNAPSHOT_PATH = resolve(SCRIPT_DIR, "../../public/data/snapshot.json");
 const REFERENCE_HEROES = resolve(REPO_ROOT, "data/reference/heroes.json");
 
 const MAX_REQUESTS = Number(process.env.SAMPLE_MAX_REQUESTS ?? 2500);
 const PLAYERS_PER_RUN = 150;
-/** The /update indexing endpoint is heavily rate-limited; pace and cap it. */
-const UPDATE_NUDGES_PER_RUN = 20;
-const UPDATE_NUDGE_SPACING_MS = 10_000;
 const WINDOW_DAYS = 60;
 /** Forget seen-match ids and player cursors older than this. */
 const STATE_RETENTION_DAYS = 70;
@@ -131,23 +126,20 @@ function loadCompRows(): CompRow[] {
 }
 
 async function main() {
-  const apiKey = process.env.MRAPI_KEY;
-  if (apiKey == null || apiKey.trim() === "") {
-    console.log(
-      "MRAPI_KEY not set — skipping match sampling (add the repo secret to enable).",
-    );
-    return;
-  }
-
   const now = new Date();
   const nowEpoch = Math.floor(now.getTime() / 1000);
   const heroes = JSON.parse(
     readFileSync(REFERENCE_HEROES, "utf8"),
   ) as SnapshotHero[];
   const slugById = new Map(heroes.map((h) => [h.rivalsMetaId, h.id]));
+  // The history endpoint is season-scoped; the ingested snapshot knows the
+  // current season.
+  const { season } = JSON.parse(readFileSync(SNAPSHOT_PATH, "utf8")) as {
+    season: { internalId: number };
+  };
 
   const state = loadState();
-  const client = new MrApiClient(apiKey, MAX_REQUESTS);
+  const client = new RivalsMetaMatchClient(MAX_REQUESTS);
   const newRows: CompRow[] = [];
   let playersTried = 0;
   let historyOk = 0;
@@ -162,41 +154,16 @@ async function main() {
     playersTried = ordered.length;
 
     const pendingMatches = new Map<string, number>(); // uid -> end epoch
-    let unindexed = 0;
-    let nudges = 0;
-    let nudgesEnabled = true;
     for (const uid of ordered) {
       if (client.budgetLeft <= pendingMatches.size + 10) break;
       const since = state.players[uid];
       let history;
       try {
-        history = await client.matchHistory(uid, since);
+        history = await client.matchHistory(uid, season.internalId);
       } catch (err) {
         if (err instanceof RateLimitedError) throw err;
-        // The API 500s for players it hasn't indexed yet — nudge its indexer
-        // (heavily rate-limited, so paced and capped) and move on. Any other
-        // status (502 while the API is down, auth failures) isn't fixable by
-        // nudging, so just tally it for the summary.
-        if (!(err instanceof HttpError) || err.status !== 500) {
-          const key = err instanceof HttpError ? `${err.status}` : "network";
-          failureCounts.set(key, (failureCounts.get(key) ?? 0) + 1);
-          continue;
-        }
-        unindexed++;
-        if (nudgesEnabled && nudges < UPDATE_NUDGES_PER_RUN) {
-          try {
-            await client.requestPlayerUpdate(uid);
-            nudges++;
-            await new Promise((r) => setTimeout(r, UPDATE_NUDGE_SPACING_MS));
-          } catch (nudgeErr) {
-            if (nudgeErr instanceof RateLimitedError) {
-              console.warn(
-                "update endpoint rate-limited — no more indexing nudges this run",
-              );
-              nudgesEnabled = false;
-            }
-          }
-        }
+        const key = err instanceof HttpError ? `${err.status}` : "network";
+        failureCounts.set(key, (failureCounts.get(key) ?? 0) + 1);
         continue;
       }
       historyOk++;
@@ -215,9 +182,8 @@ async function main() {
       .join(", ");
     console.log(
       `history pass done: ${client.used} requests, ${pendingMatches.size} new matches queued, ` +
-        `${historyOk}/${ordered.length} histories fetched, ${unindexed} players unindexed ` +
-        `(${nudges} indexing nudges sent)` +
-        (failures.length > 0 ? `, other failures: ${failures}` : ""),
+        `${historyOk}/${ordered.length} histories fetched` +
+        (failures.length > 0 ? `, failures: ${failures}` : ""),
     );
 
     for (const [matchUid, endEpoch] of pendingMatches) {
@@ -277,8 +243,8 @@ async function main() {
 
   if (playersTried > 0 && historyOk === 0) {
     console.error(
-      "Every match-history request failed — the API is down, the key is bad, " +
-        "or no leaderboard player is indexed. Failing the run so it's visible.",
+      "Every match-history request failed — the API is down or its shape " +
+        "changed. Failing the run so it's visible.",
     );
     process.exitCode = 1;
   }
