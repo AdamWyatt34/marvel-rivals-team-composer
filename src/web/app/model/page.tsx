@@ -144,11 +144,11 @@ export default function ModelPage() {
             const helps = a.delta >= 0;
             const width = (Math.abs(a.delta) / maxAbs) * 50;
             return (
-              <div key={a.param} style={ablationRow}>
-                <span style={ablationLabel}>
+              <div key={a.param} className="abl-row">
+                <span className="abl-label">
                   {TERM_LABELS[a.param] ?? a.param}
                 </span>
-                <div style={ablationTrack}>
+                <div className="abl-track">
                   <div
                     style={{
                       position: "absolute",
@@ -163,10 +163,8 @@ export default function ModelPage() {
                   <div style={zeroLine} />
                 </div>
                 <span
-                  style={{
-                    ...ablationValue,
-                    color: helps ? "var(--text)" : "var(--enemy)",
-                  }}
+                  className="abl-value"
+                  style={{ color: helps ? "var(--text)" : "var(--enemy)" }}
                 >
                   {helps ? "helps" : "hurts"} {Math.abs(a.delta).toFixed(4)}
                 </span>
@@ -397,24 +395,6 @@ const tooltip: CSSProperties = {
   whiteSpace: "nowrap",
   pointerEvents: "none",
 };
-const ablationRow: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  marginBottom: 6,
-};
-const ablationLabel: CSSProperties = {
-  width: 130,
-  fontSize: 13,
-  textAlign: "right",
-  flexShrink: 0,
-};
-const ablationTrack: CSSProperties = {
-  position: "relative",
-  flex: 1,
-  height: 12,
-  minWidth: 120,
-};
 const zeroLine: CSSProperties = {
   position: "absolute",
   left: "50%",
@@ -422,11 +402,6 @@ const zeroLine: CSSProperties = {
   bottom: -2,
   width: 1,
   background: "var(--muted-border)",
-};
-const ablationValue: CSSProperties = {
-  width: 110,
-  fontSize: 12,
-  flexShrink: 0,
 };
 const table: CSSProperties = {
   borderCollapse: "collapse",

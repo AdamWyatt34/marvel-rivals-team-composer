@@ -132,7 +132,7 @@ export default function HeroGrid({
             <span style={{ ...roleDot, background: roleColor(role) }} />
             {role}s
           </h3>
-          <div style={grid}>
+          <div className="hero-grid">
             {group.map((h) => {
               const bucket = membership[h.id];
               const threat = warn[h.id] ?? 1;
@@ -407,12 +407,6 @@ const roleHeading: CSSProperties = {
 
 const roleDot: CSSProperties = { width: 10, height: 10, borderRadius: 999 };
 
-const grid: CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(112px, 1fr))",
-  gap: 6,
-};
-
 const card: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -466,7 +460,6 @@ const name: CSSProperties = {
   display: "-webkit-box",
   WebkitLineClamp: 2,
   WebkitBoxOrient: "vertical",
-  wordBreak: "break-word",
   flex: 1,
 };
 

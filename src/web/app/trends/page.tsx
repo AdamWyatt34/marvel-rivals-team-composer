@@ -142,18 +142,20 @@ export default function TrendsPage() {
       ) : (
         <div style={list}>
           {rows.map((r) => (
-            <div key={r.slug} style={row}>
-              <span style={heroName}>{r.name}</span>
-              <span style={roleChip}>{r.role}</span>
-              <Sparkline series={r.series} dates={trends.dates} />
-              <span style={current}>
+            <div key={r.slug} className="trend-row">
+              <span className="trend-name">{r.name}</span>
+              <span className="trend-role">{r.role}</span>
+              <span className="trend-spark">
+                <Sparkline series={r.series} dates={trends.dates} />
+              </span>
+              <span className="trend-current">
                 {metric === "ban"
                   ? `${((r.current ?? 0) * 100).toFixed(0)}%`
                   : `${((r.current ?? 0) * 100).toFixed(1)}%`}
               </span>
               <span
+                className="trend-delta"
                 style={{
-                  ...deltaBadge,
                   color:
                     r.change == null || Math.abs(r.change) < 0.0005
                       ? "var(--muted)"
@@ -258,35 +260,4 @@ const list: CSSProperties = {
   border: "1px solid var(--border)",
   borderRadius: 12,
   padding: "6px 14px",
-};
-const row: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  padding: "5px 0",
-  borderBottom: "1px solid var(--border)",
-};
-const heroName: CSSProperties = {
-  width: 130,
-  fontSize: 13,
-  fontWeight: 600,
-  flexShrink: 0,
-};
-const roleChip: CSSProperties = {
-  fontSize: 11,
-  color: "var(--muted)",
-  width: 66,
-  flexShrink: 0,
-};
-const current: CSSProperties = {
-  width: 52,
-  fontSize: 13,
-  textAlign: "right",
-  flexShrink: 0,
-};
-const deltaBadge: CSSProperties = {
-  width: 74,
-  fontSize: 12,
-  textAlign: "right",
-  flexShrink: 0,
 };
