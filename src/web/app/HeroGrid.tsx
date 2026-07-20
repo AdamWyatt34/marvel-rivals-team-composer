@@ -139,10 +139,16 @@ export default function HeroGrid({
               const isWarn = threat >= 1.25 && bucket !== "enemy";
               const isFav = favoriteSet.has(h.id);
               const dossier = openDossier === h.id ? dossiers[h.id] : undefined;
+              const completing = completes[h.id];
               return (
                 <div
                   key={h.id}
-                  style={{ display: "flex", flexDirection: "column", gap: 4 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 4,
+                    gridColumn: openDossier === h.id ? "1 / -1" : undefined,
+                  }}
                 >
                   <div
                     className="hero-card"
@@ -159,7 +165,9 @@ export default function HeroGrid({
                     title={
                       isWarn
                         ? (warnWhy[h.id] ?? "Countered by enemy pick")
-                        : undefined
+                        : completing != null
+                          ? `Completes the ${titleCase(completing)} team-up with your current picks`
+                          : undefined
                     }
                     style={{
                       ...card,
@@ -170,88 +178,59 @@ export default function HeroGrid({
                       boxShadow: bucket
                         ? `0 0 0 1px ${bucketColor(bucket)}`
                         : "none",
+                      background: bucket
+                        ? `color-mix(in oklab, ${bucketColor(bucket)} 9%, var(--card))`
+                        : "var(--card)",
                       opacity: bucket === "ban" ? 0.55 : 1,
                     }}
                   >
-                    <span style={cardTop}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onToggleFavorite(h.id);
-                        }}
-                        aria-label={
-                          isFav ? `Unfavorite ${h.name}` : `Favorite ${h.name}`
-                        }
-                        title={isFav ? "In my pool" : "Add to my pool"}
-                        style={{
-                          ...starBtn,
-                          color: isFav ? "#eab308" : "var(--muted-border)",
-                        }}
-                      >
-                        {isFav ? "★" : "☆"}
-                      </button>
-                      <span style={name}>{h.name}</span>
-                      <span
-                        style={{
-                          ...tierBadge,
-                          background: tierColor(tierOf(h)),
-                        }}
-                      >
-                        {tierOf(h)}
-                      </span>
-                    </span>
-                    <span style={cardBottom}>
-                      {bucket ? (
-                        <span
-                          style={{
-                            ...bucketTag,
-                            background: bucketColor(bucket),
-                          }}
-                        >
-                          {bucketLabel(bucket)}
-                        </span>
-                      ) : completes[h.id] != null ? (
-                        <span
-                          style={teamUpHint}
-                          title={`Completes the ${completes[h.id]} team-up with your current picks`}
-                        >
-                          ⚡ {titleCase(completes[h.id])}
-                        </span>
-                      ) : (
-                        <span style={{ color: "var(--muted)", fontSize: 11 }}>
-                          &nbsp;
-                        </span>
+                    <span
+                      style={{ ...monogram, background: roleColor(h.role) }}
+                      aria-hidden="true"
+                    >
+                      {monogramOf(h.name)}
+                      {isFav && <span style={favBadge}>★</span>}
+                      {bucket == null && completing != null && (
+                        <span style={teamUpBadge}>⚡</span>
                       )}
+                    </span>
+                    <span style={name}>{h.name}</span>
+                    {isWarn && (
                       <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                        }}
+                        style={warnDot}
+                        aria-label="Countered by an enemy pick"
                       >
-                        {isWarn && (
-                          <span
-                            style={warnDot}
-                            aria-label="Countered by an enemy pick"
-                          >
-                            ⚠
-                          </span>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDossier(h.id);
-                          }}
-                          aria-label={`Details for ${h.name}`}
-                          style={infoBtn}
-                        >
-                          ⓘ
-                        </button>
+                        ⚠
                       </span>
+                    )}
+                    <button
+                      className="hero-info"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDossier(h.id);
+                      }}
+                      aria-label={`Details for ${h.name}`}
+                      aria-expanded={openDossier === h.id}
+                      style={infoBtn}
+                    >
+                      ⓘ
+                    </button>
+                    <span
+                      style={{
+                        ...tierBadge,
+                        background: tierColor(tierOf(h)),
+                      }}
+                    >
+                      {tierOf(h)}
                     </span>
                   </div>
                   {openDossier === h.id && (
-                    <DossierBox dossier={dossier} mapSelected={mapId != null} />
+                    <DossierBox
+                      dossier={dossier}
+                      mapSelected={mapId != null}
+                      isFav={isFav}
+                      onToggleFavorite={() => onToggleFavorite(h.id)}
+                    />
                   )}
                 </div>
               );
@@ -266,10 +245,25 @@ export default function HeroGrid({
 function DossierBox({
   dossier,
   mapSelected,
+  isFav,
+  onToggleFavorite,
 }: {
   dossier: HeroDossier | "loading" | undefined;
   mapSelected: boolean;
+  isFav: boolean;
+  onToggleFavorite: () => void;
 }) {
+  const favButton = (
+    <button
+      onClick={onToggleFavorite}
+      style={{
+        ...favToggle,
+        color: isFav ? "#eab308" : "var(--text)",
+      }}
+    >
+      {isFav ? "★ In my pool — remove" : "☆ Add to my pool"}
+    </button>
+  );
   if (dossier == null || dossier === "loading") {
     return <div style={dossierBox}>Loading…</div>;
   }
@@ -331,8 +325,20 @@ function DossierBox({
           </span>
         </div>
       )}
+      <div style={{ marginTop: 2 }}>{favButton}</div>
     </div>
   );
+}
+
+/** Two-letter monogram: first letters of the significant words. */
+export function monogramOf(heroName: string): string {
+  const words = heroName
+    .replace(/\(.*?\)/g, "")
+    .split(/[^a-zA-Z0-9]+/)
+    .filter((w) => w.length > 0 && !/^(the|of|and)$/i.test(w));
+  if (words.length === 0) return "?";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
 }
 
 function titleCase(s: string): string {
@@ -403,93 +409,100 @@ const roleDot: CSSProperties = { width: 10, height: 10, borderRadius: 999 };
 
 const grid: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-  gap: 8,
+  gridTemplateColumns: "repeat(auto-fill, minmax(112px, 1fr))",
+  gap: 6,
 };
 
 const card: CSSProperties = {
   display: "flex",
-  flexDirection: "column",
-  gap: 4,
+  alignItems: "center",
+  gap: 6,
   textAlign: "left",
   background: "var(--card)",
   border: "1px solid var(--border)",
   borderRadius: 10,
-  padding: "8px 10px",
+  padding: "5px 6px",
+  minHeight: 40,
   color: "var(--text)",
   cursor: "pointer",
 };
 
-const cardTop: CSSProperties = {
-  display: "flex",
+const monogram: CSSProperties = {
+  position: "relative",
+  display: "inline-flex",
   alignItems: "center",
-  gap: 6,
+  justifyContent: "center",
+  width: 28,
+  height: 28,
+  borderRadius: 8,
+  fontSize: 11,
+  fontWeight: 800,
+  letterSpacing: 0.3,
+  color: "var(--text)",
+  flexShrink: 0,
+};
+
+const favBadge: CSSProperties = {
+  position: "absolute",
+  top: -5,
+  left: -5,
+  fontSize: 9,
+  color: "#eab308",
+  textShadow: "0 0 2px var(--card)",
+};
+
+const teamUpBadge: CSSProperties = {
+  position: "absolute",
+  bottom: -4,
+  right: -4,
+  fontSize: 9,
 };
 
 const name: CSSProperties = {
   fontWeight: 600,
-  fontSize: 13,
-  whiteSpace: "nowrap",
+  fontSize: 12,
+  lineHeight: 1.15,
   overflow: "hidden",
-  textOverflow: "ellipsis",
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  wordBreak: "break-word",
   flex: 1,
 };
 
 const tierBadge: CSSProperties = {
-  fontSize: 10,
-  fontWeight: 700,
-  color: "#fff",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: 16,
+  height: 16,
+  fontSize: 9.5,
+  fontWeight: 800,
+  color: "var(--tier-on-dark)",
   borderRadius: 999,
-  padding: "1px 7px",
   flexShrink: 0,
 };
 
-const cardBottom: CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  minHeight: 20,
-};
-
-const bucketTag: CSSProperties = {
-  fontSize: 10,
-  fontWeight: 600,
-  color: "#fff",
-  borderRadius: 999,
-  padding: "1px 8px",
-};
-
-const warnDot: CSSProperties = { fontSize: 12 };
-
-const teamUpHint: CSSProperties = {
-  fontSize: 10,
-  fontWeight: 600,
-  color: "var(--accent)",
-  border: "1px solid color-mix(in oklab, var(--accent) 45%, transparent)",
-  borderRadius: 999,
-  padding: "1px 7px",
-  maxWidth: 110,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-};
-
-const starBtn: CSSProperties = {
-  background: "transparent",
-  border: "none",
-  fontSize: 14,
-  lineHeight: 1,
-  padding: 0,
-  cursor: "pointer",
-};
+const warnDot: CSSProperties = { fontSize: 11, flexShrink: 0 };
 
 const infoBtn: CSSProperties = {
   background: "transparent",
   border: "none",
   color: "var(--muted)",
-  fontSize: 13,
+  fontSize: 12,
   lineHeight: 1,
-  padding: 0,
+  padding: "4px 2px",
+  margin: "-4px -2px",
+  cursor: "pointer",
+  flexShrink: 0,
+};
+
+const favToggle: CSSProperties = {
+  background: "var(--card)",
+  border: "1px solid var(--border)",
+  borderRadius: 8,
+  padding: "4px 10px",
+  fontSize: 12,
   cursor: "pointer",
 };
 

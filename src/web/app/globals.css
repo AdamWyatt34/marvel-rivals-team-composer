@@ -176,6 +176,12 @@ input {
   .site-nav {
     padding: 6px 8px;
     gap: 0;
+    /* 7 items no longer fit a phone; scroll the strip instead of the page */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .site-nav::-webkit-scrollbar {
+    display: none;
   }
   .brand-label {
     display: none;
@@ -184,9 +190,9 @@ input {
     margin-right: 6px;
   }
   .nav-link {
-    flex: 1;
+    flex: 1 0 auto;
     text-align: center;
-    padding: 8px 2px;
+    padding: 8px 8px;
     font-size: 12px;
   }
 }
@@ -194,7 +200,7 @@ input {
 /* ---- Page title ---- */
 .page-title {
   margin: 0;
-  font-size: 26px;
+  font-size: clamp(19px, 4.5vw, 26px);
   font-weight: 800;
   letter-spacing: -0.02em;
   background: linear-gradient(90deg, var(--text) 30%, var(--accent-soft) 90%);
@@ -217,6 +223,29 @@ input {
   border-color: var(--accent) !important;
 }
 
+/* Details trigger: hidden until hover/focus on pointer devices to give the
+   name room; always visible where touch is the only input. */
+.hero-info {
+  display: none;
+}
+.hero-card:hover .hero-info,
+.hero-card:focus-within .hero-info {
+  display: inline-flex;
+}
+@media (hover: none) {
+  .hero-info {
+    display: inline-flex;
+  }
+}
+
+/* Phone control bar: selects share a row instead of stacking. */
+@media (max-width: 640px) {
+  .control-bar select {
+    flex: 1 1 40%;
+    min-width: 120px;
+  }
+}
+
 .panel-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -233,6 +262,14 @@ input {
 }
 
 /* ---- Section heading accent ---- */
+/* On phones the intro prose costs half the first screen; the UI explains
+   itself. Provenance (the data line) stays. */
+@media (max-width: 640px) {
+  .intro-copy {
+    display: none;
+  }
+}
+
 .role-heading {
   border-left: 3px solid var(--accent);
   padding-left: 8px;

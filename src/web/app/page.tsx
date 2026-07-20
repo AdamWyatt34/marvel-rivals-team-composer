@@ -426,8 +426,10 @@ export default function Home() {
       <header style={{ marginBottom: 10 }}>
         <h1 className="page-title">Marvel Rivals Team Composer</h1>
         <p style={{ margin: "4px 0 0", color: "var(--muted)", fontSize: 13 }}>
-          Mark your locked picks, the enemy&apos;s picks, and any bans — the
-          ideal team updates live.
+          <span className="intro-copy">
+            Mark your locked picks, the enemy&apos;s picks, and any bans — the
+            ideal team updates live.
+          </span>
           {meta && (
             <>
               {" "}
@@ -495,7 +497,7 @@ export default function Home() {
           disabled={favorites.length === 0}
           title={
             favorites.length === 0
-              ? "Star some heroes first (☆ on the cards) to build your pool"
+              ? "Build your pool first: open a hero's details (ⓘ) and add it, or import your profile"
               : "Only recommend heroes in my pool"
           }
           style={{
