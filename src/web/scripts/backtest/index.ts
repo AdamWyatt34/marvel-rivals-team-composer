@@ -160,6 +160,11 @@ function main() {
     resolve(BACKTEST_DIR, "latest.json"),
     JSON.stringify(report, null, 2) + "\n",
   );
+  // Also published for the site's model report-card page.
+  writeFileSync(
+    resolve(SCRIPT_DIR, "../../public/data/backtest.json"),
+    JSON.stringify(report) + "\n",
+  );
   appendFileSync(
     resolve(BACKTEST_DIR, "history.jsonl"),
     JSON.stringify({

@@ -11,6 +11,8 @@ const NAV = [
   { href: "/matchups/", label: "Matchups" },
   { href: "/team-ups/", label: "Team-ups" },
   { href: "/comps/", label: "Comps" },
+  { href: "/trends/", label: "Trends" },
+  { href: "/model/", label: "Model" },
 ];
 
 /** Days without a source update before every page warns the data is stale. */
