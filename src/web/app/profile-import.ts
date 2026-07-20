@@ -29,9 +29,36 @@ export interface ImportedProfile {
 const PAGE_SIZE = 20;
 const MAX_PAGES = 5; // most recent ~100 matches is plenty for a pool
 
+const LS_PROFILE = "mrtc:profile";
+
 /** Heroes with enough games to count as comfort picks. */
 export function poolOf(profile: ImportedProfile, minGames = 3): string[] {
   return profile.heroes.filter((h) => h.games >= minGames).map((h) => h.id);
+}
+
+export function storeProfile(profile: ImportedProfile): void {
+  try {
+    localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function loadStoredProfile(): ImportedProfile | null {
+  try {
+    const raw = localStorage.getItem(LS_PROFILE);
+    return raw != null ? (JSON.parse(raw) as ImportedProfile) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function forgetProfile(): void {
+  try {
+    localStorage.removeItem(LS_PROFILE);
+  } catch {
+    /* storage unavailable */
+  }
 }
 
 export async function importProfile(uid: string): Promise<ImportedProfile> {

@@ -106,5 +106,9 @@ function renderLine(
       return deltaP >= 0
         ? `${c.label} is a learned counter (${pct})`
         : `${c.label} gets countered in real matches (${pct})`;
+    case "personal":
+      return deltaP >= 0
+        ? `Your ${c.label} record is above the field's (${pct})`
+        : `Your ${c.label} record trails the field's (${pct})`;
   }
 }

@@ -28,7 +28,15 @@ import {
   type SnapshotMeta,
 } from "./local-api";
 import { TIER_BANDS, type TierBand } from "../lib/engine";
-import { importProfile, poolOf, profileImportEnabled } from "./profile-import";
+import {
+  forgetProfile,
+  importProfile,
+  loadStoredProfile,
+  poolOf,
+  profileImportEnabled,
+  storeProfile,
+  type ImportedHero,
+} from "./profile-import";
 
 const BAND_LABELS: Record<TierBand, string> = {
   all: "All ranks",
@@ -101,6 +109,7 @@ export default function Home() {
     } catch {
       /* storage unavailable */
     }
+    setProfileHeroes(loadStoredProfile()?.heroes ?? null);
     setStorageReady(true);
   }, []);
   useEffect(() => {
@@ -183,6 +192,9 @@ export default function Home() {
   const [profileUid, setProfileUid] = useState("");
   const [profileBusy, setProfileBusy] = useState(false);
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
+  const [profileHeroes, setProfileHeroes] = useState<ImportedHero[] | null>(
+    null,
+  );
 
   function runImport() {
     const uid = profileUid.trim();
@@ -200,6 +212,8 @@ export default function Home() {
         }
         setFavorites(pool);
         setPoolOnly(true);
+        setProfileHeroes(profile.heroes);
+        storeProfile(profile);
         localStorage.setItem(LS_PROFILE_UID, uid);
         const top = profile.heroes
           .slice(0, 3)
@@ -209,13 +223,19 @@ export default function Home() {
           )
           .join(", ");
         setProfileMsg(
-          `Imported ${profile.matches} matches — pool of ${pool.length} heroes (top: ${top}).`,
+          `Imported ${profile.matches} matches — pool of ${pool.length} heroes, personal records now weigh in (top: ${top}).`,
         );
       })
       .catch((e: unknown) =>
         setProfileMsg(String(e instanceof Error ? e.message : e)),
       )
       .finally(() => setProfileBusy(false));
+  }
+
+  function forgetImport() {
+    forgetProfile();
+    setProfileHeroes(null);
+    setProfileMsg("Profile forgotten — scoring is back to band averages.");
   }
 
   const [copied, setCopied] = useState(false);
@@ -272,8 +292,22 @@ export default function Home() {
         poolOnly && favorites.length > 0
           ? [...new Set([...favorites, ...effectiveLocks])]
           : undefined,
+      personal: profileHeroes?.map((h) => ({
+        id: h.id,
+        games: h.games,
+        wins: h.wins,
+      })),
     }),
-    [effectiveLocks, enemy, bans, selectedMap, band, poolOnly, favorites],
+    [
+      effectiveLocks,
+      enemy,
+      bans,
+      selectedMap,
+      band,
+      poolOnly,
+      favorites,
+      profileHeroes,
+    ],
   );
 
   // Live composition: debounce, keep the previous result while updating.
@@ -525,6 +559,15 @@ export default function Home() {
           >
             {profileBusy ? "Importing…" : "Import"}
           </button>
+          {profileHeroes != null && (
+            <button
+              onClick={forgetImport}
+              style={poolBtn}
+              title="Drop the imported record; scoring returns to band averages"
+            >
+              Forget
+            </button>
+          )}
           {profileMsg && (
             <span style={{ fontSize: 12, color: "var(--muted)" }}>
               {profileMsg}

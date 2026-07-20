@@ -37,7 +37,8 @@ export type ContributionKind =
   | "shape"
   | "coverage"
   | "pair"
-  | "counter";
+  | "counter"
+  | "personal";
 
 export interface Contribution {
   kind: ContributionKind;

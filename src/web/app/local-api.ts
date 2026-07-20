@@ -12,6 +12,7 @@ import {
   suggestBans,
   threatsAgainst,
   TIER_BANDS,
+  withPersonal,
   type ScoringTables,
   type TierBand,
 } from "../lib/engine";
@@ -39,6 +40,8 @@ export type ComposePayload = {
   band?: TierBand;
   /** Restrict non-locked recommendations to these heroes ("my pool only"). */
   poolIds?: string[];
+  /** Imported per-hero record; overlays the strength term for our side. */
+  personal?: { id: string; games: number; wins: number }[];
 };
 
 export type ComposeResponse = {
@@ -64,9 +67,13 @@ export type ThreatsResponse = Record<
 >;
 
 const tablesCache = new Map<TierBand, ScoringTables>();
+/** Personalized variants cached by identity, so the scorer's per-tables
+ * context caches stay warm across calls. */
+const personalCache = new Map<string, ScoringTables>();
 
 async function getTables(
   band: TierBand,
+  personal?: ComposePayload["personal"],
 ): Promise<{ tables: ScoringTables; snapshot: Snapshot }> {
   const [snapshot, pairs, calibration] = await Promise.all([
     loadSnapshot(),
@@ -82,6 +89,16 @@ async function getTables(
       calibration?.temperature ?? 1,
     );
     tablesCache.set(band, tables);
+  }
+  if (personal != null && personal.length > 0) {
+    const key = `${band}|${personal.map((p) => `${p.id}:${p.games}:${p.wins}`).join(",")}`;
+    let personalized = personalCache.get(key);
+    if (personalized == null) {
+      personalized = withPersonal(tables, personal);
+      if (personalCache.size > 32) personalCache.clear();
+      personalCache.set(key, personalized);
+    }
+    tables = personalized;
   }
   return { tables, snapshot };
 }
@@ -156,7 +173,7 @@ export async function composeTeam(
   payload: ComposePayload,
 ): Promise<ComposeResponse> {
   const band = payload.band ?? "all";
-  const { tables, snapshot } = await getTables(band);
+  const { tables, snapshot } = await getTables(band, payload.personal);
   const banned = payload.bans ?? [];
   const mapId = payload.map || null;
 
@@ -241,7 +258,7 @@ export async function suggestBansFor(
   payload: ComposePayload,
 ): Promise<{ id: string; name: string }[]> {
   const band = payload.band ?? "all";
-  const { tables } = await getTables(band);
+  const { tables } = await getTables(band, payload.personal);
   const ids = suggestBans(
     tables,
     payload.myLocked,
@@ -267,7 +284,7 @@ export async function slotAlternatives(
   topN = 5,
 ): Promise<SlotAlternative[]> {
   const band = payload.band ?? "all";
-  const { tables } = await getTables(band);
+  const { tables } = await getTables(band, payload.personal);
   const slot = tables.heroes.get(slotHeroId);
   if (slot == null) return [];
   const banned = new Set(payload.bans ?? []);
@@ -353,7 +370,7 @@ export async function getBanBaitWarnings(
   teamIds: string[],
 ): Promise<BanBaitWarning[]> {
   const band = payload.band ?? "all";
-  const { tables } = await getTables(band);
+  const { tables } = await getTables(band, payload.personal);
   const banned = new Set(payload.bans ?? []);
   const warnings: BanBaitWarning[] = [];
   for (const id of payload.myLocked) {

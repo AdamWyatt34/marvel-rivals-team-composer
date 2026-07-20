@@ -52,6 +52,13 @@ export const SCORING_PARAMS = {
   M_COUNTER: 400,
   K_COUNTER: 0.3,
   COUNTER_CAP: 0.2,
+  /**
+   * Personal overlay (profile import): the player's own per-hero record,
+   * shrunk hard (personal samples are tiny) toward the band's rate for that
+   * hero and capped. Applied to the user's side only.
+   */
+  M_PERSONAL: 30,
+  PERSONAL_CAP: 0.25,
   /** Team-up bonus clamps: rarely hurt, and their stats inherit the same
    * specialist bias as hero win rates, so cap the upside too. */
   TEAMUP_MIN: -0.1,
@@ -155,6 +162,10 @@ export interface ScoringTables {
   pairSynergy: Map<string, number>;
   /** "h|e" -> h's learned log-odds edge (beyond strengths) vs enemy e. */
   counterEdge: Map<string, number>;
+  /** Shrunk band win rate per hero (the baseline personal deltas shrink to). */
+  heroRate: Map<string, number>;
+  /** Per-hero log-odds delta from the player's own record; our side only. */
+  personalDelta: Map<string, number>;
   /**
    * Probability calibration temperature: P = sigmoid(zBar + T*(z - zBar)).
    * Fitted by the backtest against real match outcomes; 1 = uncalibrated.
@@ -549,10 +560,39 @@ export function buildScoringTables(
     metaThreats,
     pairSynergy,
     counterEdge,
+    heroRate,
+    personalDelta: new Map(),
     temperature,
     strengthSamples,
     pickShare,
     fieldShare,
     fieldMatchup,
   };
+}
+
+export interface PersonalHeroRecord {
+  id: string;
+  games: number;
+  wins: number;
+}
+
+/**
+ * Overlay a player's own per-hero record onto the tables. Returns a new
+ * tables object (the scorer's context caches key off identity, so the
+ * shared band tables stay unpolluted).
+ */
+export function withPersonal(
+  tables: ScoringTables,
+  records: readonly PersonalHeroRecord[],
+): ScoringTables {
+  const personalDelta = new Map<string, number>();
+  const cap = SCORING_PARAMS.PERSONAL_CAP;
+  for (const r of records) {
+    if (r.games <= 0 || !tables.heroes.has(r.id)) continue;
+    const base = tables.heroRate.get(r.id) ?? tables.pBar;
+    const observed = shrunk(r.wins, r.games, base, SCORING_PARAMS.M_PERSONAL);
+    const delta = Math.min(cap, Math.max(-cap, logit(observed) - logit(base)));
+    if (delta !== 0) personalDelta.set(r.id, delta);
+  }
+  return { ...tables, personalDelta };
 }

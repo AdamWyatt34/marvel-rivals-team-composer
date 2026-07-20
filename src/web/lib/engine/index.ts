@@ -2,6 +2,8 @@ export {
   buildScoringTables,
   SCORING_PARAMS,
   TIER_BANDS,
+  withPersonal,
+  type PersonalHeroRecord,
   type ScoringTables,
   type TierBand,
 } from "./stats";

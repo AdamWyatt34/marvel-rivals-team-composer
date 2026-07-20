@@ -115,7 +115,9 @@ function zOf(
   let z = tables.zBar;
 
   let strengthSum = 0;
-  for (const h of ourIds) strengthSum += tables.strength.get(h) ?? 0;
+  for (const h of ourIds)
+    strengthSum +=
+      (tables.strength.get(h) ?? 0) + (tables.personalDelta.get(h) ?? 0);
   for (const e of enemyIds) strengthSum -= tables.strength.get(e) ?? 0;
   z += (K_HERO * strengthSum) / TEAM_SIZE;
 
@@ -387,6 +389,15 @@ export function scoreTeamDetailed(
       label: nameOf(h),
       deltaLogOdds: (K_HERO * (tables.strength.get(h) ?? 0)) / TEAM_SIZE,
     });
+    const personal = tables.personalDelta.get(h) ?? 0;
+    if (personal !== 0) {
+      contributions.push({
+        kind: "personal",
+        ids: [h],
+        label: nameOf(h),
+        deltaLogOdds: (K_HERO * personal) / TEAM_SIZE,
+      });
+    }
   }
   for (const e of enemyIds) {
     contributions.push({
