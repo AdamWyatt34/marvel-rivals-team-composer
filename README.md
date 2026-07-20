@@ -87,7 +87,9 @@ holds out the newest quarter of sampled matches, scores them with tables
 built from the rest, and reports log loss / Brier / accuracy, per-term
 ablations, and train-fitted weight-multiplier suggestions. It also fits the
 sigmoid temperature and writes `public/data/calibration.json`, which the app
-loads so displayed win probabilities match observed outcome rates.
+loads so displayed win probabilities match observed outcome rates. The
+results render publicly at `/model`; `/trends` shows per-hero win/pick/ban
+trajectories built from the snapshot's git history (`npm run build-trends`).
 
 **Profile import** (optional) lets a visitor build their hero pool from
 their own recent competitive matches. RivalsMeta sends no CORS headers, so
