@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { parseNuxtPage, routeData } from "../devalue-parse";
+import { parseNuxtPage, parsePayloadJson, routeData } from "../devalue-parse";
 import {
   fetchMatchups,
   fetchTeamComps,
@@ -21,24 +21,41 @@ const matchupsHtml = readFileSync(
   resolve(FIXTURES, "matchups-thor.html"),
   "utf8",
 );
+const matchupsPayload = readFileSync(
+  resolve(FIXTURES, "matchups-thor.payload.json"),
+  "utf8",
+);
 const rawStats = JSON.parse(
   readFileSync(resolve(FIXTURES, "stats-season16.json"), "utf8"),
 ) as RawStats;
-const teamCompsHtml = readFileSync(
-  resolve(FIXTURES, "team-comps.html"),
+const teamCompsPayload = readFileSync(
+  resolve(FIXTURES, "team-comps.payload.json"),
   "utf8",
 );
 
-// The fixtures were captured 2026-07-03; freeze "now" near that.
+// The stats fixture was captured 2026-07-03; freeze "now" near that.
 const NOW = new Date("2026-07-03T12:00:00Z");
 
-const teamComps = await fetchTeamComps(teamCompsHtml);
+const teamComps = await fetchTeamComps(teamCompsPayload);
 
-describe("parseNuxtPage", () => {
-  it("decodes the devalue payload and exposes route data", () => {
-    const payload = parseNuxtPage(matchupsHtml);
+describe("parsePayloadJson", () => {
+  it("decodes a _payload.json document and exposes route data", () => {
+    const payload = parsePayloadJson(matchupsPayload);
     const matrix = routeData<Record<string, unknown>>(payload);
     expect(Object.keys(matrix).length).toBeGreaterThanOrEqual(35);
+  });
+
+  it("throws a loud error on an unexpected shape", () => {
+    expect(() => parsePayloadJson('[{"a":1},2]')).toThrow(/unexpected shape/);
+  });
+});
+
+describe("parseNuxtPage", () => {
+  it("decodes the page's app state (build-reference reads $scharacters)", () => {
+    const payload = parseNuxtPage(matchupsHtml);
+    const characters = payload.state?.["$scharacters"] as unknown[];
+    expect(Array.isArray(characters)).toBe(true);
+    expect(characters.length).toBeGreaterThanOrEqual(35);
   });
 
   it("throws a loud error when the NUXT_DATA tag is missing", () => {
@@ -48,9 +65,9 @@ describe("parseNuxtPage", () => {
   });
 });
 
-describe("fetchMatchups (from fixture html)", () => {
+describe("fetchMatchups (from fixture payload)", () => {
   it("extracts a hero-keyed matrix with symmetric match counts", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     // Thor (1039) vs Hela (1024): h-vs-e matches should equal e-vs-h matches,
     // and the two sides' wins should sum to (roughly) the shared match count.
     const thorVsHela = matrix["1039"]["1024"];
@@ -62,13 +79,13 @@ describe("fetchMatchups (from fixture html)", () => {
 
 describe("normalize", () => {
   it("produces a snapshot that passes validation", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     expect(() => validateSnapshot(snapshot, null)).not.toThrow();
   });
 
   it("maps rivalsmeta ids to slugs and drops mirror matchups", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     expect(snapshot.matchups["thor"]).toBeDefined();
     expect(snapshot.matchups["thor"]["thor"]).toBeUndefined();
@@ -83,14 +100,14 @@ describe("normalize", () => {
   });
 
   it("fails loudly on an unmapped hero id", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     const doctored = structuredClone(rawStats);
     doctored.heroes[0].heroes[0].hero_id = 9999;
     expect(() => normalize(doctored, matrix, teamComps, NOW)).toThrow(/9999/);
   });
 
   it("normalizes role compositions into V-D-S shape counts", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     const buckets = Object.values(snapshot.roleShapes);
     expect(buckets.length).toBeGreaterThan(0);
@@ -118,7 +135,7 @@ describe("shapeKeyFromRoleCodes", () => {
 
 describe("validateSnapshot", () => {
   it("rejects a snapshot whose global WR drifts", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     for (const perHero of Object.values(snapshot.stats)) {
       for (const s of Object.values(perHero))
@@ -128,7 +145,7 @@ describe("validateSnapshot", () => {
   });
 
   it("rejects a big drop in volume vs the previous snapshot within a season", async () => {
-    const matrix = await fetchMatchups(matchupsHtml);
+    const matrix = await fetchMatchups(matchupsPayload);
     const snapshot = normalize(rawStats, matrix, teamComps, NOW);
     const previous = structuredClone(snapshot);
     for (const perHero of Object.values(previous.stats)) {

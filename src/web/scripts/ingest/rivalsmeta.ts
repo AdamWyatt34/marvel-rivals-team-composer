@@ -1,10 +1,11 @@
-import { parseNuxtPage, routeData } from "./devalue-parse";
+import { parsePayloadJson, payloadUrl, routeData } from "./devalue-parse";
 
 /**
  * Fetchers for RivalsMeta's two data sources:
  *  - the undocumented JSON stats API (win/pick/ban counts per rank bucket)
- *  - the matchups page, whose SSR payload carries the full hero-vs-hero
- *    matrix for every hero in one load (Diamond+ aggregate)
+ *  - route _payload.json documents (Nuxt payload extraction); the matchups
+ *    route's payload carries the full hero-vs-hero matrix for every hero in
+ *    one load (Diamond+ aggregate)
  *
  * Both are unofficial and may change shape without notice; downstream
  * validation is the contract.
@@ -14,7 +15,7 @@ export const USER_AGENT =
   "marvel-rivals-team-composer/1.0 (+https://github.com/AdamWyatt34/marvel-rivals-team-composer; hobby project)";
 
 /** Current season's internal id. Season N maps to internal id 2N (half-seasons increment by 1). */
-export const CURRENT_SEASON_ID = 17;
+export const CURRENT_SEASON_ID = 18;
 
 /** Reject data older than this; triggers a probe of the next season id. */
 export const MAX_STALENESS_DAYS = 7;
@@ -109,18 +110,18 @@ export async function fetchStats(
   );
 }
 
-/** One page load returns the matchup tables for every hero. */
-export async function fetchMatchups(html?: string): Promise<RawMatchups> {
-  const page =
-    html ??
-    (await (
-      await get("https://rivalsmeta.com/characters/thor/matchups")
-    ).text());
-  const matrix = routeData<RawMatchups>(parseNuxtPage(page));
+/** One payload document carries the matchup tables for every hero. */
+export async function fetchMatchups(
+  payloadJson?: string,
+): Promise<RawMatchups> {
+  const doc =
+    payloadJson ??
+    (await (await get(payloadUrl("/characters/thor/matchups"))).text());
+  const matrix = routeData<RawMatchups>(parsePayloadJson(doc));
   const heroIds = Object.keys(matrix);
   if (heroIds.length < 35) {
     throw new Error(
-      `Matchup matrix has only ${heroIds.length} heroes — page structure changed?`,
+      `Matchup matrix has only ${heroIds.length} heroes — payload structure changed?`,
     );
   }
   return matrix;
@@ -132,13 +133,15 @@ export type RawTeamComps = Array<{
   roles: Array<{ role: string; matches: number; wins: number }>;
 }>;
 
-export async function fetchTeamComps(html?: string): Promise<RawTeamComps> {
-  const page =
-    html ?? (await (await get("https://rivalsmeta.com/team-comps")).text());
-  const comps = routeData<RawTeamComps>(parseNuxtPage(page));
+export async function fetchTeamComps(
+  payloadJson?: string,
+): Promise<RawTeamComps> {
+  const doc =
+    payloadJson ?? (await (await get(payloadUrl("/team-comps"))).text());
+  const comps = routeData<RawTeamComps>(parsePayloadJson(doc));
   if (!Array.isArray(comps) || comps.length === 0) {
     throw new Error(
-      "team-comps payload has no rank buckets — page structure changed?",
+      "team-comps payload has no rank buckets — payload structure changed?",
     );
   }
   return comps;

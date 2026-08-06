@@ -8,7 +8,11 @@ import {
 } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { parseNuxtPage, routeData } from "../ingest/devalue-parse";
+import {
+  parsePayloadJson,
+  payloadUrl,
+  routeData,
+} from "../ingest/devalue-parse";
 import { USER_AGENT } from "../ingest/rivalsmeta";
 import type { SnapshotHero } from "../../lib/data/schema";
 import { pairsTableSchema } from "../../lib/data/pairs-schema";
@@ -54,14 +58,14 @@ function loadState(): State {
   return JSON.parse(readFileSync(STATE_PATH, "utf8")) as State;
 }
 
-/** Top-ranked player uids from RivalsMeta's leaderboard page (no key needed). */
+/** Top-ranked player uids from RivalsMeta's leaderboard payload (no key needed). */
 async function fetchLeaderboardUids(): Promise<string[]> {
-  const res = await fetch("https://rivalsmeta.com/leaderboard", {
+  const res = await fetch(payloadUrl("/leaderboard"), {
     headers: { "User-Agent": USER_AGENT },
   });
   if (!res.ok) throw new Error(`leaderboard returned ${res.status}`);
   const payload = routeData<{ players?: Array<{ uid: string }> }>(
-    parseNuxtPage(await res.text()),
+    parsePayloadJson(await res.text()),
   );
   const uids = (payload.players ?? [])
     .map((p) => String(p.uid))
