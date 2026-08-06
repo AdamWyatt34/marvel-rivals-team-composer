@@ -105,6 +105,7 @@ const MAPS = [
     mode: "Convoy",
   },
   { id: "1421", name: "Unknown Map (1421)", area: "Unknown", mode: "Unknown" },
+  { id: "1434", name: "Thebes", area: "Thebes", mode: "Convoy" },
   {
     id: "2042",
     name: "Heart of Tiandu",

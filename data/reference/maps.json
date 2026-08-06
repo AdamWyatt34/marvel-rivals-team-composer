@@ -84,6 +84,12 @@
     "mode": "Unknown"
   },
   {
+    "id": "1434",
+    "name": "Thebes",
+    "area": "Thebes",
+    "mode": "Convoy"
+  },
+  {
     "id": "2042",
     "name": "Heart of Tiandu",
     "area": "K'un-Lun",
