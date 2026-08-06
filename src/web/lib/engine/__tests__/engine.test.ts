@@ -153,6 +153,66 @@ describe("scorer", () => {
     expect(detailed.contributions.some((c) => c.kind === "teamup")).toBe(true);
   });
 
+  it("an anchor fielding both partners counts only its best team-up", () => {
+    // the-punisher anchors MAGNETIC ARSENAL (with magneto, ~-0.007) and
+    // SOUL AMMO (with adam-warlock, ~-0.072); with both partners present
+    // only the better option scores.
+    const team = [
+      "the-punisher",
+      "magneto",
+      "adam-warlock",
+      "thor",
+      "mantis",
+      "luna-snow",
+    ];
+    const detailed = scoreTeamDetailed(tables, team, []);
+    const labels = detailed.contributions
+      .filter((c) => c.kind === "teamup")
+      .map((c) => c.label);
+    expect(labels).toContain("MAGNETIC ARSENAL");
+    expect(labels).not.toContain("SOUL AMMO");
+
+    // dropping the unselected option's partner changes nothing about the term
+    const arsenalOnly = scoreTeamDetailed(
+      tables,
+      ["the-punisher", "magneto", "hulk", "thor", "mantis", "luna-snow"],
+      [],
+    );
+    const teamUpDelta = (d: typeof detailed) =>
+      d.contributions
+        .filter((c) => c.kind === "teamup")
+        .reduce((sum, c) => sum + c.deltaLogOdds, 0);
+    expect(teamUpDelta(detailed)).toBeCloseTo(teamUpDelta(arsenalOnly), 10);
+  });
+
+  it("the worse option scores when it is the only one available", () => {
+    const noMagneto = [
+      "the-punisher",
+      "adam-warlock",
+      "thor",
+      "hulk",
+      "mantis",
+      "luna-snow",
+    ];
+    const labels = scoreTeamDetailed(tables, noMagneto, [])
+      .contributions.filter((c) => c.kind === "teamup")
+      .map((c) => c.label);
+    expect(labels).toContain("SOUL AMMO");
+    // and the full roster still prefers the better option
+    const full = [
+      "the-punisher",
+      "magneto",
+      "adam-warlock",
+      "thor",
+      "mantis",
+      "luna-snow",
+    ];
+    const fullLabels = scoreTeamDetailed(tables, full, [])
+      .contributions.filter((c) => c.kind === "teamup")
+      .map((c) => c.label);
+    expect(fullLabels).toEqual(["MAGNETIC ARSENAL"]);
+  });
+
   it("enemy team-ups lower our probability", () => {
     const ours = [
       "hulk",

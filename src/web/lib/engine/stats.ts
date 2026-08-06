@@ -130,6 +130,11 @@ interface TeamUpVariant {
 export interface ActiveTeamUp {
   id: number;
   name: string;
+  /**
+   * The hero this team-up belongs to. A hero selects ONE of its team-ups per
+   * game, so the scorer credits at most one team-up per anchor.
+   */
+  anchor: string;
   /** Variants sorted most-members-first; first subset match wins. */
   variants: TeamUpVariant[];
 }
@@ -393,6 +398,9 @@ export function buildScoringTables(
   const teamUps: ActiveTeamUp[] = [];
   for (const def of snapshot.teamUps) {
     if (!def.currentlyActive) continue;
+    // Pre-anchor-era snapshots may lack an anchor; the first member serves.
+    const anchor = def.anchor ?? def.heroes[0];
+    if (anchor == null) continue;
     const variants: TeamUpVariant[] = [];
     for (const [key, agg] of variantAgg) {
       const [idPart, combo] = key.split(":");
@@ -414,7 +422,7 @@ export function buildScoringTables(
     }
     if (variants.length === 0) continue;
     variants.sort((a, b) => b.members.length - a.members.length);
-    teamUps.push({ id: def.id, name: def.name, variants });
+    teamUps.push({ id: def.id, name: def.name, anchor, variants });
   }
   // Per-hero index so the scorer only checks team-ups a present hero can
   // trigger — with 100+ active team-ups the full scan dominated scoring.

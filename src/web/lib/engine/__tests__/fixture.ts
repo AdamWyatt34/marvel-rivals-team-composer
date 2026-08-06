@@ -63,6 +63,24 @@ export const FIXTURE = {
       heroes: ["magneto", "the-punisher"],
       currentlyActive: false,
     },
+    // New-style pair: the-punisher anchors two team-ups but can select only
+    // one per game. Neither partner shares a squad with the-punisher in any
+    // other test, and both bonuses land <= 0, so these stay inert outside
+    // the select-one tests (compose must keep preferring hela over him).
+    {
+      id: 1014001,
+      name: "MAGNETIC ARSENAL",
+      anchor: "the-punisher",
+      heroes: ["the-punisher", "magneto"],
+      currentlyActive: true,
+    },
+    {
+      id: 1014002,
+      name: "SOUL AMMO",
+      anchor: "the-punisher",
+      heroes: ["the-punisher", "adam-warlock"],
+      currentlyActive: true,
+    },
   ],
   stats: {
     "5": {
@@ -108,6 +126,18 @@ export const FIXTURE = {
           "hela+thor": { matches: 800, wins: 460 },
           "hela+loki+thor": { matches: 200, wins: 120 },
         },
+      },
+      // 44% observed ~ what punisher's own weakness predicts -> bonus ~ -0.007
+      "1014001": {
+        matches: 1000,
+        wins: 440,
+        variants: { "magneto+the-punisher": { matches: 1000, wins: 440 } },
+      },
+      // 42% -> clearly worse (~ -0.072); must never stack with 1014001
+      "1014002": {
+        matches: 1000,
+        wins: 420,
+        variants: { "adam-warlock+the-punisher": { matches: 1000, wins: 420 } },
       },
     },
   },

@@ -323,18 +323,34 @@ function teamUpBonus(
     if (idxs != null) for (const idx of idxs) candidates.add(idx);
   }
   const ours = new Set(ourIds);
-  let total = 0;
-  const active: Array<{ name: string; members: string[]; bonus: number }> = [];
-  for (const idx of candidates) {
+  // A hero selects ONE of its team-ups per game and the pick only pays off
+  // when the partner is on the team, so each anchor contributes its best
+  // partner-present option — never the sum of both. Ascending index keeps
+  // tie-breaks deterministic regardless of ourIds order.
+  const bestByAnchor = new Map<
+    string,
+    { name: string; members: string[]; bonus: number }
+  >();
+  for (const idx of [...candidates].sort((a, b) => a - b)) {
     const teamUp = tables.teamUps[idx];
+    if (!ours.has(teamUp.anchor)) continue;
     // variants are sorted most-members-first; take the biggest one present
     const hit = teamUp.variants.find((v) =>
       v.members.every((m) => ours.has(m)),
     );
     if (hit == null) continue;
-    total += hit.bonus;
-    active.push({ name: teamUp.name, members: hit.members, bonus: hit.bonus });
+    const prev = bestByAnchor.get(teamUp.anchor);
+    if (prev == null || hit.bonus > prev.bonus) {
+      bestByAnchor.set(teamUp.anchor, {
+        name: teamUp.name,
+        members: hit.members,
+        bonus: hit.bonus,
+      });
+    }
   }
+  const active = [...bestByAnchor.values()];
+  let total = 0;
+  for (const a of active) total += a.bonus;
   return { total, active };
 }
 
