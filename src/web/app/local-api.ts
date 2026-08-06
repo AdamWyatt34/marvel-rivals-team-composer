@@ -565,6 +565,8 @@ export async function getMatchupTable(heroId: string): Promise<MatchupRow[]> {
 export type TeamUpRow = {
   id: number;
   name: string;
+  /** Display name of the hero this team-up belongs to (selects one per game). */
+  anchor: string | null;
   members: string[];
   variants: Array<{ members: string[]; winRate: number; matches: number }>;
 };
@@ -600,6 +602,7 @@ export async function getTeamUpStats(band: TierBand): Promise<TeamUpRow[]> {
     rows.push({
       id: def.id,
       name: def.name,
+      anchor: def.anchor != null ? nameOf(def.anchor) : null,
       members: def.heroes.map(nameOf),
       variants,
     });
