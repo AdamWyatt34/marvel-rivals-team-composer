@@ -1,158 +1,158 @@
 {
-  "generatedAt": "2026-08-07T07:33:58.568Z",
+  "generatedAt": "2026-08-08T07:24:12.755Z",
   "band": "grandmaster+",
-  "nMatches": 3629,
+  "nMatches": 3844,
   "nSkipped": 0,
-  "nPredictions": 7258,
-  "logLoss": 0.6728612293757702,
+  "nPredictions": 7688,
+  "logLoss": 0.6728320822064454,
   "logLossBaseline": 0.6931471805599453,
-  "brier": 0.24012005110270973,
+  "brier": 0.24009833241764256,
   "brierBaseline": 0.25,
-  "accuracy": 0.5555249379994489,
+  "accuracy": 0.5576222684703434,
   "calibration": [
     {
       "lo": 0.1,
       "hi": 0.2,
-      "count": 41,
-      "meanPredicted": 0.18823012709111792,
+      "count": 43,
+      "meanPredicted": 0.18900984805134977,
       "actualRate": 0
     },
     {
       "lo": 0.2,
       "hi": 0.3,
-      "count": 692,
-      "meanPredicted": 0.2616329292214979,
-      "actualRate": 0.20086705202312138
+      "count": 725,
+      "meanPredicted": 0.26239577630204136,
+      "actualRate": 0.2193103448275862
     },
     {
       "lo": 0.3,
       "hi": 0.4,
-      "count": 2176,
-      "meanPredicted": 0.3538155292391762,
-      "actualRate": 0.4117647058823529
+      "count": 2270,
+      "meanPredicted": 0.3535215712912109,
+      "actualRate": 0.4066079295154185
     },
     {
       "lo": 0.4,
       "hi": 0.5,
-      "count": 3590,
-      "meanPredicted": 0.4499238650359516,
-      "actualRate": 0.5610027855153203
+      "count": 3832,
+      "meanPredicted": 0.4498580600226939,
+      "actualRate": 0.5563674321503131
     },
     {
       "lo": 0.5,
       "hi": 0.6,
-      "count": 749,
-      "meanPredicted": 0.5256777280758791,
-      "actualRate": 0.7623497997329773
+      "count": 809,
+      "meanPredicted": 0.5251106084936864,
+      "actualRate": 0.7676143386897404
     },
     {
       "lo": 0.6,
       "hi": 0.7,
-      "count": 10,
-      "meanPredicted": 0.62480694422622,
-      "actualRate": 0.9
+      "count": 9,
+      "meanPredicted": 0.6253668269859651,
+      "actualRate": 1
     }
   ],
   "ablations": [
     {
       "param": "K_HERO",
-      "logLoss": 0.6796273105392145,
-      "delta": 0.0067660811634443485
+      "logLoss": 0.679748247181482,
+      "delta": 0.006916164975036554
     },
     {
       "param": "K_MATCHUP",
-      "logLoss": 0.6750169587640097,
-      "delta": 0.0021557293882394912
+      "logLoss": 0.6748854263257393,
+      "delta": 0.0020533441192939206
     },
     {
       "param": "K_MAP",
-      "logLoss": 0.6728885176314983,
-      "delta": 0.000027288255728064037
+      "logLoss": 0.6728500307359726,
+      "delta": 0.000017948529527189727
     },
     {
       "param": "K_TEAMUP",
-      "logLoss": 0.6674562957434282,
-      "delta": -0.005404933632341957
+      "logLoss": 0.6673801551283407,
+      "delta": -0.0054519270781047124
     },
     {
       "param": "K_SHAPE",
-      "logLoss": 0.6849088005122561,
-      "delta": 0.012047571136485913
+      "logLoss": 0.6846990655501758,
+      "delta": 0.011866983343730375
     },
     {
       "param": "K_COVERAGE",
-      "logLoss": 0.6651090658362688,
-      "delta": -0.007752163539501367
+      "logLoss": 0.6649580464019546,
+      "delta": -0.007874035804490864
     },
     {
       "param": "K_PAIR",
-      "logLoss": 0.6816651989943172,
-      "delta": 0.008803969618547014
+      "logLoss": 0.681864170637384,
+      "delta": 0.009032088430938612
     },
     {
       "param": "K_COUNTER",
-      "logLoss": 0.6747226221492134,
-      "delta": 0.0018613927734432156
+      "logLoss": 0.6747258125756642,
+      "delta": 0.0018937303692188046
     },
     {
       "param": "K_DEMAND",
-      "logLoss": 0.6728981933085028,
-      "delta": 0.000036963932732558824
+      "logLoss": 0.6730169913167038,
+      "delta": 0.00018490911025836887
     }
   ],
   "holdout": {
-    "trainMatches": 10885,
-    "testMatches": 3629,
-    "cutoffEpoch": 1785163114
+    "trainMatches": 11529,
+    "testMatches": 3844,
+    "cutoffEpoch": 1785281125
   },
-  "temperature": 1.7441560923651083,
-  "logLossCalibrated": 0.6709148225270859,
+  "temperature": 1.7314826872850833,
+  "logLossCalibrated": 0.6708269152795875,
   "multipliers": [
     {
       "param": "K_HERO",
       "best": 2,
-      "delta": -0.005962506315710714
+      "delta": -0.0059937201367231685
     },
     {
       "param": "K_MATCHUP",
       "best": 2,
-      "delta": -0.002341669857711448
+      "delta": -0.0023158660531392705
     },
     {
       "param": "K_MAP",
       "best": 2,
-      "delta": -0.00017772056468612352
+      "delta": -0.0001612147879014314
     },
     {
       "param": "K_TEAMUP",
       "best": 0,
-      "delta": -0.004000803236356321
+      "delta": -0.004115198554911714
     },
     {
       "param": "K_SHAPE",
       "best": 2,
-      "delta": -0.006879083795278795
+      "delta": -0.006892245961088284
     },
     {
       "param": "K_COVERAGE",
       "best": 0,
-      "delta": -0.007411426185271464
+      "delta": -0.007437421180218617
     },
     {
       "param": "K_PAIR",
       "best": 2,
-      "delta": -0.0094078955417074
+      "delta": -0.009335875056324272
     },
     {
       "param": "K_COUNTER",
       "best": 2,
-      "delta": -0.0020280771195431146
+      "delta": -0.00203545523579185
     },
     {
       "param": "K_DEMAND",
       "best": 0.5,
-      "delta": -0.0002636284371390074
+      "delta": -0.00026009539199145504
     }
   ],
-  "productionTemperature": 1.7160065366630783
+  "productionTemperature": 1.7079849020071296
 }
