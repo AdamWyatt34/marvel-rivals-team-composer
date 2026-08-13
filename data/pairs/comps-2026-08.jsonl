@@ -6062,3 +6062,11 @@
 {"t":1785740593,"w":"b","a":["deadpool-vanguard","spider-man","magneto","ultron","mister-fantastic","rocket-raccoon"],"b":["hela","loki","magneto","winter-soldier","luna-snow","deadpool-vanguard"],"m":"1311"}
 {"t":1785782169,"w":"a","a":["gambit","rogue","psylocke","magneto","luna-snow","doctor-strange"],"b":["gambit","spider-man","thor","luna-snow","daredevil","magneto"],"m":"1434"}
 {"t":1785787704,"w":"b","a":["emma-frost","magneto","elsa-bloodstone","invisible-woman","adam-warlock","ultron"],"b":["invisible-woman","elsa-bloodstone","adam-warlock","magneto","loki","emma-frost"],"m":"1311"}
+{"t":1785954332,"w":"b","a":["luna-snow","hela","doctor-strange","emma-frost","invisible-woman","winter-soldier"],"b":["deadpool-duelist","venom","rocket-raccoon","magneto","luna-snow","winter-soldier"],"m":"2042"}
+{"t":1785795351,"w":"b","a":["luna-snow","magneto","namor","psylocke","winter-soldier","invisible-woman"],"b":["winter-soldier","doctor-strange","magneto","luna-snow","invisible-woman","daredevil"],"m":"1245"}
+{"t":1785942904,"w":"b","a":["magneto","luna-snow","the-thing","winter-soldier","wolverine","invisible-woman"],"b":["the-thing","cloak-dagger","elsa-bloodstone","luna-snow","magneto","psylocke"],"m":"1421"}
+{"t":1786083639,"w":"a","a":["magneto","invisible-woman","deadpool-vanguard","luna-snow","elsa-bloodstone","winter-soldier"],"b":["invisible-woman","black-panther","hela","winter-soldier","loki","magneto"],"m":"1318"}
+{"t":1785871214,"w":"b","a":["invisible-woman","black-widow","emma-frost","magneto","winter-soldier","loki"],"b":["emma-frost","invisible-woman","ultron","loki","daredevil","magneto"],"m":"1231"}
+{"t":1785882870,"w":"a","a":["hela","luna-snow","invisible-woman","groot","the-thing","daredevil"],"b":["magneto","luna-snow","groot","hela","squirrel-girl","loki"],"m":"1267"}
+{"t":1785881103,"w":"a","a":["emma-frost","winter-soldier","gambit","elsa-bloodstone","mantis","rogue"],"b":["gambit","black-panther","rocket-raccoon","elsa-bloodstone","emma-frost","the-thing"],"m":"1434"}
+{"t":1785878139,"w":"a","a":["groot","winter-soldier","the-thing","emma-frost","loki","gambit"],"b":["gambit","the-thing","thor","invisible-woman","devil-dinosaur","winter-soldier"],"m":"1292"}
