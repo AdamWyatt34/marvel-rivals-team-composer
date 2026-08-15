@@ -39,7 +39,15 @@ jobs:
         working-directory: src/web
         run: |
           set -o pipefail
-          npm run ingest 2>&1 | tee ingest.log
+          # RivalsMeta's API has multi-minute outage windows that outlast the
+          # in-process retries, so also retry the whole ingest across 15-min gaps.
+          for attempt in 1 2 3; do
+            npm run ingest 2>&1 | tee ingest.log && exit 0
+            # Deterministic failures (new hero) won't heal; recovery handles them.
+            grep -q "Unmapped RivalsMeta hero ids" ingest.log && exit 1
+            [ "$attempt" = 3 ] || { echo "ingest failed; retrying in 15 min"; sleep 900; }
+          done
+          exit 1
 
       - name: Open reference-refresh PR for unmapped heroes
         if: steps.ingest.outcome == 'failure'
