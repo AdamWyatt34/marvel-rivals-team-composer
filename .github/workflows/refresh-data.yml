@@ -9,6 +9,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  actions: write # dispatch deploy-pages after committing data
 
 concurrency:
   group: refresh-data
@@ -64,6 +65,8 @@ jobs:
 
       - name: Commit snapshot if changed
         if: steps.ingest.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet -- src/web/public/data/snapshot.json; then
             echo "Snapshot unchanged; nothing to commit."
@@ -80,6 +83,9 @@ jobs:
             git commit -m "chore(data): update trends $(date -u +%F)"
           fi
           git push
+          # Pushes made with GITHUB_TOKEN never fire push-triggered workflows
+          # (GitHub's recursion guard), so deploy the new data explicitly.
+          gh workflow run deploy-pages.yml --ref master
 
       - name: File failure issue
         if: failure()
