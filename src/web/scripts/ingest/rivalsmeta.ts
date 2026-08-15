@@ -15,7 +15,7 @@ export const USER_AGENT =
   "marvel-rivals-team-composer/1.0 (+https://github.com/AdamWyatt34/marvel-rivals-team-composer; hobby project)";
 
 /** Current season's internal id. Season N maps to internal id 2N (half-seasons increment by 1). */
-export const CURRENT_SEASON_ID = 18;
+export const CURRENT_SEASON_ID = 19;
 
 /** Reject data older than this; triggers a probe of the next season id. */
 export const MAX_STALENESS_DAYS = 7;
@@ -87,11 +87,18 @@ export async function fetchStats(
       await get(`https://rivalsmeta.com/api/heroes/stats?season=${id}`)
     ).json() as Promise<RawStats>;
 
-  const current = await fetchSeason(seasonId);
-  if (isFresh(current.timestamp, now)) return { stats: current, seasonId };
+  // A dead season endpoint (RivalsMeta 5xxs retired seasons) is the same
+  // signal as stale data: the season has likely rolled over, so probe onward.
+  const current = await fetchSeason(seasonId).catch((err: unknown) => {
+    console.warn(`season=${seasonId} request failed: ${String(err)}`);
+    return null;
+  });
+  if (current != null && isFresh(current.timestamp, now)) {
+    return { stats: current, seasonId };
+  }
 
   console.warn(
-    `season=${seasonId} data is stale; probing season=${seasonId + 1}`,
+    `season=${seasonId} data is ${current == null ? "unavailable" : "stale"}; probing season=${seasonId + 1}`,
   );
   try {
     const next = await fetchSeason(seasonId + 1);
