@@ -224,7 +224,8 @@
     "name": "OBLIVION SHROUD",
     "anchor": "cloak-dagger",
     "heroes": [
-      "cloak-dagger"
+      "cloak-dagger",
+      "the-hood"
     ],
     "currentlyActive": true
   },
@@ -313,7 +314,8 @@
     "name": "VOID PENTAGRAM",
     "anchor": "magik",
     "heroes": [
-      "magik"
+      "magik",
+      "the-hood"
     ],
     "currentlyActive": true
   },
@@ -998,7 +1000,8 @@
     "name": "HELLFIRE SPARKS",
     "anchor": "jubilee",
     "heroes": [
-      "jubilee"
+      "jubilee",
+      "the-hood"
     ],
     "currentlyActive": true
   },

@@ -276,6 +276,12 @@
     "role": "Duelist"
   },
   {
+    "id": "the-hood",
+    "name": "The Hood",
+    "rivalsMetaId": 1066,
+    "role": "Vanguard"
+  },
+  {
     "id": "the-punisher",
     "name": "The Punisher",
     "rivalsMetaId": 1014,
