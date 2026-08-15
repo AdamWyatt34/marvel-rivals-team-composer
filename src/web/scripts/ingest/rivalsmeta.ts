@@ -58,15 +58,38 @@ export type RawMatchups = Record<
   Record<string, { matches: number; wins: number }>
 >;
 
+/** RivalsMeta's gateway 504s intermittently; give transient errors time to clear. */
+const RETRY_DELAYS_MS = [10_000, 30_000, 60_000];
+
 async function get(url: string): Promise<Response> {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": USER_AGENT,
-      Accept: "application/json, text/html",
-    },
-  });
-  if (!res.ok) throw new Error(`${url} returned ${res.status}`);
-  return res;
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt - 1]));
+    }
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: {
+          "User-Agent": USER_AGENT,
+          Accept: "application/json, text/html",
+        },
+      });
+    } catch (err) {
+      lastError = err;
+      if (attempt < RETRY_DELAYS_MS.length) {
+        console.warn(`${url} fetch failed (${String(err)}); retrying`);
+      }
+      continue;
+    }
+    if (res.ok) return res;
+    lastError = new Error(`${url} returned ${res.status}`);
+    if (res.status < 500) break; // 4xx won't heal on retry
+    if (attempt < RETRY_DELAYS_MS.length) {
+      console.warn(`${url} returned ${res.status}; retrying`);
+    }
+  }
+  throw lastError;
 }
 
 export function isFresh(timestampSeconds: number, now: Date): boolean {
