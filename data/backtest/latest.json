@@ -1,172 +1,172 @@
 {
-  "generatedAt": "2026-08-30T11:31:40.640Z",
+  "generatedAt": "2026-08-31T13:02:52.118Z",
   "band": "grandmaster+",
-  "nMatches": 6223,
+  "nMatches": 6247,
   "nSkipped": 0,
-  "nPredictions": 12446,
-  "logLoss": 0.6690803246436575,
+  "nPredictions": 12494,
+  "logLoss": 0.6689949407878767,
   "logLossBaseline": 0.6931471805599453,
-  "brier": 0.23813213718344342,
+  "brier": 0.2380900485667908,
   "brierBaseline": 0.25,
-  "accuracy": 0.6214848143982002,
+  "accuracy": 0.6215783576116536,
   "calibration": [
     {
       "lo": 0,
       "hi": 0.1,
       "count": 232,
-      "meanPredicted": 0.07740732652924821,
+      "meanPredicted": 0.07820877128861779,
       "actualRate": 0.034482758620689655
     },
     {
       "lo": 0.1,
       "hi": 0.2,
-      "count": 776,
-      "meanPredicted": 0.15296777920043197,
-      "actualRate": 0.20489690721649484
+      "count": 770,
+      "meanPredicted": 0.15306426088886724,
+      "actualRate": 0.2051948051948052
     },
     {
       "lo": 0.2,
       "hi": 0.3,
-      "count": 1662,
-      "meanPredicted": 0.25571042854001363,
-      "actualRate": 0.35318892900120336
+      "count": 1665,
+      "meanPredicted": 0.25583934951235926,
+      "actualRate": 0.34894894894894896
     },
     {
       "lo": 0.3,
       "hi": 0.4,
-      "count": 2158,
-      "meanPredicted": 0.35077167228366174,
-      "actualRate": 0.4402224281742354
+      "count": 2171,
+      "meanPredicted": 0.3507564175077905,
+      "actualRate": 0.44127130354675265
     },
     {
       "lo": 0.4,
       "hi": 0.5,
-      "count": 2954,
-      "meanPredicted": 0.4552558223062832,
-      "actualRate": 0.484427894380501
+      "count": 2973,
+      "meanPredicted": 0.4551270295609658,
+      "actualRate": 0.4843592330978809
     },
     {
       "lo": 0.5,
       "hi": 0.6,
-      "count": 3446,
-      "meanPredicted": 0.5450155036092248,
-      "actualRate": 0.6198491004062682
+      "count": 3477,
+      "meanPredicted": 0.5450611193056025,
+      "actualRate": 0.6206499856197871
     },
     {
       "lo": 0.6,
       "hi": 0.7,
-      "count": 1143,
-      "meanPredicted": 0.6338748193164284,
-      "actualRate": 0.7760279965004374
+      "count": 1140,
+      "meanPredicted": 0.6340549128220035,
+      "actualRate": 0.7789473684210526
     },
     {
       "lo": 0.7,
       "hi": 0.8,
-      "count": 75,
-      "meanPredicted": 0.7210361680680647,
-      "actualRate": 0.8666666666666667
+      "count": 66,
+      "meanPredicted": 0.722585246428061,
+      "actualRate": 0.8484848484848485
     }
   ],
   "ablations": [
     {
       "param": "K_HERO",
-      "logLoss": 0.674533033114525,
-      "delta": 0.005452708470867429
+      "logLoss": 0.674479589054446,
+      "delta": 0.0054846482665693586
     },
     {
       "param": "K_MATCHUP",
-      "logLoss": 0.670468160726579,
-      "delta": 0.0013878360829214786
+      "logLoss": 0.6704064897791948,
+      "delta": 0.0014115489913181234
     },
     {
       "param": "K_MAP",
-      "logLoss": 0.6687332747247697,
-      "delta": -0.00034704991888778736
+      "logLoss": 0.6686470064422029,
+      "delta": -0.0003479343456738171
     },
     {
       "param": "K_TEAMUP",
-      "logLoss": 0.6649110208157677,
-      "delta": -0.004169303827889825
+      "logLoss": 0.6646927003930008,
+      "delta": -0.0043022403948759225
     },
     {
       "param": "K_SHAPE",
-      "logLoss": 0.6805668296512714,
-      "delta": 0.011486505007613834
+      "logLoss": 0.6806487554067074,
+      "delta": 0.011653814618830749
     },
     {
       "param": "K_COVERAGE",
-      "logLoss": 0.6681079425021137,
-      "delta": -0.0009723821415438261
+      "logLoss": 0.6680192812533204,
+      "delta": -0.0009756595345562502
     },
     {
       "param": "K_PAIR",
-      "logLoss": 0.6773538644734008,
-      "delta": 0.008273539829743326
+      "logLoss": 0.6772899407781195,
+      "delta": 0.008294999990242857
     },
     {
       "param": "K_COUNTER",
-      "logLoss": 0.6709239523896968,
-      "delta": 0.0018436277460393002
+      "logLoss": 0.6708236358732759,
+      "delta": 0.001828695085399179
     },
     {
       "param": "K_DEMAND",
-      "logLoss": 0.6695066587470163,
-      "delta": 0.0004263341033587942
+      "logLoss": 0.669396108807173,
+      "delta": 0.0004011680192963496
     }
   ],
   "holdout": {
-    "trainMatches": 18668,
-    "testMatches": 6223,
-    "cutoffEpoch": 1786285816
+    "trainMatches": 18739,
+    "testMatches": 6247,
+    "cutoffEpoch": 1786299794
   },
-  "temperature": 3.6739334223550832,
-  "logLossCalibrated": 0.6520608943067249,
+  "temperature": 3.6606121690538087,
+  "logLossCalibrated": 0.65165363131694,
   "multipliers": [
     {
       "param": "K_HERO",
       "best": 2,
-      "delta": -0.004062778177733262
+      "delta": -0.004068803862399384
     },
     {
       "param": "K_MATCHUP",
       "best": 2,
-      "delta": -0.0016265508609806245
+      "delta": -0.0016217447586569511
     },
     {
       "param": "K_MAP",
       "best": 2,
-      "delta": -0.00008250754269933935
+      "delta": -0.00008021719037609731
     },
     {
       "param": "K_TEAMUP",
       "best": 0,
-      "delta": -0.0033975564206460973
+      "delta": -0.0033876930661295157
     },
     {
       "param": "K_SHAPE",
       "best": 2,
-      "delta": -0.007217221460717793
+      "delta": -0.0072027773452283395
     },
     {
       "param": "K_COVERAGE",
       "best": 0.75,
-      "delta": -0.00003629166166374542
+      "delta": -0.000038894688576318615
     },
     {
       "param": "K_PAIR",
       "best": 2,
-      "delta": -0.009645356225010615
+      "delta": -0.009567445037091171
     },
     {
       "param": "K_COUNTER",
       "best": 2,
-      "delta": -0.0020634066229429093
+      "delta": -0.0020427670692388933
     },
     {
       "param": "K_DEMAND",
       "best": 0.5,
-      "delta": -0.0004326039952619043
+      "delta": -0.00042876351642251453
     }
   ],
-  "productionTemperature": 3.61537110359835
+  "productionTemperature": 3.6122263822737564
 }
