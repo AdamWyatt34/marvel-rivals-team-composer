@@ -1,172 +1,172 @@
 {
-  "generatedAt": "2026-09-01T11:19:27.826Z",
+  "generatedAt": "2026-09-02T10:54:05.849Z",
   "band": "grandmaster+",
-  "nMatches": 6281,
+  "nMatches": 6317,
   "nSkipped": 0,
-  "nPredictions": 12562,
-  "logLoss": 0.6684106339336937,
+  "nPredictions": 12634,
+  "logLoss": 0.6687384382470215,
   "logLossBaseline": 0.6931471805599453,
-  "brier": 0.23780439828242766,
+  "brier": 0.2379630890482652,
   "brierBaseline": 0.25,
-  "accuracy": 0.629358382423181,
+  "accuracy": 0.6247427576381194,
   "calibration": [
     {
       "lo": 0,
       "hi": 0.1,
-      "count": 238,
-      "meanPredicted": 0.0771334944436501,
-      "actualRate": 0.04201680672268908
+      "count": 217,
+      "meanPredicted": 0.07900315061303934,
+      "actualRate": 0.041474654377880185
     },
     {
       "lo": 0.1,
       "hi": 0.2,
-      "count": 763,
-      "meanPredicted": 0.15229416872170112,
-      "actualRate": 0.20314547837483618
+      "count": 744,
+      "meanPredicted": 0.15224391308700894,
+      "actualRate": 0.1922043010752688
     },
     {
       "lo": 0.2,
       "hi": 0.3,
-      "count": 1654,
-      "meanPredicted": 0.2569009133876518,
-      "actualRate": 0.3373639661426844
+      "count": 1648,
+      "meanPredicted": 0.25793948536204064,
+      "actualRate": 0.33555825242718446
     },
     {
       "lo": 0.3,
       "hi": 0.4,
-      "count": 2231,
-      "meanPredicted": 0.34987209812689807,
-      "actualRate": 0.45405647691618106
+      "count": 2278,
+      "meanPredicted": 0.35102158000594924,
+      "actualRate": 0.4503950834064969
     },
     {
       "lo": 0.4,
       "hi": 0.5,
-      "count": 2981,
-      "meanPredicted": 0.4555809231635085,
-      "actualRate": 0.4646091915464609
+      "count": 3032,
+      "meanPredicted": 0.4550018290049596,
+      "actualRate": 0.4752638522427441
     },
     {
       "lo": 0.5,
       "hi": 0.6,
-      "count": 3473,
-      "meanPredicted": 0.5456942277148603,
-      "actualRate": 0.6366253959113158
+      "count": 3525,
+      "meanPredicted": 0.5456987814530928,
+      "actualRate": 0.6286524822695035
     },
     {
       "lo": 0.6,
       "hi": 0.7,
-      "count": 1141,
-      "meanPredicted": 0.6324256407396791,
-      "actualRate": 0.7695004382120947
+      "count": 1122,
+      "meanPredicted": 0.6326658394028077,
+      "actualRate": 0.7754010695187166
     },
     {
       "lo": 0.7,
       "hi": 0.8,
-      "count": 81,
-      "meanPredicted": 0.721950427160277,
-      "actualRate": 0.8765432098765432
+      "count": 68,
+      "meanPredicted": 0.723742991877698,
+      "actualRate": 0.8676470588235294
     }
   ],
   "ablations": [
     {
       "param": "K_HERO",
-      "logLoss": 0.6737930577722449,
-      "delta": 0.0053824238385511425
+      "logLoss": 0.6741784159980806,
+      "delta": 0.0054399777510590885
     },
     {
       "param": "K_MATCHUP",
-      "logLoss": 0.6697103403072282,
-      "delta": 0.0012997063735344927
+      "logLoss": 0.6701011592765203,
+      "delta": 0.001362721029498748
     },
     {
       "param": "K_MAP",
-      "logLoss": 0.668106029951667,
-      "delta": -0.0003046039820266966
+      "logLoss": 0.6684351912815819,
+      "delta": -0.0003032469654395964
     },
     {
       "param": "K_TEAMUP",
-      "logLoss": 0.6645738395985167,
-      "delta": -0.0038367943351770295
+      "logLoss": 0.6643355785163082,
+      "delta": -0.004402859730713304
     },
     {
       "param": "K_SHAPE",
-      "logLoss": 0.6803759970474398,
-      "delta": 0.011965363113746075
+      "logLoss": 0.6807900579709163,
+      "delta": 0.01205161972389479
     },
     {
       "param": "K_COVERAGE",
-      "logLoss": 0.6675400146742915,
-      "delta": -0.0008706192594022388
+      "logLoss": 0.6678955393174943,
+      "delta": -0.0008428989295271583
     },
     {
       "param": "K_PAIR",
-      "logLoss": 0.6765991905116727,
-      "delta": 0.008188556577979011
+      "logLoss": 0.6769674800522941,
+      "delta": 0.008229041805272619
     },
     {
       "param": "K_COUNTER",
-      "logLoss": 0.6702148258449185,
-      "delta": 0.0018041919112248284
+      "logLoss": 0.6705465822048442,
+      "delta": 0.0018081439578226943
     },
     {
       "param": "K_DEMAND",
-      "logLoss": 0.6687468205273417,
-      "delta": 0.0003361865936479802
+      "logLoss": 0.6690675142620234,
+      "delta": 0.00032907601500187234
     }
   ],
   "holdout": {
-    "trainMatches": 18841,
-    "testMatches": 6281,
-    "cutoffEpoch": 1786314413
+    "trainMatches": 18950,
+    "testMatches": 6317,
+    "cutoffEpoch": 1786329734
   },
-  "temperature": 3.6510834852983782,
-  "logLossCalibrated": 0.649765534929708,
+  "temperature": 3.6064902680641673,
+  "logLossCalibrated": 0.6501507626170696,
   "multipliers": [
     {
       "param": "K_HERO",
       "best": 2,
-      "delta": -0.003990118705909151
+      "delta": -0.00404078478766845
     },
     {
       "param": "K_MATCHUP",
       "best": 2,
-      "delta": -0.0015067552894001413
+      "delta": -0.0015250058797678934
     },
     {
       "param": "K_MAP",
       "best": 2,
-      "delta": -0.00007343004292259536
+      "delta": -0.00005811471209860031
     },
     {
       "param": "K_TEAMUP",
       "best": 0,
-      "delta": -0.0032460474589459665
+      "delta": -0.0035080884733623696
     },
     {
       "param": "K_SHAPE",
       "best": 2,
-      "delta": -0.007294437017234756
+      "delta": -0.007283119620475453
     },
     {
       "param": "K_COVERAGE",
       "best": 0.75,
-      "delta": -0.00003692077925987469
+      "delta": -0.00005240632823566571
     },
     {
       "param": "K_PAIR",
       "best": 2,
-      "delta": -0.009411293633474371
+      "delta": -0.009354421504428334
     },
     {
       "param": "K_COUNTER",
       "best": 2,
-      "delta": -0.00200276570007063
+      "delta": -0.0019869808507196884
     },
     {
       "param": "K_DEMAND",
-      "best": 0.5,
-      "delta": -0.0004411262402890248
+      "best": 0,
+      "delta": -0.0004657560038318076
     }
   ],
-  "productionTemperature": 3.6161718880389158
+  "productionTemperature": 3.5866321161127406
 }
