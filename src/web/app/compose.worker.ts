@@ -1,12 +1,17 @@
-import { createWorkerState, handleMessage } from "./compose-worker";
+import { createWorkerEntry } from "./compose-worker";
 import type { WorkerRequest, WorkerResponse } from "./compose-protocol";
+import { loadEngine } from "./engine-loader";
 
 const scope = self as unknown as {
-  addEventListener(type: "message", listener: (event: MessageEvent<WorkerRequest>) => void): void;
+  addEventListener(
+    type: "message",
+    listener: (event: MessageEvent<WorkerRequest>) => void,
+  ): void;
   postMessage(message: WorkerResponse): void;
 };
-const state = createWorkerState();
+const entry = createWorkerEntry({ engine: loadEngine() });
 scope.addEventListener("message", (event) => {
-  const response = handleMessage(state, event.data);
-  if (response) scope.postMessage(response);
+  void entry.onMessage(event.data).then((response) => {
+    if (response) scope.postMessage(response);
+  });
 });

@@ -38,6 +38,10 @@ jobs:
         working-directory: src/web
         run: npm ci
 
+      - name: Check the committed WASM artifact
+        working-directory: src/web
+        run: npm run wasm:check
+
       - name: Test
         working-directory: src/web
         run: npm run test

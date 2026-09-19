@@ -13,7 +13,9 @@
     "sample-pairs": "tsx scripts/pairs/sample.ts",
     "backtest": "tsx scripts/backtest/index.ts",
     "bench": "tsx scripts/bench.mts",
-    "build-trends": "tsx scripts/trends/build.ts"
+    "build-trends": "tsx scripts/trends/build.ts",
+    "wasm:build": "node scripts/wasm-build.mjs",
+    "wasm:check": "node scripts/wasm-check.mjs"
   },
   "dependencies": {
     "next": "^15.5.20",

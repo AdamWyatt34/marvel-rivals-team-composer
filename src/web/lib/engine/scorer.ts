@@ -373,12 +373,16 @@ function sideTotals(
     cache = new Map();
     sideTotalsCache.set(tables, cache);
   }
-  const key = [...ids].sort().join(",");
+  const sorted = [...ids].sort();
+  const key = sorted.join(",");
   const hit = cache.get(key);
   if (hit != null) return hit;
+  // Summed in sorted order so the cached value is a function of the hero set,
+  // not of whichever team order was scored first (float sums are not
+  // associative); the WASM engine sums in the same order.
   const value = {
     teamUp: teamUpBonus(tables, ids).total,
-    pairs: pairSynergySum(tables, ids),
+    pairs: pairSynergySum(tables, sorted),
   };
   if (cache.size > 8192) cache.clear();
   cache.set(key, value);

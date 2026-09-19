@@ -1,5 +1,4 @@
-import { compose } from "./compose";
-import { scoreTeam } from "./scorer";
+import { TS_ENGINE, type EngineOps } from "./ops";
 import { SCORING_PARAMS, type ScoringTables } from "./stats";
 import { NoFeasibleTeamError, type TeamRules } from "./types";
 
@@ -40,6 +39,7 @@ export function suggestBans(
   rules: TeamRules,
   k = 3,
   mapId?: string | null,
+  engine: EngineOps = TS_ENGINE,
 ): string[] {
   const banned = new Set(existingBans);
   const chosen: string[] = [];
@@ -50,7 +50,7 @@ export function suggestBans(
     bans: Set<string>,
   ) => {
     try {
-      return compose(tables, {
+      return engine.compose(tables, {
         myLockedIds: locked,
         enemyIds: enemy,
         bannedIds: [...bans],
@@ -73,7 +73,7 @@ export function suggestBans(
     if (theirs == null) break;
     const theirIds = theirs.team.map((h) => h.id);
 
-    const baseline = scoreTeam(tables, ourIds, theirIds, mapId, [
+    const baseline = engine.scoreTeam(tables, ourIds, theirIds, mapId, [
       ...banned,
     ]).prob;
 
@@ -95,7 +95,7 @@ export function suggestBans(
       const our2Ids = ours2.team.map((h) => h.id);
       const theirs2 = tryCompose(enemyLockedIds, our2Ids, testBans);
       if (theirs2 == null) continue;
-      const p = scoreTeam(
+      const p = engine.scoreTeam(
         tables,
         our2Ids,
         theirs2.team.map((h) => h.id),
