@@ -50,3 +50,5 @@ src/web/next-env.d.ts
 
 # AIOS inner-dev-loop task workspaces are per-machine scratch
 .aios/tasks/
+
+crates/**/target/

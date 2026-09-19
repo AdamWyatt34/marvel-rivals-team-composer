@@ -1,0 +1,57 @@
+name: Rust CI
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "crates/**"
+      - "src/web/wasm/**"
+      - "src/web/scripts/wasm-*.mjs"
+      - ".github/workflows/rust-ci.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "crates/**"
+      - "src/web/wasm/**"
+      - "src/web/scripts/wasm-*.mjs"
+      - ".github/workflows/rust-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            crates/rivals-engine/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('crates/**/Cargo.lock') }}
+
+      - name: Test the engine on the host
+        working-directory: crates/rivals-engine
+        run: cargo test --release
+
+      - name: Build the engine for wasm32
+        working-directory: crates/rivals-engine
+        run: cargo build --release --target wasm32-unknown-unknown
+
+  artifact:
+    # src/web ships a committed wasm-pack build; fail when crates/ moved without a rebuild.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Check the committed artifact against crates/
+        working-directory: src/web
+        run: node scripts/wasm-check.mjs
