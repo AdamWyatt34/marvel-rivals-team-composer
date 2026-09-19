@@ -1,6 +1,7 @@
-import { NoFeasibleTeamError } from "../lib/engine";
+import { NoFeasibleTeamError, type EngineOps } from "../lib/engine";
 import { runComposeJob, runBansJob, type ComposePayload, type ComposeResponse } from "./compose-job";
 import type { WorkerRequest, WorkerResponse } from "./compose-protocol";
+import { awaitEngine, engineOrTs, loadEngine } from "./engine-loader";
 
 export type ComposeWorker = Pick<Worker, "postMessage" | "terminate" | "addEventListener">;
 type Tables = Omit<Extract<WorkerRequest, { type: "tables" }>, "type">;
@@ -25,6 +26,7 @@ export class ComposeAbortedError extends Error {
 
 export function createComposeClient(
   workerFactory?: () => ComposeWorker,
+  engineLoader: () => Promise<EngineOps | null> = () => awaitEngine(loadEngine),
 ) {
   const factory = workerFactory ?? (() => new Worker(new URL("./compose.worker.ts", import.meta.url), { type: "module" }));
   let disabled = !workerFactory && typeof Worker === "undefined";
@@ -33,6 +35,11 @@ export function createComposeClient(
   let queued: Job | undefined;
   let nextId = 0;
   const loadedKeys = new Set<string>();
+  // Direct-path supersession: while a request waits for the engine, a newer
+  // request of the same kind (or any newer compose) makes it obsolete, so it
+  // rejects as aborted instead of running an answer nobody will read.
+  let directCompose = 0;
+  let directBans = 0;
 
   function terminate() {
     worker?.terminate();
@@ -115,9 +122,22 @@ export function createComposeClient(
 
   async function request(type: Job["type"], entry: Tables, payload: ComposePayload): Promise<Result> {
     if (disabled) {
-      return type === "compose"
-        ? runComposeJob(entry.tables, entry.maps, payload)
-        : runBansJob(entry.tables, payload);
+      const compose = type === "compose" ? ++directCompose : directCompose;
+      const bans = type === "bans" ? ++directBans : directBans;
+      const engine = engineOrTs(await engineLoader());
+      if (compose !== directCompose || (type === "bans" && bans !== directBans)) {
+        throw new ComposeAbortedError();
+      }
+      const mark = `compose-client:direct:${type}`;
+      performance.mark(mark);
+      try {
+        return type === "compose"
+          ? runComposeJob(entry.tables, entry.maps, payload, engine)
+          : runBansJob(entry.tables, payload, engine);
+      } finally {
+        performance.measure(`compose-client:${type}`, mark);
+        performance.clearMarks(mark);
+      }
     }
     if (type === "compose" && (active || queued)) {
       rejectJobs(new ComposeAbortedError());

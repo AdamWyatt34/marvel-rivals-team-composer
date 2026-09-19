@@ -1,6 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
-import type { ScoringTables } from "../../lib/engine";
-import { NoFeasibleTeamError } from "../../lib/engine";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { EngineOps, ScoringTables } from "../../lib/engine";
+import { NoFeasibleTeamError, TS_ENGINE } from "../../lib/engine";
+import { runBansJob, runComposeJob } from "../compose-job";
 import { createComposeClient, ComposeAbortedError, type ComposeWorker } from "../compose-client";
 import type { WorkerRequest, WorkerResponse } from "../compose-protocol";
 
@@ -110,5 +111,58 @@ describe("compose client", () => {
     const job = expect(client.compose(entry, payload)).rejects.toBeInstanceOf(NoFeasibleTeamError);
     workers[0].emit("message", { type: "error", id: 1, name: "NoFeasibleTeamError", message: "infeasible" });
     await job;
+  });
+});
+
+/** The direct path: no Worker in this runtime, so every job runs inline. */
+describe("compose client direct path", () => {
+  const stubEngine = { name: "wasm", compose: vi.fn(), scoreTeam: vi.fn() } as unknown as EngineOps;
+
+  function deferredLoader() {
+    let resolve!: (engine: EngineOps | null) => void;
+    const promise = new Promise<EngineOps | null>((r) => (resolve = r));
+    return { loader: vi.fn(() => promise), resolve };
+  }
+
+  afterEach(() => {
+    vi.mocked(runComposeJob).mockClear();
+    vi.mocked(runBansJob).mockClear();
+    vi.useRealTimers();
+  });
+
+  it("hands the loaded engine to the jobs", async () => {
+    const { loader, resolve } = deferredLoader();
+    const client = createComposeClient(undefined, loader);
+    const compose = client.compose(entry, payload);
+    resolve(stubEngine);
+    await expect(compose).resolves.toEqual(result);
+    expect(runComposeJob).toHaveBeenLastCalledWith(entry.tables, entry.maps, payload, stubEngine);
+    await client.bans(entry, payload);
+    expect(runBansJob).toHaveBeenLastCalledWith(entry.tables, payload, stubEngine);
+  });
+
+  it("runs on the TypeScript engine when the loader yields nothing", async () => {
+    const client = createComposeClient(undefined, () => Promise.resolve(null));
+    await client.compose(entry, payload);
+    expect(runComposeJob).toHaveBeenLastCalledWith(entry.tables, entry.maps, payload, TS_ENGINE);
+  });
+
+  it("aborts requests superseded while the engine was loading", async () => {
+    const { loader, resolve } = deferredLoader();
+    const client = createComposeClient(undefined, loader);
+    const staleCompose = client.compose(entry, payload);
+    const bansBeforeCompose = client.bans(entry, payload);
+    const latestCompose = client.compose(entry, payload);
+    const staleBans = client.bans(entry, payload);
+    const latestBans = client.bans(entry, payload);
+    resolve(stubEngine);
+    await expect(staleCompose).rejects.toBeInstanceOf(ComposeAbortedError);
+    // a newer compose supersedes an older bans, as terminate does on the worker path
+    await expect(bansBeforeCompose).rejects.toBeInstanceOf(ComposeAbortedError);
+    await expect(staleBans).rejects.toBeInstanceOf(ComposeAbortedError);
+    await expect(latestCompose).resolves.toEqual(result);
+    await expect(latestBans).resolves.toEqual([]);
+    expect(runComposeJob).toHaveBeenCalledTimes(1);
+    expect(runBansJob).toHaveBeenCalledTimes(1);
   });
 });
