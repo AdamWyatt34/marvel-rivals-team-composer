@@ -1,0 +1,156 @@
+{
+  "schemaVersion": "0.4",
+  "repo": {
+    "name": "marvel-rivals-team-composer",
+    "primaryLanguage": "typescript",
+    "lastExtractedAt": "2026-09-19T11:41:31.965Z"
+  },
+  "product": {
+    "mission": "Suggest the best 6-hero Marvel Rivals team comp for your locked picks, the enemy picks, and bans — a transparent additive log-odds model over a daily RivalsMeta snapshot, running entirely in the browser on GitHub Pages with no backend.",
+    "direction": [
+      {
+        "theme": "Off-main-thread solve for phones: compose + backups + bans + explain in a dedicated Web Worker with cancellation; Rust/WASM (Step B) only if the 4x-throttled compose wall-clock stays over 1 s",
+        "why": "The solve blocks the UI on mobile; season 18 quadrupled active team-ups and the smoke budget had to be raised from 2 s to 4 s",
+        "status": "committed",
+        "added": "2026-09-19",
+        "source": "elicited"
+      },
+      {
+        "theme": "Model calibration from sampled matches: pair synergy, learned counters, and backtest-fitted weights maturing as the daily sampler accumulates data",
+        "why": "Those terms are zero until ~2-4 weeks of sampled comps exist; calibration.json is what makes displayed win probabilities honest",
+        "status": "committed",
+        "added": "2026-09-19",
+        "source": "elicited"
+      }
+    ]
+  },
+  "maintenancePosture": "active",
+  "desiredPatterns": [
+    {
+      "name": "Engine is pure and DOM-free: src/web/lib/engine imports only data-schema types and sibling modules — no fetch, window, document, or React",
+      "status": "enforced",
+      "detected": true
+    },
+    {
+      "name": "Single seam: components call the engine only through src/web/app/local-api.ts, which owns the table caches; no component imports lib/engine directly",
+      "status": "enforced",
+      "detected": true
+    },
+    {
+      "name": "Transparent additive model, not ML: every score term is inspectable and explanations are the model's own contributions",
+      "status": "enforced",
+      "detected": true
+    },
+    {
+      "name": "Fail-safe data pipeline: ingest validates with zod + sanity gates and never overwrites the last good snapshot",
+      "status": "enforced",
+      "detected": true
+    }
+  ],
+  "noGoZones": [],
+  "prGates": [
+    "npm run test green (vitest: engine + ingest + backtest suites; enforced by deploy-pages.yml)",
+    "npm run build green (next build static export; enforced by deploy-pages.yml)"
+  ],
+  "ownership": [
+    {
+      "area": "src/web/**",
+      "owner": "AdamWyatt34"
+    }
+  ],
+  "layeringRules": [],
+  "structure": {
+    "repo": {
+      "name": "marvel-rivals-team-composer"
+    },
+    "primaryLanguage": "typescript",
+    "solutions": [],
+    "frameworks": [
+      "next",
+      "react",
+      "typescript"
+    ],
+    "projectCount": 1,
+    "projects": [
+      {
+        "name": "rivals-composer-web",
+        "path": "src\\web\\package.json",
+        "language": "typescript",
+        "packages": [
+          {
+            "name": "next",
+            "version": "^15.5.20"
+          },
+          {
+            "name": "react",
+            "version": "19.1.0"
+          },
+          {
+            "name": "react-dom",
+            "version": "19.1.0"
+          },
+          {
+            "name": "@eslint/eslintrc",
+            "version": "^3"
+          },
+          {
+            "name": "@types/node",
+            "version": "^20"
+          },
+          {
+            "name": "@types/react",
+            "version": "^19"
+          },
+          {
+            "name": "@types/react-dom",
+            "version": "^19"
+          },
+          {
+            "name": "devalue",
+            "version": "^5.8.1"
+          },
+          {
+            "name": "eslint",
+            "version": "^9"
+          },
+          {
+            "name": "eslint-config-next",
+            "version": "15.5.2"
+          },
+          {
+            "name": "tsx",
+            "version": "^4.22.5"
+          },
+          {
+            "name": "typescript",
+            "version": "^5"
+          },
+          {
+            "name": "vitest",
+            "version": "^4.1.9"
+          },
+          {
+            "name": "zod",
+            "version": "^4.4.3"
+          }
+        ],
+        "dependsOn": []
+      }
+    ],
+    "adaptersUsed": [
+      {
+        "name": "node",
+        "confidence": 1,
+        "evidence": [
+          "1 package.json"
+        ]
+      }
+    ]
+  },
+  "history": {
+    "ledger": ".aios/history.ndjson",
+    "entries": 1,
+    "firstAt": "2026-09-19T11:41:32+00:00",
+    "lastAt": "2026-09-19T11:41:32Z"
+  }
+}
