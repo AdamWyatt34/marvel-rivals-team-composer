@@ -1,7 +1,7 @@
 import type { SnapshotMap } from "../lib/data/schema";
 import {
-  buildBackups, calibratedProb, compose, DEFAULT_RULES, explainTeam,
-  SCORING_PARAMS, suggestBans, type ScoringTables, type TierBand,
+  buildBackups, calibratedProb, DEFAULT_RULES, explainTeam, SCORING_PARAMS,
+  suggestBans, TS_ENGINE, type EngineOps, type ScoringTables, type TierBand,
 } from "../lib/engine";
 
 export type ComposePayload = {
@@ -31,11 +31,12 @@ export function runComposeJob(
   tables: ScoringTables,
   maps: SnapshotMap[],
   payload: ComposePayload,
+  engine: EngineOps = TS_ENGINE,
 ): ComposeResponse {
   const banned = payload.bans ?? [];
   const mapId = payload.map || null;
 
-  const result = compose(tables, {
+  const result = engine.compose(tables, {
     myLockedIds: payload.myLocked,
     enemyIds: payload.enemyLocked,
     bannedIds: banned,
@@ -115,6 +116,7 @@ function probabilityBand(
 export function runBansJob(
   tables: ScoringTables,
   payload: ComposePayload,
+  engine: EngineOps = TS_ENGINE,
 ): { id: string; name: string }[] {
   const ids = suggestBans(
     tables,
@@ -124,6 +126,7 @@ export function runBansJob(
     DEFAULT_RULES,
     3,
     payload.map || null,
+    engine,
   );
   return ids.map((id) => ({ id, name: tables.heroes.get(id)?.name ?? id }));
 }

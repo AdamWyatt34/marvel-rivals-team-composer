@@ -2,11 +2,13 @@
 //! (`lib/engine/wasm-bridge.ts`) owns id <-> index translation and probability
 //! calibration; this side only ever sees hero indices and returns log-odds.
 
+pub mod compose;
 pub mod scorer;
 pub mod tables;
 
 use wasm_bindgen::prelude::*;
 
+use compose::{ComposeError, Rules};
 use scorer::ScoreContext;
 use tables::Tables;
 
@@ -60,5 +62,58 @@ impl WasmTables {
         let (map, map_given) = map_arg(map_index, map_given);
         let ctx = ScoreContext::new(&self.inner, enemy, map, map_given, banned);
         Ok(scorer::z_of(&self.inner, &ctx, ours))
+    }
+
+    /// Returns `[z, hero index...]`; the bridge maps indices back to heroes and derives
+    /// the probability. Errors carry the TypeScript engine's names so the bridge can
+    /// rethrow the same types.
+    #[allow(clippy::too_many_arguments)]
+    pub fn compose(
+        &self,
+        locked: &[u32],
+        enemy: &[u32],
+        banned: &[u32],
+        pool: &[u32],
+        has_pool: bool,
+        map_index: i32,
+        map_given: bool,
+        min_strategists: u32,
+        min_vanguards: u32,
+        min_duelists: u32,
+        team_size: u32,
+        beam_width: u32,
+    ) -> Result<Vec<f64>, JsError> {
+        // locked is left to compose, whose UnknownLock error names the hero
+        check_indices(self.inner.n, &[enemy, banned, pool])?;
+        let (map, map_given) = map_arg(map_index, map_given);
+        let rules = Rules {
+            min_strategists: min_strategists as usize,
+            min_vanguards: min_vanguards as usize,
+            min_duelists: min_duelists as usize,
+            team_size: team_size as usize,
+        };
+        let pool_filter = if has_pool { Some(pool) } else { None };
+        match compose::compose(
+            &self.inner,
+            locked,
+            enemy,
+            banned,
+            pool_filter,
+            map,
+            map_given,
+            &rules,
+            beam_width as usize,
+        ) {
+            Ok(c) => {
+                let mut out = Vec::with_capacity(c.team.len() + 1);
+                out.push(c.z);
+                out.extend(c.team.iter().map(|&h| h as f64));
+                Ok(out)
+            }
+            Err(ComposeError::NoFeasibleTeam) => Err(JsError::new("NoFeasibleTeamError")),
+            Err(ComposeError::UnknownLock(h)) => {
+                Err(JsError::new(&format!("Unknown locked hero id: {}", h)))
+            }
+        }
     }
 }

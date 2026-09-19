@@ -15,6 +15,12 @@ export {
   type ComposeResult,
 } from "./compose";
 export { buildBackups } from "./backups";
+export { TS_ENGINE, type EngineOps } from "./ops";
+export {
+  createWasmEngine,
+  flattenTables,
+  type WasmEngineModule,
+} from "./wasm-bridge";
 export { suggestBans, threatScore } from "./bans";
 export { threatsAgainst, type ThreatInfo } from "./threats";
 export { explainTeam, type Explanation } from "./explain";
