@@ -79,7 +79,9 @@ describe("engine against the real snapshot", () => {
     expect(result.prob).toBeLessThan(0.8);
     expect(Object.keys(backups).length).toBeGreaterThan(0);
     expect(bans.length).toBeLessThanOrEqual(3);
-    for (const ban of bans) expect(teamIds).not.toContain(ban);
+    // Later picks recompose around a simulated enemy ban, so a ban may hit a
+    // hero from the step-0 team; the invariant is that locks are never banned.
+    for (const ban of bans) expect(["thor", "winter-soldier"]).not.toContain(ban);
     expect(explanation.lines.length).toBeGreaterThan(0);
 
     // Smoke bound, not an SLO: season 18 quadrupled active team-ups, which
