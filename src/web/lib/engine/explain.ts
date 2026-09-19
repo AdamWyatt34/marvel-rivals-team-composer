@@ -20,7 +20,7 @@ export interface Explanation {
 
 export function explainTeam(
   tables: ScoringTables,
-  snapshot: Snapshot,
+  snapshot: Pick<Snapshot, "maps">,
   ourIds: readonly string[],
   enemyIds: readonly string[],
   mapId?: string | null,

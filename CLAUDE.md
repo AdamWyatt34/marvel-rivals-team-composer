@@ -28,6 +28,11 @@ PR gates: `npm run test` and `npm run build` green (both enforced by
 - `app/local-api.ts` — the **single seam** between UI and engine. Owns the
   `tablesCache` (per tier band) and `personalCache`. Components call
   `local-api`, never `lib/engine` directly.
+- `app/compose-*.ts` — behind that seam, `composeTeam`/`suggestBansFor` run
+  in a dedicated Web Worker: `compose-job.ts` (pure jobs, the direct path),
+  `compose-protocol.ts` (message union), `compose-worker.ts` (worker-side
+  state + handler), `compose.worker.ts` (entry), `compose-client.ts` (main-
+  thread client: tables posted once per key, terminate-and-respawn cancel).
 - `app/` — UI. `page.tsx` (~820 lines), `HeroGrid.tsx`, `ResultsPanel.tsx`.
 - `scripts/{ingest,pairs,backtest,trends}` — tsx CLIs run by the Actions
   workflows; they commit into `data/` and `public/data/`.
