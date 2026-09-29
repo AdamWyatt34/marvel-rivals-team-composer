@@ -1,166 +1,173 @@
 {
-  "generatedAt": "2026-09-28T13:13:01.221Z",
+  "generatedAt": "2026-09-29T12:23:09.166Z",
   "band": "grandmaster+",
-  "nMatches": 7732,
+  "nMatches": 7767,
   "nSkipped": 0,
-  "nPredictions": 15464,
-  "logLoss": 0.6651052389707,
+  "nPredictions": 15534,
+  "logLoss": 0.6649173573529907,
   "logLossBaseline": 0.6931471805599453,
-  "brier": 0.2361440019113202,
+  "brier": 0.23605246542529734,
   "brierBaseline": 0.25,
-  "accuracy": 0.6420719089498189,
+  "accuracy": 0.644135444830694,
   "calibration": [
     {
       "lo": 0,
       "hi": 0.1,
-      "count": 297,
-      "meanPredicted": 0.07577614175786523,
-      "actualRate": 0.03367003367003367
+      "count": 328,
+      "meanPredicted": 0.07449688948938266,
+      "actualRate": 0.03353658536585366
     },
     {
       "lo": 0.1,
       "hi": 0.2,
-      "count": 1090,
-      "meanPredicted": 0.15439388089448175,
-      "actualRate": 0.1743119266055046
+      "count": 1123,
+      "meanPredicted": 0.1541741768664372,
+      "actualRate": 0.19145146927871773
     },
     {
       "lo": 0.2,
       "hi": 0.3,
-      "count": 2201,
-      "meanPredicted": 0.2556817368811894,
-      "actualRate": 0.3003180372557928
+      "count": 2184,
+      "meanPredicted": 0.2547339123470046,
+      "actualRate": 0.30448717948717946
     },
     {
       "lo": 0.3,
       "hi": 0.4,
-      "count": 2979,
-      "meanPredicted": 0.3506015650326863,
-      "actualRate": 0.4427660288687479
+      "count": 2954,
+      "meanPredicted": 0.3506722340075081,
+      "actualRate": 0.43737305348679756
     },
     {
       "lo": 0.4,
       "hi": 0.5,
-      "count": 3809,
-      "meanPredicted": 0.4528379827610344,
-      "actualRate": 0.4996061958519296
+      "count": 3741,
+      "meanPredicted": 0.4524867430310064,
+      "actualRate": 0.4982624966586474
     },
     {
       "lo": 0.5,
       "hi": 0.6,
-      "count": 3685,
-      "meanPredicted": 0.5466600672485231,
-      "actualRate": 0.667842605156038
+      "count": 3637,
+      "meanPredicted": 0.5466303175750983,
+      "actualRate": 0.6596095683255431
     },
     {
       "lo": 0.6,
       "hi": 0.7,
-      "count": 1300,
-      "meanPredicted": 0.6362324342336072,
-      "actualRate": 0.8392307692307692
+      "count": 1432,
+      "meanPredicted": 0.6363621288621838,
+      "actualRate": 0.8365921787709497
     },
     {
       "lo": 0.7,
       "hi": 0.8,
-      "count": 103,
-      "meanPredicted": 0.7258604847829506,
-      "actualRate": 0.941747572815534
+      "count": 133,
+      "meanPredicted": 0.7239666263657804,
+      "actualRate": 0.9097744360902256
+    },
+    {
+      "lo": 0.8,
+      "hi": 0.9,
+      "count": 2,
+      "meanPredicted": 0.8001402741849974,
+      "actualRate": 1
     }
   ],
   "ablations": [
     {
       "param": "K_HERO",
-      "logLoss": 0.6675318263072132,
-      "delta": 0.0024265873365132418
+      "logLoss": 0.6673621948294668,
+      "delta": 0.0024448374764760583
     },
     {
       "param": "K_MATCHUP",
-      "logLoss": 0.6667728076539262,
-      "delta": 0.0016675686832262615
+      "logLoss": 0.6665632509987981,
+      "delta": 0.0016458936458073614
     },
     {
       "param": "K_MAP",
-      "logLoss": 0.6658336630375757,
-      "delta": 0.000728424066875788
+      "logLoss": 0.6656116127746813,
+      "delta": 0.0006942554216905483
     },
     {
       "param": "K_TEAMUP",
-      "logLoss": 0.6668564818172249,
-      "delta": 0.0017512428465249474
+      "logLoss": 0.6667814956014285,
+      "delta": 0.0018641382484377855
     },
     {
       "param": "K_SHAPE",
-      "logLoss": 0.6760468036179749,
-      "delta": 0.010941564647274915
+      "logLoss": 0.6759735217643046,
+      "delta": 0.011056164411313851
     },
     {
       "param": "K_COVERAGE",
-      "logLoss": 0.6643156521263205,
-      "delta": -0.000789586844379464
+      "logLoss": 0.6642354134666189,
+      "delta": -0.000681943886371883
     },
     {
       "param": "K_PAIR",
-      "logLoss": 0.67394022825701,
-      "delta": 0.008834989286310102
+      "logLoss": 0.6735892735827865,
+      "delta": 0.008671916229795795
     },
     {
       "param": "K_COUNTER",
-      "logLoss": 0.6670667569127204,
-      "delta": 0.0019615179420204853
+      "logLoss": 0.6668336439862791,
+      "delta": 0.0019162866332883555
     },
     {
       "param": "K_DEMAND",
-      "logLoss": 0.6661092632525168,
-      "delta": 0.0010040242818168954
+      "logLoss": 0.6658567587415323,
+      "delta": 0.0009394013885415387
     }
   ],
   "holdout": {
-    "trainMatches": 23196,
-    "testMatches": 7732,
-    "cutoffEpoch": 1787113547
+    "trainMatches": 23298,
+    "testMatches": 7767,
+    "cutoffEpoch": 1787132154
   },
-  "temperature": 3.9651742831946972,
-  "logLossCalibrated": 0.6343890082649395,
+  "temperature": 4.012475726189237,
+  "logLossCalibrated": 0.6342749442215551,
   "multipliers": [
     {
       "param": "K_HERO",
       "best": 2,
-      "delta": -0.0015493182602935862
+      "delta": -0.0014808891670775592
     },
     {
       "param": "K_MATCHUP",
       "best": 2,
-      "delta": -0.0015162443116747415
+      "delta": -0.0014352663487070538
     },
     {
       "param": "K_MAP",
       "best": 2,
-      "delta": -0.0006536568388788577
+      "delta": -0.0006208007104424595
     },
     {
       "param": "K_TEAMUP",
-      "best": 1,
-      "delta": 0
+      "best": 1.25,
+      "delta": -0.0000015037214450286385
     },
     {
       "param": "K_SHAPE",
       "best": 2,
-      "delta": -0.007096370090256987
+      "delta": -0.007168056795190503
     },
     {
       "param": "K_COVERAGE",
       "best": 0,
-      "delta": -0.0008982118490294955
+      "delta": -0.0006512068818772532
     },
     {
       "param": "K_PAIR",
       "best": 2,
-      "delta": -0.009064550016657513
+      "delta": -0.009010022825774677
     },
     {
       "param": "K_COUNTER",
       "best": 2,
-      "delta": -0.0020229344976037122
+      "delta": -0.0020047017105865317
     },
     {
       "param": "K_DEMAND",
@@ -168,5 +175,5 @@
       "delta": 0
     }
   ],
-  "productionTemperature": 4.049236348330796
+  "productionTemperature": 4.083558513806679
 }
