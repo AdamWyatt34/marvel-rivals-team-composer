@@ -1,172 +1,172 @@
 {
-  "generatedAt": "2026-10-11T12:19:52.005Z",
+  "generatedAt": "2026-10-12T14:44:53.913Z",
   "band": "grandmaster+",
-  "nMatches": 8173,
+  "nMatches": 8182,
   "nSkipped": 0,
-  "nPredictions": 16346,
-  "logLoss": 0.6662204363986546,
+  "nPredictions": 16364,
+  "logLoss": 0.6662501066023473,
   "logLossBaseline": 0.6931471805599453,
-  "brier": 0.23670508701118065,
+  "brier": 0.236719922779744,
   "brierBaseline": 0.25,
-  "accuracy": 0.6331212529059097,
+  "accuracy": 0.6331581520410657,
   "calibration": [
     {
       "lo": 0,
       "hi": 0.1,
-      "count": 399,
-      "meanPredicted": 0.07423887205378402,
-      "actualRate": 0.045112781954887216
+      "count": 394,
+      "meanPredicted": 0.07476539084099768,
+      "actualRate": 0.04314720812182741
     },
     {
       "lo": 0.1,
       "hi": 0.2,
-      "count": 1071,
-      "meanPredicted": 0.1518390681077921,
-      "actualRate": 0.20448179271708683
+      "count": 1063,
+      "meanPredicted": 0.15200868399121972,
+      "actualRate": 0.20319849482596425
     },
     {
       "lo": 0.2,
       "hi": 0.3,
-      "count": 2432,
-      "meanPredicted": 0.2565750392970518,
-      "actualRate": 0.3092105263157895
+      "count": 2416,
+      "meanPredicted": 0.2568810208736749,
+      "actualRate": 0.30753311258278143
     },
     {
       "lo": 0.3,
       "hi": 0.4,
-      "count": 3158,
-      "meanPredicted": 0.3505836918515576,
-      "actualRate": 0.45883470550981637
+      "count": 3172,
+      "meanPredicted": 0.3507585898650029,
+      "actualRate": 0.45807061790668346
     },
     {
       "lo": 0.4,
       "hi": 0.5,
-      "count": 3806,
-      "meanPredicted": 0.452538697383562,
-      "actualRate": 0.501050972149238
+      "count": 3822,
+      "meanPredicted": 0.4527178318288361,
+      "actualRate": 0.5007849293563579
     },
     {
       "lo": 0.5,
       "hi": 0.6,
-      "count": 3841,
-      "meanPredicted": 0.5466491377724421,
-      "actualRate": 0.6480083311637594
+      "count": 3873,
+      "meanPredicted": 0.5465692564774701,
+      "actualRate": 0.6475600309837335
     },
     {
       "lo": 0.6,
       "hi": 0.7,
-      "count": 1496,
-      "meanPredicted": 0.6365341664713374,
-      "actualRate": 0.8061497326203209
+      "count": 1489,
+      "meanPredicted": 0.6363095627890887,
+      "actualRate": 0.8092679650772331
     },
     {
       "lo": 0.7,
       "hi": 0.8,
-      "count": 143,
-      "meanPredicted": 0.723571182271757,
-      "actualRate": 0.9300699300699301
+      "count": 135,
+      "meanPredicted": 0.7232312666081372,
+      "actualRate": 0.9333333333333333
     }
   ],
   "ablations": [
     {
       "param": "K_HERO",
-      "logLoss": 0.6691787455226105,
-      "delta": 0.0029583091239558934
+      "logLoss": 0.6692096469959408,
+      "delta": 0.002959540393593474
     },
     {
       "param": "K_MATCHUP",
-      "logLoss": 0.6677568648806473,
-      "delta": 0.0015364284819927576
+      "logLoss": 0.6678009762681923,
+      "delta": 0.001550869665845056
     },
     {
       "param": "K_MAP",
-      "logLoss": 0.6667828555906529,
-      "delta": 0.0005624191919982868
+      "logLoss": 0.6668139681929491,
+      "delta": 0.000563861590601844
     },
     {
       "param": "K_TEAMUP",
-      "logLoss": 0.6678226656592446,
-      "delta": 0.00160222926059006
+      "logLoss": 0.6678874555180024,
+      "delta": 0.0016373489156551457
     },
     {
       "param": "K_SHAPE",
-      "logLoss": 0.6778126012913038,
-      "delta": 0.011592164892649248
+      "logLoss": 0.6778805407416344,
+      "delta": 0.011630434139287105
     },
     {
       "param": "K_COVERAGE",
-      "logLoss": 0.6658212947639701,
-      "delta": -0.0003991416346844634
+      "logLoss": 0.6658673244747881,
+      "delta": -0.00038278212755915586
     },
     {
       "param": "K_PAIR",
-      "logLoss": 0.6730058177674247,
-      "delta": 0.00678538136877016
+      "logLoss": 0.6729341974270251,
+      "delta": 0.006684090824677802
     },
     {
       "param": "K_COUNTER",
-      "logLoss": 0.6677039924664018,
-      "delta": 0.0014835560677471937
+      "logLoss": 0.6677037078867382,
+      "delta": 0.0014536012843908708
     },
     {
       "param": "K_DEMAND",
-      "logLoss": 0.6669985352441462,
-      "delta": 0.000778098845491626
+      "logLoss": 0.6670381140256475,
+      "delta": 0.0007880074233002077
     }
   ],
   "holdout": {
-    "trainMatches": 24516,
-    "testMatches": 8173,
-    "cutoffEpoch": 1787461729
+    "trainMatches": 24543,
+    "testMatches": 8182,
+    "cutoffEpoch": 1787472311
   },
-  "temperature": 4.016115359515762,
-  "logLossCalibrated": 0.6403370492290857,
+  "temperature": 3.99659918334695,
+  "logLossCalibrated": 0.6402908806083866,
   "multipliers": [
     {
       "param": "K_HERO",
       "best": 2,
-      "delta": -0.0013489351462345756
+      "delta": -0.001349192900178764
     },
     {
       "param": "K_MATCHUP",
       "best": 2,
-      "delta": -0.0012363446079716178
+      "delta": -0.0012355724390642475
     },
     {
       "param": "K_MAP",
       "best": 2,
-      "delta": -0.0005560532887886049
+      "delta": -0.0005564244739668656
     },
     {
       "param": "K_TEAMUP",
       "best": 1.25,
-      "delta": -0.00001660016885440818
+      "delta": -0.00001671732733254938
     },
     {
       "param": "K_SHAPE",
       "best": 2,
-      "delta": -0.007690313503307511
+      "delta": -0.0076894605367048285
     },
     {
       "param": "K_COVERAGE",
       "best": 0.5,
-      "delta": -0.000251085701719056
+      "delta": -0.0002525540513754754
     },
     {
       "param": "K_PAIR",
       "best": 2,
-      "delta": -0.007990160691561887
+      "delta": -0.007862809550010286
     },
     {
       "param": "K_COUNTER",
       "best": 2,
-      "delta": -0.0017572933324407902
+      "delta": -0.0017226692667562382
     },
     {
       "param": "K_DEMAND",
       "best": 1.25,
-      "delta": -0.00005407994963746443
+      "delta": -0.000053538441687428495
     }
   ],
-  "productionTemperature": 4.07218080516915
+  "productionTemperature": 4.065018371391435
 }
