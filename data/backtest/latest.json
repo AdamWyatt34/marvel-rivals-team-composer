@@ -1,172 +1,172 @@
 {
-  "generatedAt": "2026-10-16T10:58:40.385Z",
+  "generatedAt": "2026-10-17T10:22:04.398Z",
   "band": "grandmaster+",
-  "nMatches": 8271,
+  "nMatches": 8309,
   "nSkipped": 0,
-  "nPredictions": 16542,
-  "logLoss": 0.6669780290320957,
+  "nPredictions": 16618,
+  "logLoss": 0.6670858589087977,
   "logLossBaseline": 0.6931471805599453,
-  "brier": 0.23708314937720656,
+  "brier": 0.2371368342568505,
   "brierBaseline": 0.25,
-  "accuracy": 0.6286422439850079,
+  "accuracy": 0.6286556745697437,
   "calibration": [
     {
       "lo": 0,
       "hi": 0.1,
-      "count": 368,
-      "meanPredicted": 0.07518988518717419,
-      "actualRate": 0.04619565217391304
+      "count": 363,
+      "meanPredicted": 0.07518973216723608,
+      "actualRate": 0.049586776859504134
     },
     {
       "lo": 0.1,
       "hi": 0.2,
-      "count": 1053,
-      "meanPredicted": 0.15138720803471895,
-      "actualRate": 0.1956315289648623
+      "count": 1062,
+      "meanPredicted": 0.15141884306587852,
+      "actualRate": 0.1958568738229755
     },
     {
       "lo": 0.2,
       "hi": 0.3,
-      "count": 2391,
-      "meanPredicted": 0.25724964462944705,
-      "actualRate": 0.31158511083228774
+      "count": 2389,
+      "meanPredicted": 0.2571284825819527,
+      "actualRate": 0.3114273754709083
     },
     {
       "lo": 0.3,
       "hi": 0.4,
-      "count": 3269,
-      "meanPredicted": 0.3507146915228461,
-      "actualRate": 0.4597736310798409
+      "count": 3291,
+      "meanPredicted": 0.3507289398802007,
+      "actualRate": 0.4597386812518991
     },
     {
       "lo": 0.4,
       "hi": 0.5,
-      "count": 3948,
-      "meanPredicted": 0.45299144569285477,
-      "actualRate": 0.5007598784194529
+      "count": 3968,
+      "meanPredicted": 0.4532235084434454,
+      "actualRate": 0.49924395161290325
     },
     {
       "lo": 0.5,
       "hi": 0.6,
-      "count": 3979,
-      "meanPredicted": 0.5464642876759233,
-      "actualRate": 0.646393566222669
+      "count": 4027,
+      "meanPredicted": 0.5463167407851799,
+      "actualRate": 0.6466352123168612
     },
     {
       "lo": 0.6,
       "hi": 0.7,
-      "count": 1422,
-      "meanPredicted": 0.6359220831739073,
-      "actualRate": 0.8087201125175809
+      "count": 1409,
+      "meanPredicted": 0.6357020100213968,
+      "actualRate": 0.8097941802696949
     },
     {
       "lo": 0.7,
       "hi": 0.8,
-      "count": 112,
-      "meanPredicted": 0.7215603866759505,
-      "actualRate": 0.9017857142857143
+      "count": 109,
+      "meanPredicted": 0.7205512591706233,
+      "actualRate": 0.9174311926605505
     }
   ],
   "ablations": [
     {
       "param": "K_HERO",
-      "logLoss": 0.6699645483908727,
-      "delta": 0.002986519358777029
+      "logLoss": 0.6701796568495952,
+      "delta": 0.00309379794079756
     },
     {
       "param": "K_MATCHUP",
-      "logLoss": 0.6685559338302918,
-      "delta": 0.0015779047981960836
+      "logLoss": 0.66870358280154,
+      "delta": 0.0016177238927422843
     },
     {
       "param": "K_MAP",
-      "logLoss": 0.6675387887968764,
-      "delta": 0.0005607597647807605
+      "logLoss": 0.6676546386369958,
+      "delta": 0.0005687797281981322
     },
     {
       "param": "K_TEAMUP",
-      "logLoss": 0.6686020257636327,
-      "delta": 0.001623996731537014
+      "logLoss": 0.6686526022818092,
+      "delta": 0.0015667433730115476
     },
     {
       "param": "K_SHAPE",
-      "logLoss": 0.6784855571532497,
-      "delta": 0.011507528121153965
+      "logLoss": 0.6786399687950213,
+      "delta": 0.011554109886223629
     },
     {
       "param": "K_COVERAGE",
-      "logLoss": 0.666571767170845,
-      "delta": -0.00040626186125070074
+      "logLoss": 0.6666345786505833,
+      "delta": -0.00045128025821439266
     },
     {
       "param": "K_PAIR",
-      "logLoss": 0.6731677341657694,
-      "delta": 0.006189705133673673
+      "logLoss": 0.6731025592945573,
+      "delta": 0.006016700385759632
     },
     {
       "param": "K_COUNTER",
-      "logLoss": 0.6683129152609384,
-      "delta": 0.0013348862288427021
+      "logLoss": 0.6683835474478194,
+      "delta": 0.0012976885390216797
     },
     {
       "param": "K_DEMAND",
-      "logLoss": 0.6677165890260897,
-      "delta": 0.0007385599939939702
+      "logLoss": 0.6678232389405734,
+      "delta": 0.0007373800317757029
     }
   ],
   "holdout": {
-    "trainMatches": 24812,
-    "testMatches": 8271,
-    "cutoffEpoch": 1787538747
+    "trainMatches": 24926,
+    "testMatches": 8309,
+    "cutoffEpoch": 1787575439
   },
-  "temperature": 3.9339968390434095,
-  "logLossCalibrated": 0.6428822467216455,
+  "temperature": 3.9200638408648674,
+  "logLossCalibrated": 0.6433555040923845,
   "multipliers": [
     {
       "param": "K_HERO",
       "best": 2,
-      "delta": -0.0013474356992863035
+      "delta": -0.0013446401459843438
     },
     {
       "param": "K_MATCHUP",
       "best": 2,
-      "delta": -0.0012195685154965386
+      "delta": -0.00121424392191527
     },
     {
       "param": "K_MAP",
       "best": 2,
-      "delta": -0.00055617924827156
+      "delta": -0.0005549857221465171
     },
     {
       "param": "K_TEAMUP",
       "best": 1.25,
-      "delta": -0.0000215975039297156
+      "delta": -0.000026009279333050195
     },
     {
       "param": "K_SHAPE",
       "best": 2,
-      "delta": -0.007747255331356451
+      "delta": -0.007756702412614724
     },
     {
       "param": "K_COVERAGE",
       "best": 0.5,
-      "delta": -0.0002552037402899776
+      "delta": -0.0002556272220011202
     },
     {
       "param": "K_PAIR",
       "best": 2,
-      "delta": -0.007388992076975853
+      "delta": -0.0072835332681626674
     },
     {
       "param": "K_COUNTER",
       "best": 2,
-      "delta": -0.0015987596128190784
+      "delta": -0.001572449922798591
     },
     {
       "param": "K_DEMAND",
       "best": 1.25,
-      "delta": -0.000057302285244587026
+      "delta": -0.00005793376163354402
     }
   ],
-  "productionTemperature": 4.027340131933974
+  "productionTemperature": 4.0196965764046215
 }
